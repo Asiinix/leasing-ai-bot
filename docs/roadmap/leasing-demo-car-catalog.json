@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Fixed price demo vehicle catalog; not an inventory feed or firm leasing offer",
+  "createdAt": "2026-09-23",
+  "currency": "KZT",
+  "exampleRules": {
+    "clientType": "IP",
+    "maxAdvanceKzt": 3000000,
+    "monthlyBudgetsKzt": [
+      350000,
+      250000
+    ],
+    "repaymentMethod": "annuity",
+    "ranking": "shortest available term, then smallest allowed advance meeting budget",
+    "costScope": "principal and interest only; additional costs unmodeled"
+  },
+  "vehicles": [
+    {
+      "id": "chevrolet-cobalt-optimum-2026",
+      "brand": "Chevrolet",
+      "model": "Cobalt",
+      "trim": "Optimum AT",
+      "powertrain": "1.5 / 6AT / FWD",
+      "modelYear": 2026,
+      "priceKzt": 6490000,
+      "priceType": "published_maximum_resale_price",
+      "priceSourceUrl": "https://cdn.chevrolet-auto.kz/cars/i3ngOtACUhCAqSqNQQcs3HUwStb3mdFRfJGu4qSs.pdf",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": null,
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "PDF: максимальная цена перепродажи для MY2026. Фактическая цена и наличие уточняются у дилера.",
+      "colvir": {
+        "modelId": 2637,
+        "brandId": 335,
+        "partnerId": 164,
+        "partnerName": "Общий каталог авто",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 37,
+          "advance_percent": 15.0,
+          "advance_kzt": 973500,
+          "annual_rate_percent": 23.85,
+          "rate_id": 16828,
+          "principal_kzt": 5516500.0,
+          "payment_exact": "211986.526633541747117774224305901736693234",
+          "payment_kzt": 211987,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": {
+          "term_months": 37,
+          "advance_percent": 15.0,
+          "advance_kzt": 973500,
+          "annual_rate_percent": 23.85,
+          "rate_id": 16828,
+          "principal_kzt": 5516500.0,
+          "payment_exact": "211986.526633541747117774224305901736693234",
+          "payment_kzt": 211987,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        }
+      }
+    },
+    {
+      "id": "hyundai-elantra-smart-2026",
+      "brand": "Hyundai",
+      "model": "Elantra",
+      "trim": "Smart",
+      "powertrain": "1.5 MPI / IVT / 2WD",
+      "modelYear": 2026,
+      "priceKzt": 10590000,
+      "priceType": "published_standard",
+      "priceSourceUrl": "https://hyundai.kz/userdata/uploads/u5/1788883382.pdf",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": null,
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "Обычная цена. Акционная 8 890 000 не использована; совместимость акции с лизингом не подтверждена.",
+      "colvir": {
+        "modelId": 2769,
+        "brandId": 323,
+        "partnerId": 162,
+        "partnerName": "Hyundai Trans Kazakhstan",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 37,
+          "advance_percent": 15.0,
+          "advance_kzt": 1588500,
+          "annual_rate_percent": 23.85,
+          "rate_id": 78,
+          "principal_kzt": 9001500.0,
+          "payment_exact": "345907.136679384761475690144129352756792195",
+          "payment_kzt": 345907,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": {
+          "term_months": 60,
+          "advance_percent": 20.0,
+          "advance_kzt": 2118000,
+          "annual_rate_percent": 24.55,
+          "rate_id": 83,
+          "principal_kzt": 8472000.0,
+          "payment_exact": "246434.312724840002405243377434652467006406",
+          "payment_kzt": 246434,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        }
+      }
+    },
+    {
+      "id": "kia-seltos-comfort-2026",
+      "brand": "Kia",
+      "model": "Seltos",
+      "trim": "Comfort",
+      "powertrain": "2.0 MPI / 149 л.с. / CVT / FWD",
+      "modelYear": 2026,
+      "priceKzt": 12490000,
+      "priceType": "recommended_retail",
+      "priceSourceUrl": "https://api.kia.com.kz/images/cars/jGBEqOGVX7BB3gFNXzKkWR9ga9yZSZsTRZeoXzAI.pdf",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": "2026-09-22",
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "Рекомендованная розничная цена. Акционная 10 990 000 не использована. Модификация THW52G61V, D355/D395.",
+      "colvir": {
+        "modelId": 2715,
+        "brandId": 322,
+        "partnerId": 164,
+        "partnerName": "Общий каталог авто",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 48,
+          "advance_percent": 15.0,
+          "advance_kzt": 1873500,
+          "annual_rate_percent": 24.3,
+          "rate_id": 15100,
+          "principal_kzt": 10616500.0,
+          "payment_exact": "347880.492734943152683177051168568881403466",
+          "payment_kzt": 347880,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": null
+      }
+    },
+    {
+      "id": "kia-sportage-comfort-2026",
+      "brand": "Kia",
+      "model": "Sportage",
+      "trim": "Comfort",
+      "powertrain": "2.0 MPI / 150 л.с. / AT / FWD",
+      "modelYear": 2026,
+      "priceKzt": 12790000,
+      "priceType": "recommended_retail",
+      "priceSourceUrl": "https://api.kia.com.kz/images/cars/06yCyO7JmcYbmN1pkdsrP38uO0IowJzYsdYZnycA.pdf",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": "2026-09-22",
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "Новый Sportage. Рекомендованная розничная цена. Акционная 12 290 000 не использована. Модификация GYWD2J61F, D675.",
+      "colvir": {
+        "modelId": 2717,
+        "brandId": 322,
+        "partnerId": 164,
+        "partnerName": "Общий каталог авто",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 48,
+          "advance_percent": 20.0,
+          "advance_kzt": 2558000,
+          "annual_rate_percent": 24.15,
+          "rate_id": 15151,
+          "principal_kzt": 10232000.0,
+          "payment_exact": "334431.040141139007220221008760253174430975",
+          "payment_kzt": 334431,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": null
+      }
+    },
+    {
+      "id": "hyundai-tucson-classic-plus",
+      "brand": "Hyundai",
+      "model": "Tucson",
+      "trim": "Classic (+)",
+      "powertrain": "2.0 MPI / 6AT / 2WD",
+      "modelYear": null,
+      "priceKzt": 13490000,
+      "priceType": "published_standard",
+      "priceSourceUrl": "https://hyundai.kz/userdata/rubrics/rubrics_472/file_ru.pdf?1788873753=",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": null,
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "Год обычной цены не указан в строке прайса; 2026 указан только в акционной таблице. Год требует уточнения до реальной заявки. Акционная 12 490 000 не использована.",
+      "colvir": {
+        "modelId": 2059,
+        "brandId": 323,
+        "partnerId": 162,
+        "partnerName": "Hyundai Trans Kazakhstan",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 60,
+          "advance_percent": 15.0,
+          "advance_kzt": 2023500,
+          "annual_rate_percent": 24.75,
+          "rate_id": 3820,
+          "principal_kzt": 11466500.0,
+          "payment_exact": "334878.426124552846719398232494266879755014",
+          "payment_kzt": 334878,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": null
+      }
+    },
+    {
+      "id": "hyundai-sonata-base-2026",
+      "brand": "Hyundai",
+      "model": "Sonata",
+      "trim": "Base",
+      "powertrain": "Theta III 2.5 GDI / 8AT / 2WD",
+      "modelYear": 2026,
+      "priceKzt": 13990000,
+      "priceType": "published_standard",
+      "priceSourceUrl": "https://hyundai.kz/userdata/rubrics/rubrics_415/file_ru.pdf?1788873197=",
+      "priceCheckedAt": "2026-09-23",
+      "priceEffectiveFrom": null,
+      "availability": "not_verified",
+      "leasingPurchasePriceConfirmed": false,
+      "note": "Обычная цена конкретной версии2.5Base. Акционная12 990 000 не использована; совместимость акции с лизингом не подтверждена.",
+      "colvir": {
+        "modelId": 2488,
+        "brandId": 323,
+        "partnerId": 162,
+        "partnerName": "Hyundai Trans Kazakhstan",
+        "matchLevel": "model_and_partner_only",
+        "trimAndYearConfirmedByApi": false
+      },
+      "examplePlansIp": {
+        "350000": {
+          "term_months": 60,
+          "advance_percent": 15.0,
+          "advance_kzt": 2098500,
+          "annual_rate_percent": 24.75,
+          "rate_id": 12434,
+          "principal_kzt": 11891500.0,
+          "payment_exact": "347290.524943105583810554579139717838974992",
+          "payment_kzt": 347291,
+          "price_within_limits": true,
+          "passes_advance_cap": true
+        },
+        "250000": null
+      }
+    }
+  ]
+}

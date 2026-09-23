@@ -1,0 +1,1358 @@
+{
+  "checked_date": "2026-09-23",
+  "service_url": "https://business.bcc.kz/online-leasing/",
+  "source_bundle": "https://business.bcc.kz/online-leasing/_next/static/chunks/0r~1r_1lsefnk.js",
+  "source_formula": "https://claude.ai/artifact/UA3JvpnP2U5uwyW4FXqJcu",
+  "scope": "Read-only catalogs and rate/limit lookups; no client information, application submission, OTP or signing.",
+  "catalog_endpoints": [
+    {
+      "name": "vehicle_types",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/z_077_pkg_auto_leasing.p_get_vehicle_type",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.594740+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "data_keys": [
+        "p_dmnlst"
+      ],
+      "count": 73,
+      "item_keys": [
+        "ARCFL",
+        "CAR_TYPE",
+        "CATEGORY_CODE",
+        "ID",
+        "ID_HI",
+        "LVL",
+        "NAME",
+        "RANKING",
+        "SUBCATEGORY_CODE",
+        "SUBTYPE_CODE"
+      ],
+      "sample": [
+        {
+          "ID": 261.0,
+          "ID_HI": null,
+          "LVL": 1,
+          "NAME": "Легковые автомобили",
+          "ARCFL": "0",
+          "CAR_TYPE": 1,
+          "CATEGORY_CODE": "PC-Main",
+          "SUBCATEGORY_CODE": null,
+          "SUBTYPE_CODE": null,
+          "RANKING": null
+        },
+        {
+          "ID": 262.0,
+          "ID_HI": null,
+          "LVL": 1,
+          "NAME": "Грузовой транспорт",
+          "ARCFL": "0",
+          "CAR_TYPE": 2,
+          "CATEGORY_CODE": "FT-Main",
+          "SUBCATEGORY_CODE": null,
+          "SUBTYPE_CODE": null,
+          "RANKING": null
+        },
+        {
+          "ID": 263.0,
+          "ID_HI": null,
+          "LVL": 1,
+          "NAME": "Спецтехника",
+          "ARCFL": "0",
+          "CAR_TYPE": 3,
+          "CATEGORY_CODE": "SE-Main",
+          "SUBCATEGORY_CODE": null,
+          "SUBTYPE_CODE": null,
+          "RANKING": null
+        }
+      ]
+    },
+    {
+      "name": "years",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/autoLeasing.CarReleaseYears",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.595157+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "count": 3,
+      "item_keys": [
+        "code_period",
+        "id_year_period",
+        "interval",
+        "name_period",
+        "quantity"
+      ],
+      "sample": [
+        {
+          "id_year_period": 5,
+          "code_period": "year",
+          "name_period": "год",
+          "quantity": 2024,
+          "interval": "год"
+        },
+        {
+          "id_year_period": 6,
+          "code_period": "year",
+          "name_period": "год",
+          "quantity": 2025,
+          "interval": "год"
+        },
+        {
+          "id_year_period": 39,
+          "code_period": "year",
+          "name_period": "год",
+          "quantity": 2026,
+          "interval": "год"
+        }
+      ]
+    },
+    {
+      "name": "partners",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/z_077_pkg_auto_leasing.p_get_partners",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.595219+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "data_keys": [
+        "p_dmnlst"
+      ],
+      "count": 29,
+      "item_keys": [
+        "ID",
+        "NAME",
+        "MIN_COUNT_CAR",
+        "MAX_COUNT_CAR"
+      ],
+      "sample": [
+        {
+          "ID": 402.0,
+          "NAME": "DOSCAR TRUCKS",
+          "MIN_COUNT_CAR": null,
+          "MAX_COUNT_CAR": null
+        },
+        {
+          "ID": 162.0,
+          "NAME": "Hyundai Trans Kazakhstan",
+          "MIN_COUNT_CAR": 1,
+          "MAX_COUNT_CAR": 20
+        },
+        {
+          "ID": 403.0,
+          "NAME": "QazTehna",
+          "MIN_COUNT_CAR": null,
+          "MAX_COUNT_CAR": null
+        }
+      ],
+      "note": "Only fields relevant to payment selection are included; legal/contact fields omitted."
+    },
+    {
+      "name": "brands",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/z_077_pkg_auto_leasing.p_get_brand",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.698572+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "data_keys": [
+        "p_dmnlst"
+      ],
+      "count": 128,
+      "item_keys": [
+        "CODE",
+        "ID",
+        "ID_PARTNER",
+        "NAME",
+        "POP_RAT"
+      ],
+      "sample": [
+        {
+          "ID": 390.0,
+          "CODE": "HYUNDAI",
+          "NAME": "HYUNDAI",
+          "ID_PARTNER": 164.0,
+          "POP_RAT": null
+        },
+        {
+          "ID": 943.0,
+          "CODE": "SANY",
+          "NAME": "SANY",
+          "ID_PARTNER": 362.0,
+          "POP_RAT": null
+        },
+        {
+          "ID": 703.0,
+          "CODE": "XCMG HANVAN",
+          "NAME": "XCMG HANVAN",
+          "ID_PARTNER": 242.0,
+          "POP_RAT": null
+        }
+      ]
+    },
+    {
+      "name": "models",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/z_077_pkg_auto_leasing.p_get_model",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.711209+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "data_keys": [
+        "p_dmnlst"
+      ],
+      "count": 1307,
+      "item_keys": [
+        "CAR_TYPE",
+        "CODE",
+        "ID",
+        "ID_BRAND",
+        "ID_COUNTRY",
+        "ID_PARTNER",
+        "ID_VEHICLE_TYPE",
+        "NAME",
+        "POP_RAT"
+      ],
+      "sample": [
+        {
+          "ID": 2766.0,
+          "CODE": "L6",
+          "NAME": "L6",
+          "ID_BRAND": 361.0,
+          "ID_PARTNER": 164.0,
+          "ID_COUNTRY": 51.0,
+          "CAR_TYPE": 1,
+          "ID_VEHICLE_TYPE": 274.0,
+          "POP_RAT": null
+        },
+        {
+          "ID": 2767.0,
+          "CODE": "ENTOURAGE",
+          "NAME": "ENTOURAGE",
+          "ID_BRAND": 323.0,
+          "ID_PARTNER": 162.0,
+          "ID_COUNTRY": 57.0,
+          "CAR_TYPE": 1,
+          "ID_VEHICLE_TYPE": 274.0,
+          "POP_RAT": null
+        },
+        {
+          "ID": 2768.0,
+          "CODE": "CLICK",
+          "NAME": "CLICK",
+          "ID_BRAND": 323.0,
+          "ID_PARTNER": 162.0,
+          "ID_COUNTRY": 57.0,
+          "CAR_TYPE": 1,
+          "ID_VEHICLE_TYPE": 274.0,
+          "POP_RAT": null
+        }
+      ]
+    },
+    {
+      "name": "countries",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/z_077_pkg_auto_leasing.p_get_country",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.724027+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "data_keys": [
+        "p_dmnlst"
+      ],
+      "count": 8,
+      "item_keys": [
+        "CODE",
+        "ID",
+        "ID_PERIOD",
+        "ID_PREPAYMENT",
+        "LONGNAME",
+        "NAME"
+      ],
+      "sample": [
+        {
+          "ID": 51.0,
+          "CODE": "CN",
+          "NAME": "КНР",
+          "LONGNAME": "Китайская народная республика",
+          "ID_PERIOD": null,
+          "ID_PREPAYMENT": 43.0
+        },
+        {
+          "ID": 52.0,
+          "CODE": "UK",
+          "NAME": "Великобритания",
+          "LONGNAME": "Европа",
+          "ID_PERIOD": null,
+          "ID_PREPAYMENT": 41.0
+        },
+        {
+          "ID": 53.0,
+          "CODE": "UZ",
+          "NAME": "Узбекистан",
+          "LONGNAME": "Узбекистан",
+          "ID_PERIOD": null,
+          "ID_PREPAYMENT": 43.0
+        }
+      ]
+    },
+    {
+      "name": "limits_ip",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSB_GetMaxMinSummAutolizing",
+      "method": "POST",
+      "request": {
+        "cli_type": "IP"
+      },
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.798433+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "count": 11,
+      "item_keys": [
+        "max_sum",
+        "min_sum",
+        "name"
+      ],
+      "sample": [
+        {
+          "name": "5%",
+          "min_sum": 5263158.0,
+          "max_sum": 52631578.0
+        },
+        {
+          "name": "10%",
+          "min_sum": 5555556.0,
+          "max_sum": 55555555.0
+        },
+        {
+          "name": "15%",
+          "min_sum": 5882353.0,
+          "max_sum": 58823529.0
+        }
+      ]
+    },
+    {
+      "name": "limits_too",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSB_GetMaxMinSummAutolizing",
+      "method": "POST",
+      "request": {
+        "cli_type": "TOO"
+      },
+      "status": 200,
+      "observed_at": "2026-09-23T08:51:02.800347+00:00",
+      "envelope_keys": [
+        "data"
+      ],
+      "count": 11,
+      "item_keys": [
+        "max_sum",
+        "min_sum",
+        "name"
+      ],
+      "sample": [
+        {
+          "name": "5%",
+          "min_sum": 5263158.0,
+          "max_sum": 73684210.0
+        },
+        {
+          "name": "35%",
+          "min_sum": 7692308.0,
+          "max_sum": 107692307.0
+        },
+        {
+          "name": "40%",
+          "min_sum": 8333334.0,
+          "max_sum": 116666666.0
+        }
+      ]
+    }
+  ],
+  "rate_endpoints": [
+    {
+      "name": "rates_ip_general",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+      "status": 200,
+      "method": "POST",
+      "request": {
+        "p_id_models": [
+          2875
+        ],
+        "p_cli_type": "IP"
+      },
+      "observed_at": "2026-09-23T08:51:31.778731+00:00",
+      "count": 11,
+      "envelope_keys": [
+        "data"
+      ],
+      "item_keys": [
+        "ADVANCE",
+        "ID_MODEL",
+        "ID_RATES_MODEL",
+        "MONTHS",
+        "NAME_COUNTRY",
+        "RATE",
+        "SUBS"
+      ],
+      "sample": [
+        {
+          "MONTHS": "48",
+          "ADVANCE": "25",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.95,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2184
+        },
+        {
+          "MONTHS": "60",
+          "ADVANCE": "15",
+          "ID_MODEL": 2875.0,
+          "RATE": 24.75,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2179
+        },
+        {
+          "MONTHS": "60",
+          "ADVANCE": "30",
+          "ID_MODEL": 2875.0,
+          "RATE": 24.1,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2188
+        },
+        {
+          "MONTHS": "37",
+          "ADVANCE": "20",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.75,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2180
+        }
+      ],
+      "MONTHS_values": [
+        "37",
+        "48",
+        "60"
+      ],
+      "ADVANCE_values": [
+        "15",
+        "20",
+        "25",
+        "30"
+      ],
+      "RATE_values": [
+        "23.6",
+        "23.75",
+        "23.85",
+        "23.95",
+        "24.1",
+        "24.15",
+        "24.3",
+        "24.55",
+        "24.75"
+      ],
+      "SUBS_values": [
+        "None"
+      ]
+    },
+    {
+      "name": "rates_too_general",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+      "status": 200,
+      "method": "POST",
+      "request": {
+        "p_id_models": [
+          2875
+        ],
+        "p_cli_type": "TOO"
+      },
+      "observed_at": "2026-09-23T08:51:32.138707+00:00",
+      "count": 11,
+      "envelope_keys": [
+        "data"
+      ],
+      "item_keys": [
+        "ADVANCE",
+        "ID_MODEL",
+        "ID_RATES_MODEL",
+        "MONTHS",
+        "NAME_COUNTRY",
+        "RATE",
+        "SUBS"
+      ],
+      "sample": [
+        {
+          "MONTHS": "37",
+          "ADVANCE": "15",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.8,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2165
+        },
+        {
+          "MONTHS": "48",
+          "ADVANCE": "20",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.5,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2169
+        },
+        {
+          "MONTHS": "60",
+          "ADVANCE": "20",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.9,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2170
+        },
+        {
+          "MONTHS": "48",
+          "ADVANCE": "30",
+          "ID_MODEL": 2875.0,
+          "RATE": 23.0,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 2175
+        }
+      ],
+      "MONTHS_values": [
+        "37",
+        "48",
+        "60"
+      ],
+      "ADVANCE_values": [
+        "15",
+        "20",
+        "25",
+        "30"
+      ],
+      "RATE_values": [
+        "23.0",
+        "23.2",
+        "23.3",
+        "23.5",
+        "23.6",
+        "23.8",
+        "23.9",
+        "24.1"
+      ],
+      "SUBS_values": [
+        "None"
+      ]
+    },
+    {
+      "name": "rates_ip_hyundai",
+      "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+      "status": 200,
+      "method": "POST",
+      "request": {
+        "p_id_models": [
+          2059
+        ],
+        "p_cli_type": "IP"
+      },
+      "observed_at": "2026-09-23T08:51:31.766196+00:00",
+      "count": 14,
+      "envelope_keys": [
+        "data"
+      ],
+      "item_keys": [
+        "ADVANCE",
+        "ID_MODEL",
+        "ID_RATES_MODEL",
+        "MONTHS",
+        "NAME_COUNTRY",
+        "RATE",
+        "SUBS"
+      ],
+      "sample": [
+        {
+          "MONTHS": "48",
+          "ADVANCE": "25",
+          "ID_MODEL": 2059.0,
+          "RATE": 23.95,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 3825
+        },
+        {
+          "MONTHS": "60",
+          "ADVANCE": "30",
+          "ID_MODEL": 2059.0,
+          "RATE": 24.1,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 3828
+        },
+        {
+          "MONTHS": "37",
+          "ADVANCE": "25",
+          "ID_MODEL": 2059.0,
+          "RATE": 23.6,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 3824
+        },
+        {
+          "MONTHS": "60",
+          "ADVANCE": "10",
+          "ID_MODEL": 2059.0,
+          "RATE": 24.9,
+          "NAME_COUNTRY": "Южная Корея",
+          "SUBS": null,
+          "ID_RATES_MODEL": 3817
+        }
+      ],
+      "MONTHS_values": [
+        "37",
+        "48",
+        "60"
+      ],
+      "ADVANCE_values": [
+        "10",
+        "15",
+        "20",
+        "25",
+        "30"
+      ],
+      "RATE_values": [
+        "23.6",
+        "23.75",
+        "23.85",
+        "23.95",
+        "24.1",
+        "24.15",
+        "24.3",
+        "24.4",
+        "24.55",
+        "24.75",
+        "24.9"
+      ],
+      "SUBS_values": [
+        "None"
+      ]
+    }
+  ],
+  "filtered_rate_request": {
+    "status": 200,
+    "observed_at": "2026-09-23T08:52:14.643285+00:00",
+    "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+    "method": "POST",
+    "request": {
+      "p_id_models": [
+        2875
+      ],
+      "p_cli_type": "IP",
+      "p_advance": 20,
+      "p_cnt_month": 48
+    },
+    "response": {
+      "data": {
+        "p_dmnlst": [
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2875.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 2181
+          }
+        ]
+      }
+    }
+  },
+  "illustrative_scenarios": {
+    "assumptions": {
+      "price_kzt": 15000000,
+      "maximum_advance_kzt": 3000000,
+      "target_monthly_kzt": 350000,
+      "client_type": "IP",
+      "model_id": 2875,
+      "method": "annuity",
+      "price_source": "illustrative user input, not catalog price"
+    },
+    "results": [
+      {
+        "rate_id": 2177,
+        "term_months": 37,
+        "advance_percent": 15.0,
+        "advance_kzt": 2250000.0,
+        "annual_rate_percent": 23.85,
+        "principal_kzt": 12750000,
+        "monthly_payment_kzt": 489953.45,
+        "interest_sum_kzt": 5378277.7,
+        "total_with_advance_kzt": 20378277.7,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2178,
+        "term_months": 48,
+        "advance_percent": 15.0,
+        "advance_kzt": 2250000.0,
+        "annual_rate_percent": 24.3,
+        "principal_kzt": 12750000,
+        "monthly_payment_kzt": 417790.82,
+        "interest_sum_kzt": 7303959.55,
+        "total_with_advance_kzt": 22303959.55,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2179,
+        "term_months": 60,
+        "advance_percent": 15.0,
+        "advance_kzt": 2250000.0,
+        "annual_rate_percent": 24.75,
+        "principal_kzt": 12750000,
+        "monthly_payment_kzt": 372362.96,
+        "interest_sum_kzt": 9591777.87,
+        "total_with_advance_kzt": 24591777.87,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2180,
+        "term_months": 37,
+        "advance_percent": 20.0,
+        "advance_kzt": 3000000.0,
+        "annual_rate_percent": 23.75,
+        "principal_kzt": 12000000,
+        "monthly_payment_kzt": 460500.79,
+        "interest_sum_kzt": 5038529.37,
+        "total_with_advance_kzt": 20038529.37,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2181,
+        "term_months": 48,
+        "advance_percent": 20.0,
+        "advance_kzt": 3000000.0,
+        "annual_rate_percent": 24.15,
+        "principal_kzt": 12000000,
+        "monthly_payment_kzt": 392217.8,
+        "interest_sum_kzt": 6826454.18,
+        "total_with_advance_kzt": 21826454.18,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2182,
+        "term_months": 60,
+        "advance_percent": 20.0,
+        "advance_kzt": 3000000.0,
+        "annual_rate_percent": 24.55,
+        "principal_kzt": 12000000,
+        "monthly_payment_kzt": 349057.1,
+        "interest_sum_kzt": 8943426.01,
+        "total_with_advance_kzt": 23943426.01,
+        "price_allowed": true,
+        "within_example_budget": true
+      },
+      {
+        "rate_id": 2183,
+        "term_months": 37,
+        "advance_percent": 25.0,
+        "advance_kzt": 3750000.0,
+        "annual_rate_percent": 23.6,
+        "principal_kzt": 11250000,
+        "monthly_payment_kzt": 430831.76,
+        "interest_sum_kzt": 4690775.26,
+        "total_with_advance_kzt": 19690775.26,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2184,
+        "term_months": 48,
+        "advance_percent": 25.0,
+        "advance_kzt": 3750000.0,
+        "annual_rate_percent": 23.95,
+        "principal_kzt": 11250000,
+        "monthly_payment_kzt": 366459.75,
+        "interest_sum_kzt": 6340067.97,
+        "total_with_advance_kzt": 21340067.97,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2185,
+        "term_months": 60,
+        "advance_percent": 25.0,
+        "advance_kzt": 3750000.0,
+        "annual_rate_percent": 24.3,
+        "principal_kzt": 11250000,
+        "monthly_payment_kzt": 325601.56,
+        "interest_sum_kzt": 8286093.58,
+        "total_with_advance_kzt": 23286093.58,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2187,
+        "term_months": 48,
+        "advance_percent": 30.0,
+        "advance_kzt": 4500000.0,
+        "annual_rate_percent": 23.75,
+        "principal_kzt": 10500000,
+        "monthly_payment_kzt": 340869.7,
+        "interest_sum_kzt": 5861745.54,
+        "total_with_advance_kzt": 20861745.54,
+        "price_allowed": true,
+        "within_example_budget": false
+      },
+      {
+        "rate_id": 2188,
+        "term_months": 60,
+        "advance_percent": 30.0,
+        "advance_kzt": 4500000.0,
+        "annual_rate_percent": 24.1,
+        "principal_kzt": 10500000,
+        "monthly_payment_kzt": 302673.41,
+        "interest_sum_kzt": 7660404.55,
+        "total_with_advance_kzt": 22660404.55,
+        "price_allowed": true,
+        "within_example_budget": false
+      }
+    ]
+  },
+  "ui_rounding_example": {
+    "source": "Inspected frontend formula, independently transcribed; no real application",
+    "priceKzt": 15000000,
+    "advanceKzt": 3000000,
+    "principalKzt": 12000000,
+    "annualRatePercent": 24.55,
+    "termMonths": 60,
+    "displayedPaymentKzt": 349057,
+    "scheduleTotals": {
+      "payments": 20943420,
+      "principal": 11999999,
+      "interest": 8943426
+    },
+    "rows": [
+      {
+        "month": 1,
+        "payment": 349057,
+        "principal": 103557,
+        "interest": 245500,
+        "remainingPrincipal": 11896443
+      },
+      {
+        "month": 2,
+        "payment": 349057,
+        "principal": 105676,
+        "interest": 243381,
+        "remainingPrincipal": 11790767
+      },
+      {
+        "month": 3,
+        "payment": 349057,
+        "principal": 107838,
+        "interest": 241219,
+        "remainingPrincipal": 11682930
+      },
+      {
+        "month": 4,
+        "payment": 349057,
+        "principal": 110044,
+        "interest": 239013,
+        "remainingPrincipal": 11572886
+      },
+      {
+        "month": 5,
+        "payment": 349057,
+        "principal": 112295,
+        "interest": 236762,
+        "remainingPrincipal": 11460591
+      },
+      {
+        "month": 6,
+        "payment": 349057,
+        "principal": 114593,
+        "interest": 234465,
+        "remainingPrincipal": 11345998
+      },
+      {
+        "month": 7,
+        "payment": 349057,
+        "principal": 116937,
+        "interest": 232120,
+        "remainingPrincipal": 11229061
+      },
+      {
+        "month": 8,
+        "payment": 349057,
+        "principal": 119329,
+        "interest": 229728,
+        "remainingPrincipal": 11109732
+      },
+      {
+        "month": 9,
+        "payment": 349057,
+        "principal": 121771,
+        "interest": 227287,
+        "remainingPrincipal": 10987961
+      },
+      {
+        "month": 10,
+        "payment": 349057,
+        "principal": 124262,
+        "interest": 224795,
+        "remainingPrincipal": 10863700
+      },
+      {
+        "month": 11,
+        "payment": 349057,
+        "principal": 126804,
+        "interest": 222253,
+        "remainingPrincipal": 10736896
+      },
+      {
+        "month": 12,
+        "payment": 349057,
+        "principal": 129398,
+        "interest": 219659,
+        "remainingPrincipal": 10607498
+      },
+      {
+        "month": 13,
+        "payment": 349057,
+        "principal": 132045,
+        "interest": 217012,
+        "remainingPrincipal": 10475452
+      },
+      {
+        "month": 14,
+        "payment": 349057,
+        "principal": 134747,
+        "interest": 214310,
+        "remainingPrincipal": 10340706
+      },
+      {
+        "month": 15,
+        "payment": 349057,
+        "principal": 137504,
+        "interest": 211554,
+        "remainingPrincipal": 10203202
+      },
+      {
+        "month": 16,
+        "payment": 349057,
+        "principal": 140317,
+        "interest": 208741,
+        "remainingPrincipal": 10062885
+      },
+      {
+        "month": 17,
+        "payment": 349057,
+        "principal": 143187,
+        "interest": 205870,
+        "remainingPrincipal": 9919698
+      },
+      {
+        "month": 18,
+        "payment": 349057,
+        "principal": 146117,
+        "interest": 202940,
+        "remainingPrincipal": 9773582
+      },
+      {
+        "month": 19,
+        "payment": 349057,
+        "principal": 149106,
+        "interest": 199951,
+        "remainingPrincipal": 9624476
+      },
+      {
+        "month": 20,
+        "payment": 349057,
+        "principal": 152156,
+        "interest": 196901,
+        "remainingPrincipal": 9472319
+      },
+      {
+        "month": 21,
+        "payment": 349057,
+        "principal": 155269,
+        "interest": 193788,
+        "remainingPrincipal": 9317050
+      },
+      {
+        "month": 22,
+        "payment": 349057,
+        "principal": 158446,
+        "interest": 190611,
+        "remainingPrincipal": 9158604
+      },
+      {
+        "month": 23,
+        "payment": 349057,
+        "principal": 161687,
+        "interest": 187370,
+        "remainingPrincipal": 8996917
+      },
+      {
+        "month": 24,
+        "payment": 349057,
+        "principal": 164995,
+        "interest": 184062,
+        "remainingPrincipal": 8831922
+      },
+      {
+        "month": 25,
+        "payment": 349057,
+        "principal": 168371,
+        "interest": 180686,
+        "remainingPrincipal": 8663551
+      },
+      {
+        "month": 26,
+        "payment": 349057,
+        "principal": 171815,
+        "interest": 177242,
+        "remainingPrincipal": 8491736
+      },
+      {
+        "month": 27,
+        "payment": 349057,
+        "principal": 175330,
+        "interest": 173727,
+        "remainingPrincipal": 8316405
+      },
+      {
+        "month": 28,
+        "payment": 349057,
+        "principal": 178917,
+        "interest": 170140,
+        "remainingPrincipal": 8137488
+      },
+      {
+        "month": 29,
+        "payment": 349057,
+        "principal": 182578,
+        "interest": 166479,
+        "remainingPrincipal": 7954910
+      },
+      {
+        "month": 30,
+        "payment": 349057,
+        "principal": 186313,
+        "interest": 162744,
+        "remainingPrincipal": 7768598
+      },
+      {
+        "month": 31,
+        "payment": 349057,
+        "principal": 190125,
+        "interest": 158933,
+        "remainingPrincipal": 7578473
+      },
+      {
+        "month": 32,
+        "payment": 349057,
+        "principal": 194014,
+        "interest": 155043,
+        "remainingPrincipal": 7384459
+      },
+      {
+        "month": 33,
+        "payment": 349057,
+        "principal": 197983,
+        "interest": 151074,
+        "remainingPrincipal": 7186476
+      },
+      {
+        "month": 34,
+        "payment": 349057,
+        "principal": 202034,
+        "interest": 147023,
+        "remainingPrincipal": 6984442
+      },
+      {
+        "month": 35,
+        "payment": 349057,
+        "principal": 206167,
+        "interest": 142890,
+        "remainingPrincipal": 6778275
+      },
+      {
+        "month": 36,
+        "payment": 349057,
+        "principal": 210385,
+        "interest": 138672,
+        "remainingPrincipal": 6567890
+      },
+      {
+        "month": 37,
+        "payment": 349057,
+        "principal": 214689,
+        "interest": 134368,
+        "remainingPrincipal": 6353201
+      },
+      {
+        "month": 38,
+        "payment": 349057,
+        "principal": 219081,
+        "interest": 129976,
+        "remainingPrincipal": 6134120
+      },
+      {
+        "month": 39,
+        "payment": 349057,
+        "principal": 223563,
+        "interest": 125494,
+        "remainingPrincipal": 5910556
+      },
+      {
+        "month": 40,
+        "payment": 349057,
+        "principal": 228137,
+        "interest": 120920,
+        "remainingPrincipal": 5682419
+      },
+      {
+        "month": 41,
+        "payment": 349057,
+        "principal": 232804,
+        "interest": 116253,
+        "remainingPrincipal": 5449615
+      },
+      {
+        "month": 42,
+        "payment": 349057,
+        "principal": 237567,
+        "interest": 111490,
+        "remainingPrincipal": 5212048
+      },
+      {
+        "month": 43,
+        "payment": 349057,
+        "principal": 242427,
+        "interest": 106630,
+        "remainingPrincipal": 4969621
+      },
+      {
+        "month": 44,
+        "payment": 349057,
+        "principal": 247387,
+        "interest": 101670,
+        "remainingPrincipal": 4722234
+      },
+      {
+        "month": 45,
+        "payment": 349057,
+        "principal": 252448,
+        "interest": 96609,
+        "remainingPrincipal": 4469786
+      },
+      {
+        "month": 46,
+        "payment": 349057,
+        "principal": 257613,
+        "interest": 91444,
+        "remainingPrincipal": 4212173
+      },
+      {
+        "month": 47,
+        "payment": 349057,
+        "principal": 262883,
+        "interest": 86174,
+        "remainingPrincipal": 3949290
+      },
+      {
+        "month": 48,
+        "payment": 349057,
+        "principal": 268261,
+        "interest": 80796,
+        "remainingPrincipal": 3681029
+      },
+      {
+        "month": 49,
+        "payment": 349057,
+        "principal": 273749,
+        "interest": 75308,
+        "remainingPrincipal": 3407279
+      },
+      {
+        "month": 50,
+        "payment": 349057,
+        "principal": 279350,
+        "interest": 69707,
+        "remainingPrincipal": 3127929
+      },
+      {
+        "month": 51,
+        "payment": 349057,
+        "principal": 285065,
+        "interest": 63992,
+        "remainingPrincipal": 2842865
+      },
+      {
+        "month": 52,
+        "payment": 349057,
+        "principal": 290897,
+        "interest": 58160,
+        "remainingPrincipal": 2551968
+      },
+      {
+        "month": 53,
+        "payment": 349057,
+        "principal": 296848,
+        "interest": 52209,
+        "remainingPrincipal": 2255120
+      },
+      {
+        "month": 54,
+        "payment": 349057,
+        "principal": 302921,
+        "interest": 46136,
+        "remainingPrincipal": 1952199
+      },
+      {
+        "month": 55,
+        "payment": 349057,
+        "principal": 309118,
+        "interest": 39939,
+        "remainingPrincipal": 1643080
+      },
+      {
+        "month": 56,
+        "payment": 349057,
+        "principal": 315442,
+        "interest": 33615,
+        "remainingPrincipal": 1327638
+      },
+      {
+        "month": 57,
+        "payment": 349057,
+        "principal": 321896,
+        "interest": 27161,
+        "remainingPrincipal": 1005742
+      },
+      {
+        "month": 58,
+        "payment": 349057,
+        "principal": 328481,
+        "interest": 20576,
+        "remainingPrincipal": 677261
+      },
+      {
+        "month": 59,
+        "payment": 349057,
+        "principal": 335201,
+        "interest": 13856,
+        "remainingPrincipal": 342059
+      },
+      {
+        "month": 60,
+        "payment": 349057,
+        "principal": 342059,
+        "interest": 6998,
+        "remainingPrincipal": 0
+      }
+    ],
+    "advancePlusDisplayedPaymentsKzt": 23943420
+  },
+  "verification": {
+    "method": "independent Decimal implementation and month-by-month unrounded amortization",
+    "tests": [
+      {
+        "rate_id": 2177,
+        "monthly_payment_decimal": "489953.45",
+        "closing_balance_unrounded": "-1.95E-34",
+        "passed": true
+      },
+      {
+        "rate_id": 2178,
+        "monthly_payment_decimal": "417790.82",
+        "closing_balance_unrounded": "-4.52E-34",
+        "passed": true
+      },
+      {
+        "rate_id": 2179,
+        "monthly_payment_decimal": "372362.96",
+        "closing_balance_unrounded": "1.32E-34",
+        "passed": true
+      },
+      {
+        "rate_id": 2180,
+        "monthly_payment_decimal": "460500.79",
+        "closing_balance_unrounded": "2.840E-33",
+        "passed": true
+      },
+      {
+        "rate_id": 2181,
+        "monthly_payment_decimal": "392217.80",
+        "closing_balance_unrounded": "-1.0E-35",
+        "passed": true
+      },
+      {
+        "rate_id": 2182,
+        "monthly_payment_decimal": "349057.10",
+        "closing_balance_unrounded": "-3.512E-33",
+        "passed": true
+      },
+      {
+        "rate_id": 2183,
+        "monthly_payment_decimal": "430831.76",
+        "closing_balance_unrounded": "2.569E-33",
+        "passed": true
+      },
+      {
+        "rate_id": 2184,
+        "monthly_payment_decimal": "366459.75",
+        "closing_balance_unrounded": "-2.769E-33",
+        "passed": true
+      },
+      {
+        "rate_id": 2185,
+        "monthly_payment_decimal": "325601.56",
+        "closing_balance_unrounded": "3.0E-35",
+        "passed": true
+      },
+      {
+        "rate_id": 2187,
+        "monthly_payment_decimal": "340869.70",
+        "closing_balance_unrounded": "2.879E-33",
+        "passed": true
+      },
+      {
+        "rate_id": 2188,
+        "monthly_payment_decimal": "302673.41",
+        "closing_balance_unrounded": "-2.684E-33",
+        "passed": true
+      }
+    ],
+    "note": "Does not establish contractual per-period rounding or unmodeled fees."
+  },
+  "notes": [
+    "Vehicle price is illustrative user input; catalogs do not expose price in observed schemas.",
+    "Enumerate allowed rate rows, not the Cartesian product of available terms and advances.",
+    "min_sum/max_sum are applied to gross asset cost in inspected frontend.",
+    "Formula artifact rounds principal to integer; current frontend uses two decimal places before per-row integer display rounding.",
+    "Computed amounts exclude costs not defined in observed calculation; not a final offer or approval.",
+    "HTTP availability is observed behavior, not a documented production integration contract."
+  ]
+}

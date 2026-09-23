@@ -1,0 +1,1373 @@
+{
+  "purpose": "Audit snapshots underlying example calculations",
+  "ip": {
+    "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+    "method": "POST",
+    "request": {
+      "p_id_models": [
+        2769,
+        2059,
+        2488,
+        2715,
+        2717,
+        2637
+      ],
+      "p_cli_type": "IP"
+    },
+    "status": 200,
+    "checked_at": "2026-09-23T14:13:15.969489+00:00",
+    "response": {
+      "data": {
+        "p_dmnlst": [
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3825
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3828
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3824
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3817
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3822
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3826
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3815
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3821
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3816
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3820
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3827
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3819
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.55,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3823
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3818
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12436
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12441
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12430
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12433
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12431
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12434
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.55,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12437
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12438
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12440
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12442
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12429
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12432
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12435
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12439
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 14444
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 14443
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 16828
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15109
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15102
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15103
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15106
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15099
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15100
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15101
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.55,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15104
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15107
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15110
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15105
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15155
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15151
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15148
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.55,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15152
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15154
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15150
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15149
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15157
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15158
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15147
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15153
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 85
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.95,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 75
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 77
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 86
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 76
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.85,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 78
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 80
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.55,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 83
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 84
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 87
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 88
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 79
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.75,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 81
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.15,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 82
+          }
+        ]
+      }
+    }
+  },
+  "too": {
+    "url": "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/MSBgetAutolizingRateAdvance",
+    "method": "POST",
+    "request": {
+      "p_id_models": [
+        2769,
+        2059,
+        2488,
+        2715,
+        2717,
+        2637
+      ],
+      "p_cli_type": "TOO"
+    },
+    "status": 200,
+    "checked_at": "2026-09-23T14:13:15.971695+00:00",
+    "response": {
+      "data": {
+        "p_dmnlst": [
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3806
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3801
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3803
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3805
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3810
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3812
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.2,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3814
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3804
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3808
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3809
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3811
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3813
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2059.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3802
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2059.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 3807
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12416
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12421
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12424
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12425
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12427
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12420
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12422
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12417
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12418
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12419
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12423
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2488.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12415
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12426
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2488.0,
+            "RATE": 23.2,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 12428
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 16827
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 14442
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2637.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Узбекистан",
+            "SUBS": null,
+            "ID_RATES_MODEL": 14441
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15087
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15092
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15094
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.2,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15098
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15089
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15091
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15095
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15090
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15097
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15093
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2715.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15088
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15141
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15135
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15136
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2717.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15137
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15140
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15142
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15143
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15139
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.2,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15146
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15145
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2717.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 15138
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 61
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.4,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 63
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 68
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 70
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.6,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 72
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 65
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.9,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 69
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "30",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 73
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.8,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 64
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "30",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.2,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 74
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "25",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.3,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 71
+          },
+          {
+            "MONTHS": "60",
+            "ADVANCE": "15",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.1,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 66
+          },
+          {
+            "MONTHS": "37",
+            "ADVANCE": "20",
+            "ID_MODEL": 2769.0,
+            "RATE": 23.5,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 67
+          },
+          {
+            "MONTHS": "48",
+            "ADVANCE": "10",
+            "ID_MODEL": 2769.0,
+            "RATE": 24.0,
+            "NAME_COUNTRY": "Южная Корея",
+            "SUBS": null,
+            "ID_RATES_MODEL": 62
+          }
+        ]
+      }
+    }
+  },
+  "limitsIp": {
+    "data": [
+      {
+        "name": "5%",
+        "min_sum": 5263158.0,
+        "max_sum": 52631578.0
+      },
+      {
+        "name": "10%",
+        "min_sum": 5555556.0,
+        "max_sum": 55555555.0
+      },
+      {
+        "name": "15%",
+        "min_sum": 5882353.0,
+        "max_sum": 58823529.0
+      },
+      {
+        "name": "20%",
+        "min_sum": 6250000.0,
+        "max_sum": 62500000.0
+      },
+      {
+        "name": "25%",
+        "min_sum": 6666667.0,
+        "max_sum": 66666666.0
+      },
+      {
+        "name": "30%",
+        "min_sum": 7142858.0,
+        "max_sum": 71428571.0
+      },
+      {
+        "name": "40%",
+        "min_sum": 8333334.0,
+        "max_sum": 83333333.0
+      },
+      {
+        "name": "0%",
+        "min_sum": 5000000.0,
+        "max_sum": 50000000.0
+      },
+      {
+        "name": "35%",
+        "min_sum": 7692308.0,
+        "max_sum": 76923076.0
+      },
+      {
+        "name": "45%",
+        "min_sum": 9090910.0,
+        "max_sum": 90909090.0
+      },
+      {
+        "name": "50%",
+        "min_sum": 10000000.0,
+        "max_sum": 100000000.0
+      }
+    ]
+  },
+  "limitsToo": {
+    "data": [
+      {
+        "name": "5%",
+        "min_sum": 5263158.0,
+        "max_sum": 73684210.0
+      },
+      {
+        "name": "35%",
+        "min_sum": 7692308.0,
+        "max_sum": 107692307.0
+      },
+      {
+        "name": "40%",
+        "min_sum": 8333334.0,
+        "max_sum": 116666666.0
+      },
+      {
+        "name": "45%",
+        "min_sum": 9090910.0,
+        "max_sum": 127272727.0
+      },
+      {
+        "name": "10%",
+        "min_sum": 5555556.0,
+        "max_sum": 77777777.0
+      },
+      {
+        "name": "15%",
+        "min_sum": 5882353.0,
+        "max_sum": 82352941.0
+      },
+      {
+        "name": "20%",
+        "min_sum": 6250000.0,
+        "max_sum": 87500000.0
+      },
+      {
+        "name": "25%",
+        "min_sum": 6666667.0,
+        "max_sum": 93333333.0
+      },
+      {
+        "name": "30%",
+        "min_sum": 7142858.0,
+        "max_sum": 100000000.0
+      },
+      {
+        "name": "50%",
+        "min_sum": 10000000.0,
+        "max_sum": 140000000.0
+      },
+      {
+        "name": "0%",
+        "min_sum": 5000000.0,
+        "max_sum": 70000000.0
+      }
+    ]
+  }
+}
