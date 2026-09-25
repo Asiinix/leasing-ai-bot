@@ -17,6 +17,10 @@ import {
   X,
 } from "lucide-react";
 import { parseMessage, type ParsedIntent } from "@/lib/assistant";
+import {
+  advanceBusinessBudget,
+  type BusinessBudgetState,
+} from "@/features/business-budget/conversation";
 import { calculateQuote, estimateMaxPrice, findOffers, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, percent } from "@/lib/format";
 import type { ClientType, Quote, TermsData } from "@/lib/types";
@@ -152,6 +156,7 @@ export function AssistantPanel({
   });
   const budget = memory.key === contextKey ? memory.budget : defaultBudget;
   const [messages, setMessages] = useState<Message[]>([]);
+  const [businessBudget, setBusinessBudget] = useState<BusinessBudgetState | null>(null);
   const [recommendations, setRecommendations] = useState<VehicleRecommendations | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -198,12 +203,26 @@ export function AssistantPanel({
   const push = (message: Omit<Message, "id">) =>
     setMessages((previous) => [...previous, { ...message, id: ++sequence.current }]);
 
-  async function send(text = draft) {
+  async function send(text = draft, useLeaseBudget = false) {
     if (!text.trim() || busyRef.current) return;
     recognitionRef.current?.stop();
     setDraft("");
     push({ role: "user", text: text.trim() });
-    let intent = parseMessage(text);
+    const businessTurn = useLeaseBudget ? null : advanceBusinessBudget(text, businessBudget);
+    if (useLeaseBudget) setBusinessBudget(null);
+    let intent: ParsedIntent;
+    if (businessTurn) {
+      setBusinessBudget(businessTurn.state);
+      setAwaitedSlot(null);
+      setPending(null);
+      setRecommendations(null);
+      setGeneration((value) => value + 1);
+      push({ role: "assistant", text: businessTurn.reply });
+      if (!businessTurn.budget) return;
+      intent = { action: "calculate", ...businessTurn.budget };
+    } else {
+      intent = parseMessage(text);
+    }
     const hasNewConstraints = ["maxMonthly", "maxAdvance", "price", "months", "clientType"].some(
       (key) => Object.prototype.hasOwnProperty.call(intent, key),
     );
@@ -237,8 +256,11 @@ export function AssistantPanel({
       // A changed context requires a fresh search instead of replaying old offers.
       intent = { ...intent, action: "calculate" };
     }
-    const expected = memory.key === contextKey || pending?.key === contextKey ? awaitedSlot : null;
-    const previousBudget = pending?.key === contextKey ? pending.budget : budget;
+    const expected =
+      !businessTurn && (memory.key === contextKey || pending?.key === contextKey)
+        ? awaitedSlot
+        : null;
+    const previousBudget = !businessTurn && pending?.key === contextKey ? pending.budget : budget;
     if (expected && intent.action === "unknown") {
       const prefix = {
         price: "Машина стоит ",
@@ -629,6 +651,10 @@ export function AssistantPanel({
                 <span>Хочу снизить аванс</span>
                 <ArrowUp size={16} />
               </Button>
+              <Button onClick={() => send("Подобрать по налогам бизнеса")}>
+                <span>Подобрать по налогам бизнеса</span>
+                <ArrowUp size={16} />
+              </Button>
               <Button onClick={() => send("Как считается платеж?")}>
                 <span>Как считается платеж?</span>
                 <ArrowUp size={16} />
@@ -749,6 +775,7 @@ export function AssistantPanel({
               event.preventDefault();
               void send(
                 `До ${budget.maxMonthly} тенге в месяц, на аванс до ${budget.maxAdvance} тенге`,
+                true,
               );
               setShowBudget(false);
             }}

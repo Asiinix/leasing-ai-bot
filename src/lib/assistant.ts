@@ -1,4 +1,6 @@
 /** Local, deterministic demo parser. It does not call an LLM or calculate finance. */
+import { businessPeriods, type BusinessPeriod } from "./business-period";
+
 export interface ParsedIntent {
   /** Omitted slots preserve the current form value; null explicitly releases the term. */
   maxMonthly?: number;
@@ -6,7 +8,9 @@ export interface ParsedIntent {
   price?: number;
   months?: number | null;
   clientType?: "IP" | "TOO";
-  action: "calculate" | "lower_payment" | "lower_advance" | "explain" | "unknown";
+  action:
+    "calculate" | "lower_payment" | "lower_advance" | "explain" | "unknown" | "business_finance";
+  businessPeriods?: BusinessPeriod[];
   clarification?: string;
   /** One known money field awaiting clarification; absent for unknown/multiple fields. */
   clarificationSlot?: "maxMonthly" | "maxAdvance" | "price";
@@ -118,7 +122,7 @@ const MARKERS: ReadonlyArray<{ slot: Slot; pattern: RegExp }> = [
   { slot: "months", pattern: /срок[а-я]*/gu },
 ];
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/ё/g, "е")
@@ -153,7 +157,7 @@ function parseNumber(raw: string): { value: number; scaled: boolean } {
   return { value: total + group, scaled };
 }
 
-function findNumbers(text: string): NumberSpan[] {
+export function findNumbers(text: string): NumberSpan[] {
   const spans = [...text.matchAll(numberPattern)].map((match) => ({
     raw: match[0],
     start: match.index!,
@@ -231,6 +235,9 @@ export function parseMessage(input: string): ParsedIntent {
   const text = normalize(input);
   const result: ParsedIntent = { action: "unknown" };
   if (!text) return result;
+  // Financial reporting amounts are not lease payments, even when phrased as "плачу".
+  const periods = businessPeriods(text);
+  if (periods) return { action: "business_finance", businessPeriods: periods };
   const clarifications: string[] = [];
   const unclearMoneySlots = new Set<MoneySlot>();
   const ask = (message: string, slot?: MoneySlot) => {
