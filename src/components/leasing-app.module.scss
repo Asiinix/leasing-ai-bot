@@ -183,35 +183,69 @@
   }
 }
 
-// Общий верхний баннер: слоган слева, изображение справа.
+// Баннер во всю ширину окна. Картинка 1440×667 (фургон справа, слева пусто под
+// текст) вписана по высоте баннера целиком, без обрезки, и прижата вправо;
+// нижние углы баннера скруглены, как на сайте.
 .hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background-color: #dbe4e8;
+  // Фон — цвет, запеченный в саму картинку (#f5f4f7): токена DS с таким значением нет,
+  // а с ближайшим (gray-50, #f4f5fa) по краю картинки видна полоса.
+  background-color: #f5f4f7;
   color: var(--b-color-text-neutral-strong-900);
   border-radius: 0 0 var(--b-border-radius-cof-16) var(--b-border-radius-cof-16);
 
+  // Картинка — отдельным слоем точно своего размера: левый край плавно растворяется
+  // в фоне маской (не видно стыка и скругленных углов картинки), при загрузке
+  // картинка плавно проявляется.
   &::before {
     content: "";
     position: absolute;
     z-index: -1;
-    inset: 0;
-    background:
-      linear-gradient(90deg, rgb(235 242 246 / 85%), transparent 65%),
-      url("./assets/leasing-promo-banner.webp") center / cover no-repeat;
+    top: 0;
+    right: 0;
+    height: 100%;
+    aspect-ratio: 1440 / 667;
+    background: url("./assets/gazel-banner.webp") center / 100% 100% no-repeat;
+    // Края картинки плавно растворяются в фоне (в маске важна только прозрачность):
+    // слева — стык с пустой частью баннера, по остальным сторонам — места, где
+    // синий контур упирается в обрез баннера.
+    mask-image:
+      linear-gradient(to right, transparent, black 30%),
+      linear-gradient(to top, transparent, black 18%),
+      linear-gradient(to left, transparent, black 10%),
+      linear-gradient(to bottom, transparent, black 12%);
+    mask-composite: intersect;
     animation: hero-image-in 0.8s ease-out both;
   }
 
+  // На средних экранах картинка по высоте баннера заехала бы под текст:
+  // уменьшаем ее и прижимаем к правому нижнему углу.
+  @media (min-width: 768px) and (max-width: 1199px) {
+    &::before {
+      top: auto;
+      bottom: 0;
+      height: 75%;
+    }
+  }
+
+  // На узком экране фургон под текстом: слой картинки прижат вниз, под него
+  // оставлено место паддингом.
   @media (max-width: 767px) {
-    padding-bottom: 230px;
+    padding-bottom: 80%;
 
     &::before {
       top: auto;
-      height: 230px;
-      background:
-        linear-gradient(#dbe4e8, transparent 35%),
-        url("./assets/leasing-promo-banner.webp") right bottom / auto 100% no-repeat;
+      right: 0;
+      bottom: 0;
+      width: 170%;
+      height: auto;
+      // Левая часть картинки здесь за краем экрана, растворяем только обрезы.
+      mask-image:
+        linear-gradient(to top, transparent, black 15%),
+        linear-gradient(to left, transparent, black 12%),
+        linear-gradient(to bottom, transparent, black 12%);
     }
   }
 }

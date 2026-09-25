@@ -406,9 +406,7 @@ export function LeasingApp() {
               <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
             </div>
             <Flex direction="column" gap={8}>
-              <Typography.Title tag="h1" id="promo-banner-heading">
-                Продукт только для избранных, но не для вас
-              </Typography.Title>
+              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
               <Typography.Paragraph view="large" color="secondary">
                 Рассчитайте платеж и выберите удобные условия
               </Typography.Paragraph>
