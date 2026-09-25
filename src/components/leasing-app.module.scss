@@ -536,11 +536,15 @@
 // Герои справа во всю высоту баннера, левый край фото растворяется в фоне.
 .lifeHero {
   background-color: #19372d;
+  // Кадр рисует ролик (фото, оживленное в Higgsfield), постер — то же фото.
   &::before {
-    content: "";
+    display: none;
+  }
+  > .heroVideo {
     aspect-ratio: 1672 / 941;
     min-width: 62%;
-    background: url("./assets/bcclife-brothers-90s.webp") right bottom / cover no-repeat;
+    object-fit: cover;
+    object-position: right bottom;
     mask-image: linear-gradient(to right, transparent, black 22%);
   }
   .heroContent {
@@ -571,39 +575,50 @@
   .investHero .heroContent {
     margin-top: var(--g-spacing-8);
   }
-  .lifeHero::before,
-  .investHero::before {
+  .lifeHero > .heroVideo {
     width: 150%;
     min-width: 0;
     mask-image: linear-gradient(to bottom, transparent, black 20%);
   }
-  .investHero .investChart {
-    right: 5%;
-    bottom: 140px;
-    width: 90%;
-    height: 220px;
-  }
 }
 
-// BCC Invest: темно-синий фон и растущий график рисуются без картинки.
+// BCC Invest: ролик с растущим графиком (Higgsfield) на весь баннер; темная левая
+// часть кадра служит фоном для текста, фон слайда — цвет этой части.
 .investHero {
-  background: radial-gradient(circle at 80% 40%, #1d4f91, #0b1f3a 60%);
+  background-color: #000e2a;
   &::before {
     display: none;
+  }
+  > .heroVideo {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    // Кадр шире баннера по высоте: срезаем отражения внизу, а не верхнюю свечу.
+    object-position: right 15%;
+    mask-image: none;
+
+    // На телефоне график между текстом и кнопками навигации, края растворяются в фоне.
+    @media (max-width: 767px) {
+      top: auto;
+      // График занимает правую половину кадра: ролик вдвое шире экрана, левая
+      // пустая половина уходит за край.
+      inset: auto 0 96px auto;
+      height: 230px;
+      width: 200%;
+      object-position: right 25%;
+      mask-image:
+        linear-gradient(to bottom, transparent, black 25%),
+        linear-gradient(to top, transparent, black 25%);
+      mask-composite: intersect;
+    }
   }
   .heroContent {
     background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
     padding: var(--g-spacing-6);
     border-radius: var(--b-border-radius-cof-16);
   }
-}
-.investChart {
-  position: absolute;
-  z-index: -1;
-  right: 4%;
-  bottom: 12%;
-  width: 46%;
-  height: 70%;
 }
 
 // Кнопка ИИ-помощника в пустом состоянии расчета — отделена от пояснения.
