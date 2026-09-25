@@ -553,6 +553,79 @@ export function LeasingApp() {
               </Flex>
             </Container>
           </div>
+
+          <div
+            className={`${s.hero} ${s.investHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 3}
+            aria-hidden={heroSlide !== 3}
+          >
+            <svg
+              className={s.investChart}
+              viewBox="0 0 400 220"
+              preserveAspectRatio="xMaxYMax meet"
+              aria-hidden
+            >
+              <g opacity="0.9">
+                <line x1="20" x2="20" y1="205" y2="178" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="11" y="185" width="18" height="15" rx="2" fill="#3ddc97" />
+                <line x1="55" x2="55" y1="200" y2="180" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="46" y="186" width="18" height="9" rx="2" fill="#ff6b6b" />
+                <line x1="90" x2="90" y1="198" y2="162" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="81" y="170" width="18" height="24" rx="2" fill="#3ddc97" />
+                <line x1="125" x2="125" y1="178" y2="144" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="116" y="150" width="18" height="22" rx="2" fill="#3ddc97" />
+                <line x1="160" x2="160" y1="166" y2="140" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="151" y="150" width="18" height="8" rx="2" fill="#ff6b6b" />
+                <line x1="195" x2="195" y1="160" y2="120" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="186" y="128" width="18" height="29" rx="2" fill="#3ddc97" />
+                <line x1="230" x2="230" y1="138" y2="104" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="221" y="112" width="18" height="18" rx="2" fill="#3ddc97" />
+                <line x1="265" x2="265" y1="128" y2="100" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="256" y="114" width="18" height="6" rx="2" fill="#ff6b6b" />
+                <line x1="300" x2="300" y1="124" y2="80" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="291" y="88" width="18" height="31" rx="2" fill="#3ddc97" />
+                <line x1="335" x2="335" y1="96" y2="54" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="326" y="62" width="18" height="28" rx="2" fill="#3ddc97" />
+                <line x1="370" x2="370" y1="70" y2="24" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="361" y="34" width="18" height="30" rx="2" fill="#3ddc97" />
+              </g>
+              <path
+                d="M10 205 C 120 190, 200 150, 390 20"
+                fill="none"
+                stroke="#ffffff"
+                strokeOpacity="0.5"
+                strokeWidth="3"
+                strokeDasharray="8 8"
+              />
+            </svg>
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>BCC Invest · Брокерский счет</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Деньги под матрасом не качаются</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    В отличие от братухи. Пусть капитал тоже поработает.
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open("https://bccinvest.kz", "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    Открыть счет
+                  </Button>
+                </div>
+                <Typography.Caption color="secondary">
+                  Инвестиции связаны с риском, доходность в прошлом не гарантирует доходность в
+                  будущем.
+                </Typography.Caption>
+              </Flex>
+            </Container>
+          </div>
         </Carousel>
         <Container maxWidth={1280} className={`${s.container} ${s.heroNavigation}`}>
           <Flex gap={8} alignItems="center" wrap>
@@ -563,7 +636,7 @@ export function LeasingApp() {
               aria-label="Предыдущий баннер"
               onClick={() => carouselRef.current?.goToPrevious(true)}
             />
-            {["Лизинг", "IronCard", "BCC Life"].map((label, index) => (
+            {["Лизинг", "IronCard", "BCC Life", "BCC Invest"].map((label, index) => (
               <Button
                 key={label}
                 view={heroSlide === index ? "accentPrimary" : "neutralFilledSecondary"}

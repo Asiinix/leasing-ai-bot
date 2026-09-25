@@ -501,12 +501,14 @@
     border-radius: var(--b-border-radius-cof-16);
   }
 }
-// Герои справа, слева свободное место для текста BCC Life.
+// Герои справа во всю высоту баннера, левый край фото растворяется в фоне.
 .lifeHero {
-  background: #19372d url("./assets/bcclife-brothers-90s.png") right bottom / auto
-    calc(100% - 104px) no-repeat;
+  background-color: #19372d;
   &::before {
-    display: none;
+    aspect-ratio: 1672 / 941;
+    min-width: 62%;
+    background: url("./assets/bcclife-brothers-90s.webp") right bottom / cover no-repeat;
+    mask-image: linear-gradient(to right, transparent, black 22%);
   }
   .heroContent {
     background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
@@ -532,14 +534,43 @@
     background-color: var(--b-color-object-bg-neutral-weak-50);
   }
   .ironHero .heroContent,
-  .lifeHero .heroContent {
+  .lifeHero .heroContent,
+  .investHero .heroContent {
     margin-top: var(--g-spacing-8);
   }
-  .lifeHero {
-    background-size: auto 55%;
-    background-position: 75% 100%;
-    background-color: #19372d;
+  .lifeHero::before,
+  .investHero::before {
+    width: 150%;
+    min-width: 0;
+    mask-image: linear-gradient(to bottom, transparent, black 20%);
   }
+  .investHero .investChart {
+    right: 5%;
+    bottom: 140px;
+    width: 90%;
+    height: 220px;
+  }
+}
+
+// BCC Invest: темно-синий фон и растущий график рисуются без картинки.
+.investHero {
+  background: radial-gradient(circle at 80% 40%, #1d4f91, #0b1f3a 60%);
+  &::before {
+    display: none;
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+.investChart {
+  position: absolute;
+  z-index: -1;
+  right: 4%;
+  bottom: 12%;
+  width: 46%;
+  height: 70%;
 }
 
 // Кнопка ИИ-помощника в пустом состоянии расчета — отделена от пояснения.
