@@ -148,8 +148,8 @@ export function VehicleCatalog({
       {filters}
       <CatalogGrid models={preview} selected={selected} onSelect={onSelect} />
 
-      <Flex direction="column" alignItems="center" gap={8}>
-        {found.length > preview.length && (
+      {found.length > preview.length && (
+        <Flex justifyContent="center">
           <Button
             view="neutralFilledSecondary"
             size="l"
@@ -158,11 +158,8 @@ export function VehicleCatalog({
           >
             Показать все ({found.length})
           </Button>
-        )}
-        <Typography.Caption view="large" color="secondary">
-          {DISCLAIMER}
-        </Typography.Caption>
-      </Flex>
+        </Flex>
+      )}
 
       {open && (
         <Dialog
