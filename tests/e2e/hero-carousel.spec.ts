@@ -33,15 +33,15 @@ test("hero switches between leasing and IronCard with accessible controls", asyn
   );
 });
 
-test("hero autoplays every 3 seconds and pauses on hover", async ({ page }) => {
+test("hero autoplays every 5 seconds and pauses on hover", async ({ page }) => {
   await page.goto("/");
   const hero = page.getByRole("region", { name: "Предложения" });
   const current = hero.locator('[aria-current="true"]');
   await expect(current).toHaveText("Лизинг");
   await page.mouse.move(0, page.viewportSize()!.height - 1);
-  await expect(current).toHaveText("IronCard", { timeout: 4500 });
-  await expect(current).toHaveText("BCC Life", { timeout: 4500 });
+  await expect(current).toHaveText("IronCard", { timeout: 7000 });
+  await expect(current).toHaveText("BCC Life", { timeout: 7000 });
   await hero.hover();
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(6000);
   await expect(current).toHaveText("BCC Life");
 });

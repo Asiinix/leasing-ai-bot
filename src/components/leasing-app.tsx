@@ -217,9 +217,10 @@ export function LeasingApp() {
   const headerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const ironVideoRef = useRef<HTMLVideoElement>(null);
   const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
   const [heroSlide, setHeroSlide] = useState(0);
-  // Баннеры листаются сами каждые 3 секунды; пауза, пока курсор или фокус внутри,
+  // Баннеры листаются сами каждые 5 секунд (ровно ролик IronCard); пауза, пока курсор или фокус внутри,
   // чтобы клиент успел прочитать и нажать кнопку.
   const [heroPaused, setHeroPaused] = useState(false);
   // Свой таймер вместо autoPlay из DS: тот листает только миниатюры и не обновляет
@@ -227,21 +228,27 @@ export function LeasingApp() {
   // перезапускается при каждой смене слайда, в том числе ручной.
   useEffect(() => {
     if (heroPaused) return;
-    const timer = setTimeout(() => carouselRef.current?.goToNext(true), 3000);
+    const timer = setTimeout(() => carouselRef.current?.goToNext(true), 5000);
     return () => clearTimeout(timer);
   }, [heroSlide, heroPaused]);
   const fullscreen = useFullscreen();
 
   useEffect(() => {
-    const video = heroVideoRef.current;
-    if (!video) return;
+    // Видео играет только на своем слайде: фургон — на «Лизинге», карты — на IronCard.
+    const videos = [
+      { video: heroVideoRef.current, slide: 0 },
+      { video: ironVideoRef.current, slide: 1 },
+    ];
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncPlayback = () => {
-      if (motion.matches || heroSlide !== 0) {
-        video.pause();
-        video.currentTime = 0;
-      } else {
-        void video.play().catch(() => {});
+      for (const { video, slide } of videos) {
+        if (!video) continue;
+        if (motion.matches || heroSlide !== slide) {
+          video.pause();
+          video.currentTime = 0;
+        } else {
+          void video.play().catch(() => {});
+        }
       }
     };
     syncPlayback();
@@ -573,6 +580,19 @@ export function LeasingApp() {
             inert={heroSlide !== 1}
             aria-hidden={heroSlide !== 1}
           >
+            <video
+              ref={ironVideoRef}
+              className={s.heroVideo}
+              src={appPath("/videos/ironcard.mp4")}
+              poster={appPath("/videos/ironcard-poster.jpg")}
+              width={2206}
+              height={946}
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            />
             <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
               <Flex direction="column" gap={24} className={s.heroContent}>
                 <Typography.Caption>Банк ЦентрКредит · Премиальная карта</Typography.Caption>

@@ -499,9 +499,32 @@
   z-index: 2;
 }
 .ironHero {
+  // Ролик с картами на весь баннер; небо слева служит фоном для текста.
   background: url("./assets/ironcard-banner.webp") center / cover no-repeat;
   &::before {
     display: none;
+  }
+  > .heroVideo {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: right center;
+    mask-image: none;
+
+    // На телефоне карты между текстом и кнопками навигации, края растворяются в фоне.
+    @media (max-width: 767px) {
+      top: auto;
+      bottom: 110px;
+      height: 260px;
+      width: 100%;
+      object-position: 80% center;
+      mask-image:
+        linear-gradient(to bottom, transparent, black 25%),
+        linear-gradient(to top, transparent, black 25%);
+      mask-composite: intersect;
+    }
   }
   .heroContent {
     background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
@@ -537,9 +560,9 @@
   .heroCarousel .heroInner {
     min-height: 0;
   }
+  // Фон рисует ролик; прежняя картинка просвечивала бы вокруг него.
   .ironHero {
-    background-size: auto 55%;
-    background-position: 70% 85%;
+    background-image: none;
     background-color: var(--b-color-object-bg-neutral-weak-50);
   }
   .ironHero .heroContent,
