@@ -46,6 +46,7 @@ import { AssistantPanel } from "./assistant-panel";
 import { type ApplicationContact } from "./application-contact-form";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import { VehicleCatalog } from "./vehicle-catalog";
 import faqIllustration from "./assets/faq-question.png";
 import leasingLogo from "./assets/bcc-leasing-logo.png";
 import s from "./leasing-app.module.scss";
@@ -62,6 +63,7 @@ const ProposalDialog = dynamic(
   () => import("./proposal-dialog").then((module) => module.ProposalDialog),
   { ssr: false },
 );
+type MarketPrice = { modelId: number; price: number; year: number | null; listings: number };
 type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
 const pickForm = ({
   clientType,
@@ -180,6 +182,11 @@ export function LeasingApp() {
   const [continueOpen, setContinueOpen] = useState(false);
   // Стоимость из примера — не данные клиента.
   const sample = draft.state.sources.price === "default";
+  // Рыночная цена выбранной модели (медиана свежих объявлений kolesa.kz). Подставляется
+  // как пример, а не как данные клиента: перед заявкой ее нужно подтвердить.
+  const [market, setMarket] = useState<MarketPrice | null>(null);
+  const marketShown =
+    market !== null && market.modelId === form.modelId && market.price === form.price && sample;
   // Контакты заявки живут только в памяти страницы: в localStorage не пишутся.
   const [contact, setContact] = useState<ApplicationContact>({
     fullName: "",
@@ -334,6 +341,28 @@ export function LeasingApp() {
 
   function change(patch: Partial<FormState>) {
     draft.update(patch, "form");
+  }
+  /**
+   * Выбор автомобиля в поле или в каталоге. Если цена еще не введена, подставляем
+   * рыночную: запрос асинхронный, поэтому пишем ее, только если клиент за это время
+   * не сменил модель и не ввел цену сам.
+   */
+  function pickModel(modelId: number) {
+    if (modelId !== form.modelId) change({ modelId, price: 0 });
+    setApplied(null);
+    const current = draft.latest.current.values;
+    if (modelId === form.modelId && current.price > 0) return;
+    fetch(appPath(`/api/catalog/market?id=${modelId}`))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: Omit<MarketPrice, "modelId"> | null) => {
+        const latest = draft.latest.current.values;
+        if (!data?.price || latest.modelId !== modelId || latest.price > 0) return;
+        draft.update({ price: data.price }, "default");
+        setMarket({ modelId, price: data.price, year: data.year, listings: data.listings });
+      })
+      .catch(() => {
+        // Нет цены — клиент введет ее сам, поле уже пустое и в фокусе.
+      });
   }
   /** Единый вход в заявку из калькулятора и чата: заявка, после отправки — скоринг. */
   function openApplication() {
@@ -725,12 +754,7 @@ export function LeasingApp() {
                       models={catalog?.models ?? []}
                       selected={form.modelId}
                       loading={!catalog}
-                      onSelect={(selected) => {
-                        if (selected.id !== form.modelId) {
-                          change({ modelId: selected.id, price: 0 });
-                        }
-                        setApplied(null);
-                      }}
+                      onSelect={(selected) => pickModel(selected.id)}
                     />
                   )}
 
@@ -744,9 +768,11 @@ export function LeasingApp() {
                         placeholder="Укажите стоимость"
                         error={costInvalid}
                         hint={
-                          sample
-                            ? "Для примера указано 15 млн ₸. Введите цену от продавца."
-                            : "Укажите цену из предложения продавца или счета."
+                          marketShown
+                            ? `Средняя цена${market.year ? ` ${market.year} г.` : ""} по объявлениям kolesa.kz. Уточните цену у продавца.`
+                            : sample
+                              ? "Для примера указано 15 млн ₸. Введите цену от продавца."
+                              : "Укажите цену из предложения продавца или счета."
                         }
                         onChange={(price) => {
                           change({ price });
@@ -1083,6 +1109,28 @@ export function LeasingApp() {
               )}
             </div>
           </div>
+
+          {/* Каталог: выбор карточки — то же, что выбор в поле «Автомобиль», затем
+              возвращаем клиента к полям расчета, чтобы указать цену. */}
+          {catalog && (
+            <div className={s.section}>
+              <VehicleCatalog
+                models={catalog.models}
+                selected={form.modelId}
+                onSelect={(selected) => {
+                  pickModel(selected.id);
+                  // К полю стоимости: рыночную цену клиент сверяет с ценой продавца.
+                  const fields = document.getElementById("calculator-form");
+                  fields?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  requestAnimationFrame(() =>
+                    fields
+                      ?.querySelector<HTMLInputElement>('input[inputmode="numeric"]')
+                      ?.focus({ preventScroll: true }),
+                  );
+                }}
+              />
+            </div>
+          )}
 
           {/* Как это работает */}
           {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
