@@ -10,7 +10,6 @@ import { money } from "@/lib/format";
 import { pricePreset } from "@/lib/price-presets";
 import type { LeaseModel } from "@/lib/types";
 import { brandLabel, modelLabel } from "@/lib/vehicle";
-import { vehiclePhoto } from "@/lib/vehicle-photo";
 import { Dialog } from "./dialog";
 import s from "./vehicle-catalog.module.scss";
 
@@ -19,7 +18,7 @@ const PREVIEW = 8;
 /** Порция карточек в модальном окне. */
 const PAGE = 24;
 const DISCLAIMER =
-  "Фото иллюстрируют модель. Комплектация, год выпуска и цвет у продавца могут отличаться. Цены ориентировочные.";
+  "Фото и цены — ориентир по объявлениям kolesa.kz или типичной цене модели: комплектация, цвет и цена у продавца могут отличаться.";
 // Меняется вместе с логикой подбора фото: старые ответы из кэша браузера не используются.
 const PHOTO_VERSION = 2;
 const TOP_BRANDS = 10;
@@ -132,11 +131,6 @@ export function VehicleCatalog({
 
       {filters}
       <CatalogGrid models={preview} selected={selected} onSelect={onSelect} />
-      <Typography.Caption color="secondary">
-        <a href={appPath("/vehicles/sources.html")} target="_blank" rel="noopener noreferrer">
-          Источники фотографий
-        </a>
-      </Typography.Caption>
 
       {found.length > preview.length && (
         <Flex justifyContent="center">
@@ -299,7 +293,6 @@ function CatalogCard({
   const [brandPhoto, setBrandPhoto] = useState(false);
   const [estimate, setEstimate] = useState(false);
   const label = modelLabel(model);
-  const localPhoto = vehiclePhoto(model);
   // Та же рыночная цена, что подставится в калькулятор при выборе.
   useEffect(() => {
     const controller = new AbortController();
@@ -323,17 +316,17 @@ function CatalogCard({
             <Car />
           </span>
         ) : (
-          // Подобранные фото храним локально; для остальных моделей используем API.
+          // Внешнее фото через редирект нашего API: next/image тут не нужен.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={appPath(localPhoto ?? `/api/catalog/photo?id=${model.id}&v=${PHOTO_VERSION}`)}
+            src={appPath(`/api/catalog/photo?id=${model.id}&v=${PHOTO_VERSION}`)}
             alt={label}
             loading="lazy"
             decoding="async"
             onError={() => setFailed(true)}
           />
         )}
-        {!failed && !localPhoto && brandPhoto && <span className={s.badge}>Фото марки</span>}
+        {!failed && brandPhoto && <span className={s.badge}>Фото марки</span>}
       </div>
       <Flex direction="column" gap={4} className={s.body}>
         <Typography.Paragraph view="medium" weight="semibold">
