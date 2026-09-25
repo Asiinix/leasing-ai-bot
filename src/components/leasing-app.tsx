@@ -38,7 +38,6 @@ import { dateLabel, money, number, percent } from "@/lib/format";
 import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
 import { useColorMode } from "@/app/providers";
 import { AssistantPanel } from "./assistant-panel";
-import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
 import faqIllustration from "./assets/faq-question.png";
@@ -47,6 +46,10 @@ import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
+  { ssr: false },
+);
+const ScoringDialog = dynamic(
+  () => import("./scoring-dialog").then((module) => module.ScoringDialog),
   { ssr: false },
 );
 const ProposalDialog = dynamic(
@@ -848,48 +851,12 @@ export function LeasingApp() {
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
       )}
       {continueOpen && quote && (
-        <Dialog
-          title="Ваш расчет готов"
-          description={`${title}, ${money(form.price)}`}
+        <ScoringDialog
+          quote={quote}
+          model={title}
+          clientType={form.clientType}
           onClose={() => setContinueOpen(false)}
-          footer={
-            <Flex direction="column" gap={8}>
-              <Button
-                view="accentPrimary"
-                size="l"
-                fullWidth
-                href="https://business.bcc.kz/online-leasing/"
-                target="_blank"
-                rel="noreferrer"
-                iconRight={<ArrowDirectionRight />}
-              >
-                Открыть заявку BCC
-              </Button>
-              <Button view="neutral" size="l" fullWidth onClick={() => setContinueOpen(false)}>
-                Вернуться к расчету
-              </Button>
-            </Flex>
-          }
-        >
-          <Flex direction="column" gap={24}>
-            <Flex direction="column" gap={4}>
-              <Typography.Title tag="div" view="page">
-                {money(quote.monthlyPayment)}
-              </Typography.Title>
-              <Typography.Paragraph view="medium" color="secondary">
-                в месяц на {form.months} мес.
-              </Typography.Paragraph>
-            </Flex>
-            <dl className={s.details}>
-              <Detail label="Первоначальный взнос" value={money(quote.advanceAmount)} />
-              <Detail label="Тип клиента" value={form.clientType === "IP" ? "ИП" : "ТОО"} />
-            </dl>
-            <Alert variant="info" fullWidth disableTruncate autoCloseDelay={null}>
-              Оформление продолжится в сервисе BCC Leasing. Автоматический перенос расчета пока не
-              подключен, параметры потребуется указать повторно.
-            </Alert>
-          </Flex>
-        </Dialog>
+        />
       )}
     </>
   );
