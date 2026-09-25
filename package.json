@@ -16,6 +16,7 @@
     "bcc-design": "file:vendor/bcc-design-4.4.11.tgz",
     "bcc-design-icons": "file:vendor/bcc-design-icons-3.0.2.tgz",
     "next": "16.3.6",
+    "openai": "6.49.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

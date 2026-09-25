@@ -77,3 +77,112 @@
     margin: 0;
   }
 }
+
+// Блок «Данные заявки»: свернутая строка со статусом, по клику — список полей.
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-3);
+  padding: var(--g-spacing-3) var(--g-spacing-4);
+  border-radius: var(--b-border-radius-cof-8);
+  background: var(--b-color-object-bg-neutral-weak-50);
+}
+
+// Нативная кнопка-переключатель: в DS нет компонента «строка-раскрывашка» со статусом.
+.fieldsToggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--g-spacing-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-2);
+  margin: 0;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--g-spacing-3);
+  }
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dd {
+    display: flex;
+    align-items: center;
+    gap: var(--g-spacing-2);
+    text-align: right;
+  }
+}
+
+.ok {
+  flex: none;
+  color: var(--b-color-icon-success-strong-500);
+}
+
+.error {
+  color: var(--b-color-text-error-strong-500);
+}
+
+.quoteParams {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--g-spacing-1) var(--g-spacing-4);
+  margin: 0;
+  font-size: inherit;
+
+  > div {
+    display: contents;
+  }
+
+  dt {
+    color: var(--b-color-text-neutral-weak-500);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+}
+
+// Идет запись голосового: вместо поля ввода — таймер и действия.
+.recording {
+  min-height: calc(var(--g-spacing-12) + var(--g-spacing-6));
+  padding: var(--g-spacing-3) var(--g-spacing-4);
+  border-radius: var(--b-border-radius-cof-6);
+  background: var(--b-color-object-bg-error-weak-100);
+}
+
+.recDot {
+  width: var(--g-spacing-3);
+  height: var(--g-spacing-3);
+  border-radius: var(--b-border-radius-circle);
+  background: var(--b-color-object-bg-error-strong-500);
+  animation: rec-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes rec-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recDot {
+    animation: none;
+  }
+}

@@ -37,8 +37,10 @@ import { calculateQuote, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, number, percent } from "@/lib/format";
 import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
 import { useColorMode } from "@/app/providers";
+import { initialDraft, type LeaseDraft } from "@/lib/draft";
+import { useLeaseDraft } from "@/lib/use-lease-draft";
+import { ApplicationDialog } from "./application-dialog";
 import { AssistantPanel } from "./assistant-panel";
-import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
 import faqIllustration from "./assets/faq-question.png";
@@ -49,23 +51,22 @@ const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
   { ssr: false },
 );
-type FormState = {
-  clientType: ClientType;
-  modelId: number;
-  price: number;
-  advancePercent: number;
-  months: number;
-};
-const initialForm: FormState = {
-  clientType: "IP",
-  modelId: 2875,
-  price: 15000000,
-  advancePercent: 20,
-  months: 48,
-};
+type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
+const pickForm = ({
+  clientType,
+  modelId,
+  price,
+  advancePercent,
+  months,
+}: FormState): FormState => ({
+  clientType,
+  modelId,
+  price,
+  advancePercent,
+  months,
+});
 type Applied = {
   previous: FormState;
-  previousSample: boolean;
   previousQuote: Quote | null;
   nextKey: string;
   maxMonthly: number;
@@ -117,7 +118,9 @@ function closestRate(rates: LeaseRate[], form: FormState) {
 }
 
 export function LeasingApp() {
-  const [form, setForm] = useState<FormState>(initialForm);
+  // Единое состояние заявки: калькулятор, помощник и форма заявки читают и пишут его.
+  const draft = useLeaseDraft();
+  const form = draft.state.values;
   const [catalog, setCatalog] = useState<CatalogData | null>(null);
   const [catalogError, setCatalogError] = useState(false);
   const [loadedTerms, setLoadedTerms] = useState<{ key: string; data: TermsData } | null>(null);
@@ -126,7 +129,8 @@ export function LeasingApp() {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [continueOpen, setContinueOpen] = useState(false);
-  const [sample, setSample] = useState(true);
+  // Стоимость из примера — не данные клиента.
+  const sample = draft.state.sources.price === "default";
   const [applied, setApplied] = useState<Applied | null>(null);
   const assistantAnchor = useRef<HTMLDivElement>(null);
   const colorMode = useColorMode();
@@ -198,26 +202,34 @@ export function LeasingApp() {
         if (controller.signal.aborted) return;
         setLoadedTerms({ key: termsKey, data });
         setTermsError("");
-        setForm((current) => {
-          if (
-            current.modelId !== form.modelId ||
-            current.clientType !== form.clientType ||
-            data.rates.some(
-              (rate) =>
-                rate.months === current.months && rate.advancePercent === current.advancePercent,
-            )
-          )
-            return current;
-          const selected = closestRate(data.rates, current);
-          return selected
-            ? { ...current, months: selected.months, advancePercent: selected.advancePercent }
-            : current;
-        });
+        const current = draft.latest.current;
+        const values = current.values;
+        if (
+          values.modelId !== form.modelId ||
+          values.clientType !== form.clientType ||
+          data.rates.some(
+            (rate) =>
+              rate.months === values.months && rate.advancePercent === values.advancePercent,
+          ) ||
+          // Значения, названные клиентом в чате, не подменяем догадкой: калькулятор
+          // покажет, что сочетание недоступно, а помощник предложит варианты.
+          current.sources.months === "chat" ||
+          current.sources.advancePercent === "chat"
+        )
+          return;
+        const selected = closestRate(data.rates, values);
+        // Подобранное ближайшее сочетание — предложение, а не подтвержденные данные.
+        if (selected)
+          draft.update(
+            { months: selected.months, advancePercent: selected.advancePercent },
+            "default",
+          );
       })
       .catch((error) => {
         if (error.name !== "AbortError") setTermsError(termsKey);
       });
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.modelId, form.clientType, retry, termsKey]);
 
   const model = catalog?.models.find((item) => item.id === form.modelId);
@@ -239,7 +251,7 @@ export function LeasingApp() {
     (a, b) => a - b,
   );
   const months = [...new Set(terms?.rates.map((rate) => rate.months))].sort((a, b) => a - b);
-  const isApplied = applied && applied.nextKey === formKey(form);
+  const isApplied = applied && applied.nextKey === formKey(pickForm(form));
   const rangeMin = limit?.minPrice ?? 5000000;
   const rangeMax = limit?.maxPrice ?? 50000000;
   const costInvalid = Boolean(terms && activeRate && form.price > 0 && !quote);
@@ -252,7 +264,15 @@ export function LeasingApp() {
       : "Для этого аванса не удалось подтвердить допустимую стоимость.";
 
   function change(patch: Partial<FormState>) {
-    setForm((current) => ({ ...current, ...patch }));
+    draft.update(patch, "form");
+  }
+  /** «Изменить данные»: к полям калькулятора (на мобиле — прокрутка к форме). */
+  function editData() {
+    const form = document.getElementById("calculator-form");
+    form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() =>
+      form?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }),
+    );
   }
   function openAssistant() {
     setAssistantOpen(true);
@@ -262,23 +282,22 @@ export function LeasingApp() {
     });
   }
   function applyOffer(offer: Quote, maxMonthly: number, clientType: ClientType) {
-    const next = {
-      ...form,
+    const next: FormState = {
+      ...pickForm(form),
       price: offer.price,
       clientType,
       advancePercent: offer.rate.advancePercent,
       months: offer.rate.months,
     };
     setApplied({
-      previous: form,
-      previousSample: sample,
+      previous: pickForm(form),
       previousQuote: quote,
       nextKey: formKey(next),
       maxMonthly,
     });
-    setForm(next);
+    // Клиент сам выбрал вариант — значения подтверждены.
+    draft.update(next, "form");
     setAssistantOpen(false);
-    if (offer.price !== form.price) setSample(false);
   }
   function setAdvance(advancePercent: number) {
     const allowed = terms?.rates.filter((rate) => rate.advancePercent === advancePercent) ?? [];
@@ -290,8 +309,7 @@ export function LeasingApp() {
     change({ advancePercent, ...(chosen && { months: chosen.months }) });
   }
   function resetExample() {
-    setForm(initialForm);
-    setSample(true);
+    draft.update(pickForm(initialDraft().values), "default");
     setApplied(null);
     setAssistantOpen(false);
   }
@@ -385,8 +403,7 @@ export function LeasingApp() {
               title={`Условия применены: ${form.months} месяцев, аванс ${percent(form.advancePercent)}%`}
               actionButtonText="Отменить"
               actionButtonHandler={() => {
-                setForm(applied.previous);
-                setSample(applied.previousSample);
+                draft.update(applied.previous, "form");
                 setApplied(null);
               }}
               onClose={() => setApplied(null)}
@@ -406,7 +423,7 @@ export function LeasingApp() {
           <div className={s.grid}>
             {/* Параметры лизинга */}
             <Card size="m" type="primary" height="auto">
-              <section aria-labelledby="parameters-heading">
+              <section aria-labelledby="parameters-heading" id="calculator-form">
                 <Flex direction="column" gap={24}>
                   <Typography.Title
                     tag="div"
@@ -446,7 +463,6 @@ export function LeasingApp() {
                       onSelect={(selected) => {
                         if (selected.id !== form.modelId) {
                           change({ modelId: selected.id, price: 0 });
-                          setSample(false);
                         }
                         setApplied(null);
                       }}
@@ -469,7 +485,6 @@ export function LeasingApp() {
                         }
                         onChange={(price) => {
                           change({ price });
-                          setSample(false);
                         }}
                       />
                     )}
@@ -488,7 +503,6 @@ export function LeasingApp() {
                             onUpdate={(value) => {
                               if (typeof value !== "number") return;
                               change({ price: value });
-                              setSample(false);
                             }}
                           />
                         </div>
@@ -604,11 +618,19 @@ export function LeasingApp() {
             <div className={s.side} ref={assistantAnchor}>
               {assistantOpen ? (
                 <AssistantPanel
-                  key={`${form.modelId}:${form.clientType}`}
-                  context={{ ...form, modelName: title }}
-                  terms={terms}
+                  draft={draft.state}
+                  modelName={title}
+                  onPatch={draft.applyAssistantPatch}
+                  onSelectModel={(modelId) => {
+                    // Цена относится к выбранному автомобилю клиента и при смене записи
+                    // справочника сохраняется; сочетание срока и аванса проверит расчет.
+                    change({ modelId });
+                    setApplied(null);
+                  }}
+                  onApplyOffer={applyOffer}
+                  onOpenApplication={() => setContinueOpen(true)}
+                  onEditData={editData}
                   onClose={() => setAssistantOpen(false)}
-                  onApply={applyOffer}
                 />
               ) : (
                 <>
@@ -818,49 +840,19 @@ export function LeasingApp() {
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
       )}
-      {continueOpen && quote && (
-        <Dialog
-          title="Ваш расчет готов"
-          description={`${title}, ${money(form.price)}`}
+      {continueOpen && (
+        <ApplicationDialog
+          draft={draft.state}
+          modelName={title}
+          quote={quote}
+          quoteProblem={validation}
+          onUpdate={(patch) => draft.update(patch, "form")}
+          onEditParams={() => {
+            setContinueOpen(false);
+            editData();
+          }}
           onClose={() => setContinueOpen(false)}
-          footer={
-            <Flex direction="column" gap={8}>
-              <Button
-                view="accentPrimary"
-                size="l"
-                fullWidth
-                href="https://business.bcc.kz/online-leasing/"
-                target="_blank"
-                rel="noreferrer"
-                iconRight={<ArrowDirectionRight />}
-              >
-                Открыть заявку BCC
-              </Button>
-              <Button view="neutral" size="l" fullWidth onClick={() => setContinueOpen(false)}>
-                Вернуться к расчету
-              </Button>
-            </Flex>
-          }
-        >
-          <Flex direction="column" gap={24}>
-            <Flex direction="column" gap={4}>
-              <Typography.Title tag="div" view="page">
-                {money(quote.monthlyPayment)}
-              </Typography.Title>
-              <Typography.Paragraph view="medium" color="secondary">
-                в месяц на {form.months} мес.
-              </Typography.Paragraph>
-            </Flex>
-            <dl className={s.details}>
-              <Detail label="Первоначальный взнос" value={money(quote.advanceAmount)} />
-              <Detail label="Тип клиента" value={form.clientType === "IP" ? "ИП" : "ТОО"} />
-            </dl>
-            <Alert variant="info" fullWidth disableTruncate autoCloseDelay={null}>
-              Оформление продолжится в сервисе BCC Leasing. Автоматический перенос расчета пока не
-              подключен, параметры потребуется указать повторно.
-            </Alert>
-          </Flex>
-        </Dialog>
+        />
       )}
     </>
   );

@@ -1,0 +1,23 @@
+// Список параметров заявки «подпись — значение»: в DS нет компонента описания-списка.
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-2);
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--g-spacing-4);
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dd {
+    text-align: right;
+  }
+}

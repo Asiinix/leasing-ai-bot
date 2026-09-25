@@ -14,7 +14,13 @@ export interface ParsedIntent {
 
 type MoneySlot = "maxMonthly" | "maxAdvance" | "price";
 type Slot = MoneySlot | "months";
-type NumberSpan = { raw: string; value: number; start: number; end: number; scaled: boolean };
+export type NumberSpan = {
+  raw: string;
+  value: number;
+  start: number;
+  end: number;
+  scaled: boolean;
+};
 
 const WORD_VALUES: Record<string, number> = {
   ноль: 0,
@@ -118,7 +124,7 @@ const MARKERS: ReadonlyArray<{ slot: Slot; pattern: RegExp }> = [
   { slot: "months", pattern: /срок[а-я]*/gu },
 ];
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/ё/g, "е")
@@ -153,7 +159,7 @@ function parseNumber(raw: string): { value: number; scaled: boolean } {
   return { value: total + group, scaled };
 }
 
-function findNumbers(text: string): NumberSpan[] {
+export function findNumbers(text: string): NumberSpan[] {
   const spans = [...text.matchAll(numberPattern)].map((match) => ({
     raw: match[0],
     start: match.index!,

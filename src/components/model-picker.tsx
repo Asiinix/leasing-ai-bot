@@ -3,13 +3,9 @@
 import { useMemo, useState } from "react";
 import { Select } from "bcc-design";
 import type { LeaseModel } from "@/lib/types";
+import { modelLabel } from "@/lib/vehicle";
 
-export function modelLabel(model?: LeaseModel) {
-  if (!model) return "Выберите автомобиль";
-  const brand = model.brand.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const name = model.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  return name.toLowerCase().startsWith(brand.toLowerCase()) ? name : `${brand} ${name}`;
-}
+export { modelLabel };
 
 export function ModelPicker({
   models,
