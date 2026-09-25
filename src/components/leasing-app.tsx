@@ -77,8 +77,8 @@ const clientOptions: { value: ClientType; label: string }[] = [
   { value: "TOO", label: "ТОО" },
 ];
 const breadcrumbs = [
-  { id: 1, title: "Лизинг", link: "/" },
-  { id: 2, title: "Калькулятор", link: "/" },
+  { id: 1, title: "Лизинг", link: appPath("/") },
+  { id: 2, title: "Калькулятор", link: appPath("/") },
 ];
 const steps = [
   { title: "Укажите стоимость", description: "Из предложения вашего продавца" },
