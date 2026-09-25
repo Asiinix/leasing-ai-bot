@@ -49,7 +49,8 @@ import { MoneyInput } from "./money-input";
 import { PropertyParameters, PropertySummary, type PropertyDraft } from "./property-parameters";
 import { VehicleCatalog } from "./vehicle-catalog";
 import faqIllustration from "./assets/faq-question.png";
-import leasingLogo from "./assets/bcc-leasing-logo.png";
+// В шапке только знак-треугольник, без надписи «bcc leasing».
+import leasingLogo from "./assets/bcc-leasing-mark.png";
 import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
