@@ -480,3 +480,63 @@
     opacity: 1;
   }
 }
+
+.heroCarousel {
+  position: relative;
+}
+.heroNavigation {
+  position: absolute;
+  inset: auto 0 var(--g-spacing-6);
+  height: auto;
+  z-index: 2;
+}
+.ironHero {
+  background: url("./assets/ironcard-banner.webp") center / cover no-repeat;
+  &::before {
+    display: none;
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+// Семья на фото стоит справа, слева небо — под ним читается текст.
+.lifeHero {
+  background: url("./assets/bcclife-banner.webp") 70% 30% / cover no-repeat;
+  &::before {
+    display: none;
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+.heroCarousel .heroInner {
+  min-height: calc(var(--g-spacing-12) * 13);
+  padding-bottom: calc(var(--g-spacing-12) * 2);
+}
+@media (max-width: 767px) {
+  .heroCarousel .hero {
+    padding-bottom: 0;
+    min-height: 740px;
+  }
+  .heroCarousel .heroInner {
+    min-height: 0;
+  }
+  .ironHero {
+    background-size: auto 55%;
+    background-position: 70% 85%;
+    background-color: var(--b-color-object-bg-neutral-weak-50);
+  }
+  .ironHero .heroContent,
+  .lifeHero .heroContent {
+    margin-top: var(--g-spacing-8);
+  }
+  .lifeHero {
+    background-size: auto 55%;
+    background-position: 75% 100%;
+    background-color: #8fc6e8;
+  }
+}

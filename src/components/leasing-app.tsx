@@ -4,12 +4,13 @@ import { appPath } from "@/lib/app-path";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import {
   Accordion,
   Alert,
   Breadcrumbs,
   Button,
+  Carousel,
   Card,
   Chip,
   Container,
@@ -24,6 +25,7 @@ import {
   Tag,
   Typography,
 } from "bcc-design";
+import ArrowDirectionLeft from "bcc-design-icons/base/Arrows/ArrowDirectionLeft";
 import ArrowDirectionRight from "bcc-design-icons/base/Arrows/ArrowDirectionRight";
 import Fullscreen from "bcc-design-icons/base/Arrows/Fullscreen";
 import Refresh from "bcc-design-icons/base/Arrows/Refresh";
@@ -161,6 +163,19 @@ export function LeasingApp() {
   const colorMode = useColorMode();
   const headerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
+  const [heroSlide, setHeroSlide] = useState(0);
+  // Баннеры листаются сами каждые 3 секунды; пауза, пока курсор или фокус внутри,
+  // чтобы клиент успел прочитать и нажать кнопку.
+  const [heroPaused, setHeroPaused] = useState(false);
+  // Свой таймер вместо autoPlay из DS: тот листает только миниатюры и не обновляет
+  // currentIndex, от которого зависят кнопки навигации и inert у слайдов. Таймер
+  // перезапускается при каждой смене слайда, в том числе ручной.
+  useEffect(() => {
+    if (heroPaused) return;
+    const timer = setTimeout(() => carouselRef.current?.goToNext(true), 3000);
+    return () => clearTimeout(timer);
+  }, [heroSlide, heroPaused]);
   const fullscreen = useFullscreen();
 
   useEffect(() => {
@@ -401,32 +416,151 @@ export function LeasingApp() {
       {/* Баннер во всю ширину окна, как на bccleasing.kz: текст выровнен по колонке
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
-      <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
-        <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
-          <Flex direction="column" gap={24} className={s.heroContent}>
-            <div className={s.breadcrumbs}>
-              <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
-            </div>
-            <Flex direction="column" gap={8}>
-              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
-              <Typography.Paragraph view="large" color="secondary">
-                Рассчитайте платеж и выберите удобные условия
-              </Typography.Paragraph>
-            </Flex>
-            <div>
+      <section
+        ref={heroRef}
+        className={s.heroCarousel}
+        aria-label="Предложения"
+        aria-roledescription="карусель"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+        onFocus={() => setHeroPaused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
+        }}
+      >
+        <Carousel
+          ref={carouselRef}
+          visibleSlides={1}
+          slideGap={0}
+          autoPlay={false}
+          showFade={false}
+          onStateUpdate={(state) => setHeroSlide(state.currentIndex)}
+        >
+          <div
+            className={`${s.hero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 0}
+            aria-hidden={heroSlide !== 0}
+          >
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <div className={s.breadcrumbs}>
+                  <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
+                </div>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Рассчитайте платеж и выберите удобные условия
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    iconLeft={<Chat />}
+                    aria-expanded={assistantOpen}
+                    onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
+                  >
+                    {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+
+          <div
+            className={`${s.hero} ${s.ironHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 1}
+            aria-hidden={heroSlide !== 1}
+          >
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>Банк ЦентрКредит · Премиальная карта</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Премиальная #IronCard</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Карта для ценителей комфорта и эксклюзивности
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open(
+                        "https://www.bcc.kz/personal/cards/ironcard/",
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
+                    }
+                  >
+                    Оформить кредит на IronCard
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+
+          <div
+            className={`${s.hero} ${s.lifeHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 2}
+            aria-hidden={heroSlide !== 2}
+          >
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>BCC Life · Страхование жизни</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Страхование жизни от BCC Life</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Надёжная защита в партнёрстве с Банком ЦентрКредит
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open("https://bcclife.kz/ru", "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    Получить консультацию
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+        </Carousel>
+        <Container maxWidth={1280} className={`${s.container} ${s.heroNavigation}`}>
+          <Flex gap={8} alignItems="center" wrap>
+            <Button
+              view="neutralFilledSecondary"
+              size="m"
+              iconLeft={<ArrowDirectionLeft />}
+              aria-label="Предыдущий баннер"
+              onClick={() => carouselRef.current?.goToPrevious(true)}
+            />
+            {["Лизинг", "IronCard", "BCC Life"].map((label, index) => (
               <Button
-                view="accentPrimary"
-                size="l"
-                iconLeft={<Chat />}
-                aria-expanded={assistantOpen}
-                onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
+                key={label}
+                view={heroSlide === index ? "accentPrimary" : "neutralFilledSecondary"}
+                size="m"
+                aria-current={heroSlide === index ? "true" : undefined}
+                onClick={() => carouselRef.current?.goToSlide(index)}
               >
-                {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
+                {label}
               </Button>
-            </div>
+            ))}
+            <Button
+              view="neutralFilledSecondary"
+              size="m"
+              iconLeft={<ArrowDirectionRight />}
+              aria-label="Следующий баннер"
+              onClick={() => carouselRef.current?.goToNext(true)}
+            />
           </Flex>
         </Container>
-      </div>
+      </section>
       <main id="calculator" aria-busy={booting}>
         <Container maxWidth={1280} className={`${s.container} ${s.page}`}>
           {isApplied && (
