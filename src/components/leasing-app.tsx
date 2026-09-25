@@ -119,6 +119,36 @@ const questions = [
   },
 ];
 
+/**
+ * Load reference data with automatic retries (after 1 s and 2 s): a short network drop or a
+ * server restart must not leave the calculator empty. Client errors (4xx) are not retried.
+ */
+async function fetchJson<T>(url: string, signal: AbortSignal, attempts = 3): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const response = await fetch(url, { signal });
+      if (response.ok) return (await response.json()) as T;
+      if (response.status < 500 && response.status !== 429)
+        throw Object.assign(new Error(`HTTP ${response.status}`), { final: true });
+      if (attempt + 1 >= attempts) throw new Error(`HTTP ${response.status}`);
+    } catch (error) {
+      const failure = error as Error & { final?: boolean };
+      if (failure.name === "AbortError" || failure.final || attempt + 1 >= attempts) throw error;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, 1000 * 2 ** attempt);
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+  }
+}
+
 function closestRate(rates: LeaseRate[], form: FormState) {
   return [...rates].sort(
     (a, b) =>
@@ -214,11 +244,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(appPath("/api/catalog"), { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error("catalog");
-        return response.json() as Promise<CatalogData>;
-      })
+    fetchJson<CatalogData>(appPath("/api/catalog"), controller.signal)
       .then((data) => {
         setCatalog(data);
         setCatalogError(false);
@@ -231,13 +257,10 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`), {
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("terms");
-        return response.json() as Promise<TermsData>;
-      })
+    fetchJson<TermsData>(
+      appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`),
+      controller.signal,
+    )
       .then((data) => {
         if (controller.signal.aborted) return;
         setLoadedTerms({ key: termsKey, data });
