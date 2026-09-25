@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "./ui";
+
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 
@@ -41,9 +43,9 @@ export function Dialog({
       <div className="dialog-inner">
         <div className="dialog-header">
           <h2 id={titleId}>{title}</h2>
-          <button className="icon-button" onClick={onClose} aria-label="Закрыть окно">
+          <Button className="icon-button" onClick={onClose} aria-label="Закрыть окно">
             <X size={21} />
-          </button>
+          </Button>
         </div>
         {children}
       </div>

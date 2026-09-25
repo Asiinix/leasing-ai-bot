@@ -1,0 +1,35 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}dropdown';
+
+#{$block} {
+  @include shadow-card-m;
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--b-color-background-secondary);
+  border-radius: var(--b-border-radius-cof-6);
+  color: var(--b-color-content-default-primary);
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--g-text-body-font-family);
+
+  will-change: opacity, transform;
+  transition-property: opacity, transform;
+  transition-duration: 0.2s;
+
+
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleY(0.8);
+  transform-origin: top;
+
+
+  &_shown {
+    opacity: 1;
+    pointer-events: visible;
+    transform: scaleY(1);
+  }
+}

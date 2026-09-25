@@ -10,9 +10,14 @@
     "test": "tsx --test tests/*.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:design-system": "node scripts/build-design-system.mjs",
+    "prebuild": "npm run build:design-system",
+    "predev": "npm run build:design-system"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "bcc-design": "file:vendor/bcc-design",
     "lucide-react": "1.47.0",
     "next": "16.3.6",
     "react": "19.3.0",
@@ -22,9 +27,11 @@
     "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
     "prettier": "3.9.9",
+    "sass": "1.105.0",
     "tsx": "4.23.15",
     "typescript": "6.0.3"
   },

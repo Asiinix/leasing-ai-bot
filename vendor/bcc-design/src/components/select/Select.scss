@@ -1,0 +1,25 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}select';
+
+#{$block} {
+  &__inputWrapper {
+    display: inline-block;
+    width: 100%;
+    max-width: 360px;
+
+    &_fullWidth {
+      max-width: 100%;
+    }
+  }
+
+  &__rightAddons {
+    display: flex;
+    gap: var(--g-spacing-1);
+  }
+
+  &__hiddenCaret {
+    caret-color: transparent;
+  }
+}

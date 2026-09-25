@@ -1,0 +1,332 @@
+@use 'sass:math';
+@use '../../../variables.scss';
+@import '../../../styles/mixins.scss';
+
+$original-class: 'rc-slider';
+$block: '.#{variables.$ns}base-slider';
+$mark: '.#{$original-class}-mark';
+$mark-text: '#{$mark}-text';
+$dot: '.#{$original-class}-dot';
+
+$rail-color: var(--g-color-base-selection);
+$rail-disabled-color: var(--b-color-base-transparent);
+
+$handle-focus-color: var(--b-color-brand-500);
+$handle-focus-error-color: var(--g-color-base-danger-light-hover);
+
+$handle-s-size: 16px;
+$handle-m-size: 16px;
+
+$rail-s-size: 2px;
+$rail-m-size: 2px;
+
+@mixin input-control($size) {
+  position: absolute;
+  content: '';
+  background-color: var(--b-color-brand-500);
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+
+  @if $size == 's' {
+    $width: math.floor(calc($handle-s-size / 2));
+    width: $width;
+    inset-inline-start: calc($width * -1);
+    height: $rail-s-size;
+  }
+  @if $size == 'm' {
+    $width: math.floor(calc($handle-m-size / 2));
+    width: $width;
+    inset-inline-start: calc($width * -1);
+    height: $rail-m-size;
+  }
+}
+
+@mixin slider-outer-style($size) {
+  @if $size == 's' {
+    $common-padding: calc(($handle-s-size - $rail-s-size) / 2);
+    $bottom-margin: var(--g-text-body-1-line-height);
+    padding: $common-padding 0 $common-padding;
+
+    height: calc($common-padding + $rail-s-size + $common-padding);
+    //add left and right offsets for edge position of the handler
+    margin: 0 calc($handle-s-size / 2) $bottom-margin;
+  }
+  @if $size == 'm' {
+    $common-padding: calc(($handle-m-size - $rail-m-size) / 2);
+    $bottom-margin: var(--g-text-body-1-line-height);
+    padding: $common-padding 0 $common-padding;
+
+    height: calc($common-padding + $rail-m-size + $common-padding);
+    //add left and right offsets for edge position of the handler
+    margin: 0 calc($handle-m-size / 2) $bottom-margin;
+  }
+}
+
+@mixin dot-style($size) {
+  @if $size == 's' {
+    inset-block-start: calc((($handle-s-size - $rail-s-size) / 2) + 1px);
+    $dot-size: calc($rail-s-size - 2px);
+    height: $dot-size;
+    width: $dot-size;
+  }
+  @if $size == 'm' {
+    inset-block-start: calc((($handle-m-size - $rail-m-size) / 2) + 1px);
+    $dot-size: calc($rail-m-size - 2px);
+    height: $dot-size;
+    width: $dot-size;
+  }
+}
+
+@mixin rail-size-style($size) {
+  @if $size == 's' {
+    $offset: math.floor(calc($handle-s-size / 2)) * -1;
+    height: $rail-s-size;
+    inset-inline: $offset;
+  }
+  @if $size == 'm' {
+    $offset: math.floor(calc($handle-m-size / 2)) * -1;
+    height: $rail-m-size;
+    inset-inline: $offset;
+  }
+}
+
+#{$block} {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+
+  position: relative;
+  flex-grow: 1;
+  touch-action: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+
+  &_size {
+    &_s {
+      @include slider-outer-style(s);
+
+      #{$mark} {
+        @include text-body-2;
+        $edge-mark-offset: calc($handle-s-size / -2);
+
+        //we override last of type style in the situation when we have only one mark
+        //so we should have this style sequence
+        &-text:last-of-type {
+          inset-inline-end: $edge-mark-offset;
+        }
+
+        &-text:first-of-type {
+          inset-inline-end: unset;
+          inset-inline-start: $edge-mark-offset;
+        }
+      }
+
+      #{$dot} {
+        @include dot-style(s);
+      }
+    }
+
+    &_m {
+      @include slider-outer-style(m);
+
+      #{$mark} {
+        @include text-body-2;
+        //@include mixins.text-body-1;
+        $edge-mark-offset: calc($handle-m-size / -2);
+
+        &-text:last-of-type {
+          inset-inline-end: $edge-mark-offset;
+        }
+
+        &-text:first-of-type {
+          inset-inline-end: unset;
+          inset-inline-start: $edge-mark-offset;
+        }
+      }
+
+      #{$dot} {
+        @include dot-style(m);
+      }
+    }
+  }
+
+  &__rail {
+    position: absolute;
+    border-radius: 4px;
+    background-color: transparent;
+
+    &_size {
+      &_s {
+        @include rail-size-style(s);
+      }
+
+      &_m {
+        @include rail-size-style(m);
+      }
+    }
+
+    &_disabled {
+      background-color: $rail-disabled-color;
+    }
+
+    //&_error {
+    //  background-color: var(--b-color-status-error-default);
+    //}
+  }
+
+  &__track {
+    position: absolute;
+    background-color: var(--b-color-brand-500);
+    &_size {
+      &_s {
+        height: $rail-s-size;
+        &::before {
+          @include input-control(s);
+        }
+      }
+
+      &_m {
+        height: $rail-m-size;
+        &::before {
+          @include input-control(m);
+        }
+      }
+    }
+    &_disabled {
+      background-color: var(--b-color-disabled-default-primary);
+    }
+    &_error {
+      background-color: var(--b-color-status-error-default);
+    }
+  }
+
+  &__handle {
+    position: absolute;
+    z-index: 1;
+    cursor: grab;
+    touch-action: pan-x;
+    background-color: var(--b-color-brand-500);
+    border-color: var(--b-color-brand-500);
+    border-radius: 50%;
+    border-style: solid;
+    inset-block-start: 0;
+
+    &_size {
+      &_s {
+        height: $handle-s-size;
+        width: $handle-s-size;
+        border-width: $rail-s-size;
+      }
+
+      &_m {
+        height: $handle-m-size;
+        width: $handle-m-size;
+        border-width: $rail-m-size;
+      }
+    }
+
+    &_error {
+      border-color: var(--b-color-status-error-default);
+      background-color: var(--b-color-status-error-default);
+    }
+
+    &:focus {
+      box-shadow: 0px 0px 4px 0px $handle-focus-color;
+      outline: none;
+    }
+    &:active {
+      //box-shadow: 0 0 0 4px $handle-focus-color;
+      box-shadow: 0px 0px 4px 0px $handle-focus-color;
+      cursor: grabbing;
+    }
+
+    &_disabled {
+      cursor: not-allowed;
+      border-color: var(--b-color-disabled-default-primary);
+      background-color: var(--b-color-disabled-default-primary);
+
+      &:active,
+      &:focus {
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+
+    &_error {
+      border-color: var(--b-color-status-error-default);
+      &:focus {
+        box-shadow: 0 0 0 3px $handle-focus-error-color;
+      }
+      &:active {
+        box-shadow: 0 0 0 4px $handle-focus-error-color;
+      }
+    }
+  }
+
+  &__step {
+    position: absolute;
+    width: 100%;
+    background: transparent;
+    &_size {
+      &_s {
+        height: $rail-s-size;
+      }
+
+      &_m {
+        height: $rail-m-size;
+      }
+    }
+  }
+
+  #{$mark} {
+    position: absolute;
+    inset-inline-start: 0;
+    width: 100%;
+    color: var(--b-color-content-default-secondary);
+    inset-block-end: -5px;
+
+      ::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 1px;
+        height: 4px; // Толщина линии
+        background-color: var(--b-color-content-default-secondary); // Цвет линии
+      }
+
+  }
+
+  #{$mark-text} {
+    position: absolute;
+    display: flex;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+
+    height: 24px;
+    align-items: flex-end;
+  }
+
+  &_disabled #{$mark-text} {
+    cursor: not-allowed;
+    color: var(--b-color-disabled-default-secondary);
+  }
+
+  #{$dot} {
+    position: absolute;
+    border-radius: 50%;
+    background-color: red;
+
+    &:first-of-type,
+    &:last-of-type {
+      display: none;
+    }
+  }
+
+  &_disabled #{$dot},
+  &_error #{$dot} {
+    display: none;
+  }
+}

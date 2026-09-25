@@ -1,0 +1,8 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}dropdown-relative-container';
+
+#{$block} {
+  position: relative;
+}

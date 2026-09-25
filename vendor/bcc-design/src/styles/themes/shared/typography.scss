@@ -1,0 +1,74 @@
+@mixin variables {
+  --g-font-family-base: 'SuisseIntl';
+  --g-font-family-sans: 'SuisseIntl', sans-serif;
+  --g-font-family-monospace:  'SuisseIntl', 'Monaco', 'Consolas', 'Ubuntu Mono', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Courier New', 'Courier', monospace;
+
+  --g-text-header-font-family: var(--g-font-family-sans);
+
+  --g-text-body-font-family: var(--g-font-family-sans);
+  --g-text-caption-font-family: var(--g-font-family-sans);
+  --g-text-subheader-font-family: var(--g-font-family-sans);
+  --g-text-display-font-family: var(--g-font-family-sans);
+  --g-text-code-font-family: var(--g-font-family-monospace);
+
+  font-family: var(--g-font-family-sans);
+  font-size: var(--g-text-body-1-font-size);
+  line-height: var(--g-text-body-1-line-height);
+  font-weight: var(--g-text-body-font-weight);
+
+  /**
+     * Заголовок 1-го уровня для баннеров и блоков
+     */
+  --b-text-heading-1-font-size: 48px;
+  --b-text-heading-1-line-height: 56px;
+  --b-text-heading-2-font-weight: 600;
+
+  /**
+     * Заголовок 2-го уровня для страниц модулей
+     */
+  --b-text-heading-2-font-size: 40px;
+  --b-text-heading-2-line-height: 48px;
+  --b-text-heading-2-font-weight: 600;
+
+  /**
+     * Заголовок форм и модальных окон
+     */
+  --b-text-heading-3-font-size: 32px;
+  --b-text-heading-3-line-height: 40px;
+  --b-text-heading-3-font-weight: 500;
+
+  /**
+     * Заголовок 4-го уровня для карточек и блоков
+     */
+  --b-text-heading-4-font-size: 20px;
+  --b-text-heading-4-font-size: 24px;
+  --b-text-heading-4-font-weight: 500;
+
+  /**
+     * Основной наборный стиль текста
+     */
+  --g-text-caption-1-font-weight: 400;
+  --g-text-caption-2-font-weight: 500;
+
+  --b-text-subtitle-font-size: 18px;
+  --b-text-subtitle-line-height: 28px;
+
+  --b-text-body-1-font-size: 16px;
+  --b-text-body-1-line-height: 24px;
+
+  --b-text-body-2-font-size: 14px;
+  --b-text-body-2-line-height: 20px;
+
+  --b-text-caption-1-font-size: 12px;
+  --b-text-caption-1-line-height: 16px;
+
+  --b-text-caption-2-font-size: 10px;
+  --b-text-caption-2-line-height: 12px;
+
+  --b-text-caption-3-font-size: 8px;
+  --b-text-caption-3-line-height: 12px;
+
+  --b-text-caption-4-font-size: 6px;
+  --b-text-caption-4-line-height: 8px;
+}

@@ -1,0 +1,77 @@
+@mixin b-colors-base-junior-light {
+  // Brand Colors
+  --b-color-brand-50: var(--b-color-junior-ocean-50);
+  --b-color-brand-100: var(--b-color-junior-ocean-100);
+  --b-color-brand-200: var(--b-color-junior-ocean-600);
+  --b-color-brand-300: var(--b-color-junior-ocean-300);
+  --b-color-brand-400: var(--b-color-junior-ocean-400);
+  --b-color-brand-500: var(--b-color-junior-ocean-500);
+  --b-color-brand-600: var(--b-color-junior-ocean-600);
+  --b-color-brand-700: var(--b-color-junior-ocean-700);
+
+  // Bcc Content Colors
+  --b-color-disabled-default-primary: var(--b-color-base-gray-300);
+  --b-color-disabled-default-secondary: var(--b-color-base-gray-400);
+  --b-color-disabled-invert-primary: var(--b-color-base-gray-500);
+  --b-color-disabled-invert-secondary: var(--b-color-base-gray-600);
+  --b-color-backgroundfill-default: var(--b-color-base-gray-50);
+  --b-color-backgroundfill-invert: var(--b-color-base-gray-800);
+
+  // Content Colors
+  --b-color-content-default-primary: var(--b-color-base-gray-900);
+  --b-color-content-default-secondary: var(--b-color-base-gray-600);
+  --b-color-content-default-tertiary: var(--b-color-base-gray-400);
+  --b-color-content-invert-primary: var(--b-color-base-white-solid);
+  --b-color-content-invert-secondary: var(--b-color-base-gray-200);
+  --b-color-content-invert-tertiary: var(--b-color-base-gray-300);
+  --b-color-content-disabled-primary: var(--b-color-base-gray-350);
+  --b-color-content-disabled-secondary: var(--b-color-base-gray-400);
+
+  // Background Colors
+  --b-color-background-primary: var(--b-color-base-gray-50);
+  --b-color-background-secondary: var(--b-color-base-white-solid);
+  --b-color-background-disabled: var(--b-color-base-gray-300);
+
+  // Status Colors
+  --b-color-status-error-default: var(--b-color-base-red-500);
+  --b-color-status-error-default-light: var(--b-color-base-red-300);
+  --b-color-status-error-default-dark: var(--b-color-base-red-700);
+  --b-color-status-error-default-ultra-light: var(--b-color-base-red-100);
+  --b-color-status-warning-default: var(--b-color-other-orange-500);
+  --b-color-status-warning-default-light: var(--b-color-other-orange-300);
+  --b-color-status-warning-default-ultra-light: var(--b-color-other-orange-100);
+  --b-color-status-warning-default-dark: var(--b-color-other-orange-700);
+  --b-color-status-success-default: var(--b-color-other-emerald-500);
+  --b-color-status-success-default-light: var(--b-color-other-emerald-300);
+  --b-color-status-success-default-ultra-light: var(--b-color-other-emerald-100);
+  --b-color-status-success-default-dark: var(--b-color-other-emerald-700);
+  --b-color-status-process-default: var(--b-color-base-blue-500);
+  --b-color-status-process-default-light: var(--b-color-base-blue-300);
+  --b-color-status-process-default-ultra-light: var(--b-color-base-blue-100);
+  --b-color-status-process-default-dark: var(--b-color-base-blue-700);
+
+  // Overlay Colors
+  --b-color-overlay-primary: var(--b-color-base-black-300);
+  --b-color-overlay-secondary: var(--b-color-base-black-800);
+
+  // Ultimate Colors
+  --b-color-ultimate-primary: var(--b-color-base-white-solid);
+  --b-color-ultimate-secondary: var(--b-color-base-gray-900);
+
+  // PFM (Personal Financial Management) Colors
+  --b-color-pfm-cost-biggest: var(--b-color-base-red-400);
+  --b-color-pfm-cost-2nd: var(--b-color-base-red-300);
+  --b-color-pfm-cost-3rd: var(--b-color-other-indigo-500);
+  --b-color-pfm-cost-4th: var(--b-color-base-yellow-300);
+  --b-color-pfm-cost-5th: var(--b-color-other-violet-500);
+  --b-color-pfm-cost-anothed: var(--b-color-other-lime-600);
+  --b-color-pfm-gain-biggest: var(--b-color-base-yellow-500);
+  --b-color-pfm-gain-2nd: var(--b-color-base-blue-400);
+  --b-color-pfm-gain-3td: var(--b-color-other-orange-400);
+  --b-color-pfm-gain-4th: var(--b-color-base-gray-200);
+  --b-color-pfm-gain-5th: var(--b-color-other-lime-500);
+
+  // Additional Content Color
+  --b-color-content-default-forty: var(--b-color-base-gray-200);
+  --b-color-content-default-dark-forty: var(--b-color-base-gray-700);
+}

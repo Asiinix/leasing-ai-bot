@@ -1,0 +1,19 @@
+@mixin variables {
+  --b-border-radius-base: 2px;
+
+  --b-border-radius-cof-2: calc(var(--b-border-radius-base) * 2);
+  --b-border-radius-cof-3: calc(var(--b-border-radius-base) * 3);
+  --b-border-radius-cof-4: calc(var(--b-border-radius-base) * 4);
+  --b-border-radius-cof-5: calc(var(--b-border-radius-base) * 5);
+  --b-border-radius-cof-6: calc(var(--b-border-radius-base) * 6);
+  --b-border-radius-cof-7: calc(var(--b-border-radius-base) * 7);
+  --b-border-radius-cof-8: calc(var(--b-border-radius-base) * 8);
+  --b-border-radius-cof-9: calc(var(--b-border-radius-base) * 9);
+  --b-border-radius-cof-10: calc(var(--b-border-radius-base) * 10);
+  --b-border-radius-cof-12: calc(var(--b-border-radius-base) * 12);
+  --b-border-radius-cof-16: calc(var(--b-border-radius-base) * 16);
+  --b-border-radius-cof-24: calc(var(--b-border-radius-base) * 24);
+  --b-border-radius-cof-32: calc(var(--b-border-radius-base) * 32);
+  --b-border-radius-cof-64: calc(var(--b-border-radius-base) * 64);
+  --b-border-radius-circle: 50%;
+}

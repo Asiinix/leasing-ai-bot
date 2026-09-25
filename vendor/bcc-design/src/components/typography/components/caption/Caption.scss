@@ -1,0 +1,60 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}typography-caption';
+
+
+#{$block} {
+  color: var(--b-color-content-default-primary);
+  font-family: var(--g-text-body-font-family);
+
+  &_paragraph {
+    margin: 0;
+    padding: 0;
+  }
+
+  &_paragraphWithMargins {
+    padding: 0;
+    margin: 0 0 4px;
+  }
+
+  &_small {
+    @include text-caption-3();
+    font-weight: var(--g-text-caption-1-font-weight);
+  }
+
+  &_medium {
+    @include text-caption-1();
+    font-weight: var(--g-text-caption-1-font-weight);
+  }
+
+  &_underline {
+    text-decoration: underline;
+  }
+
+  &_line-through {
+    text-decoration: line-through;
+  }
+
+  &_monospace {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &_rowLimit_none {
+    -webkit-line-clamp: none;
+  }
+
+  &_rowLimit_1 {
+    @include row_limit(1);
+  }
+
+  &_rowLimit_2 {
+    @include row_limit(2);
+  }
+
+  &_rowLimit_3 {
+    @include row_limit(3);
+  }
+}
+
+

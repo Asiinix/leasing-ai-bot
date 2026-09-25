@@ -1,0 +1,29 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}select-options';
+
+#{$block} {
+  box-sizing: border-box;
+  padding: var(--g-spacing-1) 0;
+  max-height: calc((56px * 6) + 16px); // максимальное кол-во видимых опций
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+
+  @include optimizedWordWrap;
+  //@include hideScrollbar;
+
+  &__virtualListContainer {
+    position: relative;
+  }
+
+
+  &__virtualListWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: var(--g-spacing-1);
+  }
+}

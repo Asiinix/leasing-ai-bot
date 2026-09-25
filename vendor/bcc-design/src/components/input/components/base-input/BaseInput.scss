@@ -1,0 +1,150 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}base-input';
+
+#{$block} {
+  font-family: var(--g-text-body-font-family);
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+
+  color: var(--b-color-content-default-primary);
+
+  font-size: var(--b-text-body-1-font-size);
+  line-height: var(--b-text-body-2-line-height);
+  font-weight: 400;
+
+  width: 100%;
+  height: 100%;
+
+  background: none;
+  border: none;
+  margin: 0;
+  outline: none;
+  text-overflow: ellipsis;
+  -webkit-appearance: none;
+
+  // модификаторы
+  &::placeholder {
+    transition: opacity 0.2s ease, color 0.2s ease;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 1;
+    color: var(--b-color-content-disabled-secondary);
+  }
+
+  &_hasInnerLabel {
+    &::placeholder {
+      opacity: 0;
+    }
+  }
+
+
+  // элементы
+  &__clearIcon {
+    cursor: pointer;
+    display: flex;
+    transition: opacity 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+
+    // unstyle button
+    border: none;
+    background-color: transparent;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    &:hover {
+      opacity: 0.6;
+    }
+
+    &_visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    &:active {
+      opacity: 1;
+    }
+
+    &:empty {
+      display: none;
+    }
+  }
+
+
+  // кросс браузерность
+
+  /* IE hide clear */
+  &::-ms-clear {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Убирает синюю заливку при автокомплите */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--b-color-content-default-primary);
+
+    &:first-line {
+      font-size: 16px;
+      line-height: 20px;
+      font-weight: 400;
+      font-family: var(--g-text-display-font-family);
+      color: var(--b-color-content-default-primary);
+    }
+
+    /* Hack from http://stackoverflow.com/a/29350537 */
+    transition: background-color 999999s ease-in-out 0s;
+  }
+
+  &:-webkit-autofill {
+    animation: onautofillstart 999999s forwards;
+  }
+
+  &:not(:-webkit-autofill) {
+    /* Позволяет отслеживать autofill через js */
+    animation: onautofillcancel 999999s;
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  /* Firefox */
+  &[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@keyframes onautofillstart {
+  from {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.01);
+  }
+}
+@keyframes onautofillcancel {
+  from {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.01);
+  }
+}

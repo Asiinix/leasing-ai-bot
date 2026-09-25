@@ -1,0 +1,34 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}card';
+
+#{$block} {
+  &__wrapper {
+    height: 100%;
+    box-sizing: border-box;
+
+    &_size-m {
+      padding: var(--g-spacing-6);
+      border-radius: var(--b-border-radius-cof-10);
+    }
+  
+    &_size-s {
+      padding: var(--g-spacing-4);
+      border-radius: var(--b-border-radius-cof-6);
+    }
+  
+    &_primary {
+      background-color: var(--b-color-background-secondary);
+      @include shadow-card-m;
+    }
+    
+    &_secondary {
+      background-color: var(--b-color-background-primary);
+    }
+
+    &_autocenter {
+      margin: 0 auto;
+    }
+  }
+}

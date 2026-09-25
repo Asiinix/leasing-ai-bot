@@ -1,5 +1,8 @@
 "use client";
 
+import { Textarea } from "bcc-design";
+import { Button } from "./ui";
+
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUp,
@@ -16,6 +19,7 @@ import { calculateQuote, estimateMaxPrice, findOffers, isPriceAllowed } from "@/
 import { dateLabel, money, percent } from "@/lib/format";
 import type { ClientType, Quote, TermsData } from "@/lib/types";
 import { MoneyInput } from "./money-input";
+import { AssistantMessage } from "./assistant-message";
 
 type Context = {
   modelId: number;
@@ -151,7 +155,7 @@ export function AssistantPanel({
     if (intent.action === "explain") {
       push({
         role: "assistant",
-        text: "Из стоимости автомобиля вычитаем первоначальный взнос. На оставшуюся сумму рассчитываем равные ежемесячные платежи по ставке выбранного срока. Более длинный срок может снизить платеж, но обычно увеличивает общую сумму процентов. Комиссии и страхование в этот расчет не входят.",
+        text: "Из стоимости автомобиля вычитаем **первоначальный взнос**. На оставшуюся сумму рассчитываем равные ежемесячные платежи по ставке выбранного срока. Более длинный срок может **снизить платеж**, но обычно **увеличивает общую сумму процентов**. Комиссии и страхование в этот расчет не входят.",
       });
       return;
     }
@@ -202,7 +206,7 @@ export function AssistantPanel({
     if (next.maxAdvance === 0) {
       push({
         role: "assistant",
-        text: "В доступных условиях требуется первоначальный взнос. Подобрать вариант без аванса не получится. Укажите сумму, которую готовы внести, или уточните другой продукт у BCC Leasing.",
+        text: "В доступных условиях **требуется первоначальный взнос**. Подобрать вариант без аванса не получится. Укажите сумму, которую готовы внести, или уточните другой продукт у BCC Leasing.",
       });
       return;
     }
@@ -231,7 +235,7 @@ export function AssistantPanel({
       if (!data.rates.length) {
         push({
           role: "assistant",
-          text: "Для этой модели пока нет доступных условий расчета. Выберите другого продавца или модель в калькуляторе.",
+          text: "Для этой модели пока нет доступных условий расчета. **Выберите другого продавца или модель** в калькуляторе.",
         });
         return;
       }
@@ -263,12 +267,12 @@ export function AssistantPanel({
         .slice(0, 3);
       const sourceNote =
         data.source === "snapshot"
-          ? ` Расчет по сохраненным тарифам от ${dateLabel(data.checkedAt)}.`
+          ? ` Расчет по **сохраненным тарифам от ${dateLabel(data.checkedAt)}**.`
           : "";
       if (distinct.length) {
         push({
           role: "assistant",
-          text: `Для ${context.modelName} за ${money(next.price)} ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж — до ${money(maxMonthly)}, аванс — до ${money(maxAdvance)}.${sourceNote}`,
+          text: `Для ${context.modelName} за **${money(next.price)}** ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж — **до ${money(maxMonthly)}**, аванс — **до ${money(maxAdvance)}**.${sourceNote}`,
           offers: distinct,
           contextKey,
           budget: next,
@@ -296,12 +300,12 @@ export function AssistantPanel({
             ? "Снизить аванс при этих ограничениях не получается."
             : intent.action === "lower_payment"
               ? "Снизить платеж при этих ограничениях не получается."
-              : `При цене ${money(next.price)} уложиться в эти ограничения не получается.`;
+              : `При цене **${money(next.price)}** уложиться в эти ограничения не получается.`;
         if (withinAdvance[0])
-          explanation += ` Минимальный расчетный платеж с вашим авансом — ${money(withinAdvance[0].monthlyPayment)} на ${withinAdvance[0].rate.months} мес.`;
+          explanation += ` Минимальный расчетный платеж с вашим авансом — **${money(withinAdvance[0].monthlyPayment)}** на **${withinAdvance[0].rate.months} мес.**`;
         if (maximumPrice && maximumPrice < next.price)
-          explanation += ` Можно рассмотреть стоимость до ${money(Math.floor(maximumPrice))}. Это ориентир бюджета, а не предложение автомобиля.`;
-        else explanation += " Попробуйте увеличить доступный аванс или изменить срок.";
+          explanation += ` Можно рассмотреть **стоимость до ${money(Math.floor(maximumPrice))}**. Это ориентир бюджета, а не предложение автомобиля.`;
+        else explanation += " Попробуйте **увеличить доступный аванс** или **изменить срок**.";
         push({ role: "assistant", text: explanation + sourceNote });
       }
     } catch {
@@ -380,9 +384,9 @@ export function AssistantPanel({
             <span>Подберем условия под ваш бюджет</span>
           </div>
         </div>
-        <button className="icon-button" onClick={onClose} aria-label="Закрыть помощника">
+        <Button className="icon-button" onClick={onClose} aria-label="Закрыть помощника">
           <X size={21} />
-        </button>
+        </Button>
       </div>
       <div className="assistant-context">
         <span>{context.modelName}</span>
@@ -400,24 +404,28 @@ export function AssistantPanel({
               автомобиля.
             </p>
             <div className="prompt-list">
-              <button onClick={() => send("Хочу платить до 350 тысяч в месяц, на аванс до 3 млн")}>
+              <Button onClick={() => send("Хочу платить до 350 тысяч в месяц, на аванс до 3 млн")}>
                 <span>До 350 000 ₸ в месяц</span>
                 <ArrowUp size={16} />
-              </button>
-              <button onClick={() => send("Снизить первоначальный взнос")}>
+              </Button>
+              <Button onClick={() => send("Снизить первоначальный взнос")}>
                 <span>Хочу снизить аванс</span>
                 <ArrowUp size={16} />
-              </button>
-              <button onClick={() => send("Как считается платеж?")}>
+              </Button>
+              <Button onClick={() => send("Как считается платеж?")}>
                 <span>Как считается платеж?</span>
                 <ArrowUp size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}
         {messages.map((message) => (
           <div key={message.id} className={`message message-${message.role}`}>
-            <p>{message.text}</p>
+            {message.role === "assistant" ? (
+              <AssistantMessage text={message.text} />
+            ) : (
+              <p>{message.text}</p>
+            )}
             {message.offers?.map((offer, index) => (
               <div className="offer-card" key={`${offer.rate.rateId}:${index}`}>
                 <span className="offer-eyebrow">
@@ -445,7 +453,9 @@ export function AssistantPanel({
                     ? `Срок больше на ${offer.rate.months - context.months} мес. — общая сумма процентов может вырасти.`
                     : `Ставка ${percent(offer.rate.annualRate)}% годовых.`}
                 </p>
-                <button
+                <Button
+                  view="accentPrimary"
+                  fullWidth
                   className="primary-button"
                   disabled={!proposalCurrent(message) || busy}
                   onClick={() =>
@@ -455,7 +465,7 @@ export function AssistantPanel({
                   {proposalCurrent(message)
                     ? "Применить условия"
                     : "Параметры изменились — повторите подбор"}
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -470,14 +480,14 @@ export function AssistantPanel({
         )}
       </div>
       <div className="assistant-bottom">
-        <button
+        <Button
           className="budget-toggle"
           onClick={() => setShowBudget(!showBudget)}
           aria-expanded={showBudget}
         >
           <SlidersHorizontal size={15} /> Настроить бюджет
           <ChevronDown size={15} className={showBudget ? "rotated" : ""} />
-        </button>
+        </Button>
         {showBudget && (
           <form
             className="budget-form"
@@ -503,12 +513,14 @@ export function AssistantPanel({
                 setMemory({ key: contextKey, budget: { ...budget, maxAdvance: value } })
               }
             />
-            <button
+            <Button
+              type="submit"
+              view="accentSecondary"
               className="secondary-button"
               disabled={busy || !budget.maxMonthly || budget.maxAdvance === undefined}
             >
               Подобрать условия
-            </button>
+            </Button>
           </form>
         )}
         <form
@@ -518,7 +530,9 @@ export function AssistantPanel({
             void send();
           }}
         >
-          <textarea
+          <Textarea
+            fullWidth
+            showLettersLimit={false}
             ref={inputRef}
             aria-label="Сообщение помощнику"
             rows={2}
@@ -535,7 +549,7 @@ export function AssistantPanel({
           />
           <div className="composer-actions">
             <span>{listening ? "Идет запись" : "Enter — отправить"}</span>
-            <button
+            <Button
               type="button"
               className={`icon-button ${listening ? "recording" : ""}`}
               aria-label={listening ? "Остановить запись" : "Голосовой ввод"}
@@ -544,15 +558,16 @@ export function AssistantPanel({
               disabled={busy}
             >
               {listening ? <Square size={17} /> : <Mic size={20} />}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              view="accentPrimary"
               className="send-button"
               aria-label="Отправить сообщение"
               disabled={!draft.trim() || busy}
             >
               <ArrowUp size={22} />
-            </button>
+            </Button>
           </div>
         </form>
         {voiceNotice && (

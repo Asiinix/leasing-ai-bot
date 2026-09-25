@@ -1,0 +1,32 @@
+{
+  "name": "bcc-design",
+  "version": "1.6.0-leasing.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/index.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "3.13.12",
+    "@bem-react/classname": "1.6.0",
+    "@maskito/core": "2.2.0",
+    "@maskito/kit": "2.2.0",
+    "@maskito/react": "2.2.0",
+    "lodash": "4.18.1",
+    "rc-slider": "11.1.2",
+    "utility-types": "3.11.0"
+  }
+}

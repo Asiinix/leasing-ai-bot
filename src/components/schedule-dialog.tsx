@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "./ui";
+
 import { Download, Info } from "lucide-react";
 import { buildSchedule } from "@/lib/finance";
 import { moneyPrecise, percent } from "@/lib/format";
@@ -82,10 +84,10 @@ export function ScheduleDialog({
           <Info size={15} /> Предварительный график, без дополнительных расходов. Последний платеж
           корректируется по остатку долга.
         </p>
-        <button className="secondary-button" onClick={download}>
+        <Button view="accentSecondary" className="secondary-button" onClick={download}>
           <Download size={17} />
           Скачать CSV
-        </button>
+        </Button>
       </div>
     </Dialog>
   );

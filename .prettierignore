@@ -4,3 +4,5 @@ package-lock.json
 src/data/*.json
 AGENTS.md
 CLAUDE.md
+
+vendor/

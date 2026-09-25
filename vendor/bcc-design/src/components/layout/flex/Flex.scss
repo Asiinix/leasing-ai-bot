@@ -1,0 +1,17 @@
+@use '../../../variables';
+@import '../../../styles/mixins';
+
+$block: '.#{variables.$ns}flex';
+
+#{$block} {
+  display: flex;
+
+  &_inline {
+    display: inline-flex;
+  }
+
+  &_center-content {
+    justify-content: center;
+    align-items: center;
+  }
+}

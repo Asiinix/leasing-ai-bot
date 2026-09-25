@@ -1,0 +1,25 @@
+@import './themes';
+
+.g-root {
+  background: var(--b-color-background-primary) !important;
+  color: var(--b-color-text-primary);
+
+  @include b-theme-common;
+  @include b-colors-common;
+
+  &_theme_bcc-light {
+    @include b-theme-bcc-light;
+  }
+
+  &_theme_bcc-dark {
+    @include b-theme-bcc-dark;
+  }
+
+  &_theme_junior-light {
+    @include b-theme-junior-light;
+  }
+
+  &_theme_junior-dark {
+    @include b-theme-junior-dark;
+  }
+}

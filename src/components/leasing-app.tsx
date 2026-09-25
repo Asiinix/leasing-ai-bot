@@ -1,5 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { Card, Input, Select, SegmentControl, Slider, Typography } from "bcc-design";
+import { Button, ButtonLink } from "./ui";
+
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -158,10 +162,6 @@ export function LeasingApp() {
   const isApplied = applied && applied.nextKey === formKey(form);
   const rangeMin = limit?.minPrice ?? 5000000;
   const rangeMax = limit?.maxPrice ?? 50000000;
-  const rangeProgress = Math.max(
-    0,
-    Math.min(100, ((form.price - rangeMin) / (rangeMax - rangeMin)) * 100),
-  );
   const costInvalid = Boolean(terms && activeRate && form.price > 0 && !quote);
   let validation = "";
   if (terms && !terms.rates.length)
@@ -243,14 +243,14 @@ export function LeasingApp() {
       <header className="site-header">
         <div className="header-inner">
           <Link href="/" className="brand" aria-label="BCC Leasing — главная">
-            <span className="brand-mark">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>
-              BCC <strong>Leasing</strong>
-            </span>
+            <Image
+              src="/brand/bcc-leasing-logo.png"
+              alt="BCC Leasing"
+              width={966}
+              height={160}
+              sizes="(max-width: 480px) 176px, (max-width: 899px) 200px, 224px"
+              priority
+            />
           </Link>
           <span className="header-divider" />
           <span className="header-description">Лизинг для бизнеса</span>
@@ -268,18 +268,22 @@ export function LeasingApp() {
         </nav>
         <div className="page-heading">
           <div>
-            <h1>Калькулятор лизинга</h1>
+            <Typography.Title tag="h1" isMobileView={false}>
+              Калькулятор лизинга
+            </Typography.Title>
             <p>Рассчитайте платеж и выберите удобные условия</p>
           </div>
-          <button
+          <Button
             ref={assistantButton}
+            view="accentSecondary"
+            size="l"
             className={`assistant-launch ${assistantOpen ? "active" : ""}`}
             onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
             aria-expanded={assistantOpen}
           >
             <Sparkles size={21} />
             {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
-          </button>
+          </Button>
         </div>
         {isApplied && (
           <div className="applied-banner" role="status">
@@ -287,7 +291,7 @@ export function LeasingApp() {
             <span>
               Условия применены: {form.months} месяцев, аванс {percent(form.advancePercent)}%
             </span>
-            <button
+            <Button
               onClick={() => {
                 setForm(applied.previous);
                 setSample(applied.previousSample);
@@ -296,189 +300,194 @@ export function LeasingApp() {
             >
               <Undo2 size={15} />
               Отменить
-            </button>
-            <button
+            </Button>
+            <Button
               className="banner-close"
               aria-label="Скрыть уведомление"
               onClick={() => setApplied(null)}
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
         )}
         {(catalogError || termsError === termsKey) && (
           <div className="error-banner" role="alert">
             <Info size={18} />
             <span>Не удалось загрузить условия. Проверьте подключение и попробуйте снова.</span>
-            <button onClick={() => setRetry((value) => value + 1)}>
+            <Button onClick={() => setRetry((value) => value + 1)}>
               <RefreshCw size={15} />
               Повторить
-            </button>
+            </Button>
           </div>
         )}
         <div className="calculator-grid">
           <section className="form-panel panel" aria-labelledby="parameters-heading">
-            <div className="panel-heading">
-              <h2 id="parameters-heading">Параметры лизинга</h2>
-              <span className="form-step">01 / 02</span>
-            </div>
-            <div className="client-row">
-              <span className="field-label">Клиент</span>
-              <div className="segmented-control" role="group" aria-label="Тип клиента">
-                <button
-                  aria-pressed={form.clientType === "IP"}
-                  className={form.clientType === "IP" ? "selected" : ""}
-                  onClick={() => change({ clientType: "IP" })}
-                >
-                  ИП
-                </button>
-                <button
-                  aria-pressed={form.clientType === "TOO"}
-                  className={form.clientType === "TOO" ? "selected" : ""}
-                  onClick={() => change({ clientType: "TOO" })}
-                >
-                  ТОО
-                </button>
+            <Card height="auto">
+              <div className="panel-heading">
+                <Typography.Title tag="h2" id="parameters-heading">
+                  Параметры лизинга
+                </Typography.Title>
+                <span className="form-step">01 / 02</span>
               </div>
-            </div>
-            {form.clientType === "TOO" && (
-              <p className="too-note">
-                Обычный лизинг для ТОО со сроком деятельности более 1 года.
-              </p>
-            )}
-            <div className="field-group vehicle-group">
-              <label className="field-label" htmlFor="vehicle-button">
-                Автомобиль
-              </label>
-              <button
-                id="vehicle-button"
-                className="vehicle-button"
-                onClick={() => setModelPickerOpen(true)}
-                disabled={!catalog}
-              >
-                <CarFront size={22} />
-                <span>{catalog ? title : "Загружаем модели…"}</span>
-                <ChevronDown size={20} />
-              </button>
-              <p className="field-hint">{model?.partnerName ?? "Справочник моделей и продавцов"}</p>
-            </div>
-            <div className="field-group price-group">
-              <MoneyInput
-                label="Стоимость автомобиля"
-                value={form.price}
-                onChange={(price) => {
-                  change({ price });
-                  setSample(false);
-                }}
-                placeholder="Укажите стоимость"
-                invalid={costInvalid}
-              />
-              <div className="slider-wrap">
-                <input
-                  type="range"
-                  aria-label="Стоимость автомобиля — ползунок"
-                  min={rangeMin}
-                  max={rangeMax}
-                  step={50000}
-                  value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
-                  onChange={(event) => {
-                    change({ price: Number(event.target.value) });
-                    setSample(false);
-                  }}
-                  style={{ "--range-progress": `${rangeProgress}%` } as React.CSSProperties}
-                  disabled={!activeRate}
+              <div className="client-row">
+                <span className="field-label">Клиент</span>
+                <SegmentControl
+                  aria-label="Тип клиента"
+                  size="md"
+                  selectedId={form.clientType === "IP" ? 0 : 1}
+                  items={[
+                    { id: 0, label: "ИП" },
+                    { id: 1, label: "ТОО" },
+                  ]}
+                  onChange={(id) => change({ clientType: id === 0 ? "IP" : "TOO" })}
                 />
               </div>
-              <div className="range-labels">
-                <span>{number(rangeMin)} ₸</span>
-                <span>{number(rangeMax)} ₸</span>
+              {form.clientType === "TOO" && (
+                <p className="too-note">
+                  Обычный лизинг для ТОО со сроком деятельности более 1 года.
+                </p>
+              )}
+              <div className="field-group vehicle-group">
+                <label className="field-label" htmlFor="vehicle-button">
+                  Автомобиль
+                </label>
+                <Button
+                  id="vehicle-button"
+                  className="vehicle-button"
+                  onClick={() => setModelPickerOpen(true)}
+                  disabled={!catalog}
+                >
+                  <CarFront size={22} />
+                  <span>{catalog ? title : "Загружаем модели…"}</span>
+                  <ChevronDown size={20} />
+                </Button>
+                <p className="field-hint">
+                  {model?.partnerName ?? "Справочник моделей и продавцов"}
+                </p>
               </div>
-              <p className="field-hint">
-                {sample ? (
-                  <>
-                    <span className="example-dot" /> Для примера указано 15 млн ₸. Введите цену от
-                    продавца.
-                  </>
-                ) : (
-                  "Укажите цену из предложения продавца или счета."
-                )}
-              </p>
-            </div>
-            <div className="field-group">
-              <label className="field-label" htmlFor="advance-select">
-                Первоначальный взнос
-              </label>
-              <div className="advance-row">
-                <div className="computed-field">
-                  <span>{money(Math.round((form.price * form.advancePercent) / 100))}</span>
+              <div className="field-group price-group">
+                <MoneyInput
+                  label="Стоимость автомобиля"
+                  value={form.price}
+                  onChange={(price) => {
+                    change({ price });
+                    setSample(false);
+                  }}
+                  placeholder="Укажите стоимость"
+                  invalid={costInvalid}
+                >
+                  <div className="slider-wrap">
+                    <Slider
+                      aria-label="Стоимость автомобиля — ползунок"
+                      min={rangeMin}
+                      max={rangeMax}
+                      step={50000}
+                      value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
+                      onUpdate={(price) => {
+                        if (typeof price === "number") {
+                          change({ price });
+                          setSample(false);
+                        }
+                      }}
+                      disabled={!activeRate}
+                    />
+                  </div>
+                </MoneyInput>
+                <div className="range-labels">
+                  <span>{number(rangeMin)} ₸</span>
+                  <span>{number(rangeMax)} ₸</span>
                 </div>
-                <div className="select-wrap">
-                  <select
-                    id="advance-select"
-                    value={form.advancePercent}
-                    onChange={(event) => setAdvance(Number(event.target.value))}
-                    disabled={!terms?.rates.length}
-                  >
-                    {(advances.length ? advances : [form.advancePercent]).map((advance) => (
-                      <option key={advance} value={advance}>
-                        {percent(advance)}%
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={18} />
+                <p className="field-hint">
+                  {sample ? (
+                    <>
+                      <span className="example-dot" /> Для примера указано 15 млн ₸. Введите цену от
+                      продавца.
+                    </>
+                  ) : (
+                    "Укажите цену из предложения продавца или счета."
+                  )}
+                </p>
+              </div>
+              <div className="field-group">
+                <label className="field-label" htmlFor="advance-select">
+                  Первоначальный взнос
+                </label>
+                <div className="advance-row">
+                  <Input
+                    fullWidth
+                    readOnly
+                    aria-label="Сумма первоначального взноса"
+                    value={money(Math.round((form.price * form.advancePercent) / 100))}
+                  />
+                  <div className="select-wrap">
+                    <Select
+                      fullWidth
+                      id="advance-select"
+                      aria-label="Первоначальный взнос"
+                      allowSearch={false}
+                      disabled={!terms?.rates.length}
+                      value={form.advancePercent}
+                      onChange={({ value }) => {
+                        if (typeof value === "number") setAdvance(value);
+                      }}
+                      options={(advances.length ? advances : [form.advancePercent]).map(
+                        (advance) => ({
+                          value: advance,
+                          label: `${percent(advance)}%`,
+                        }),
+                      )}
+                    />
+                  </div>
                 </div>
+                <p className="field-hint">Сумма рассчитывается от стоимости автомобиля</p>
               </div>
-              <p className="field-hint">Сумма рассчитывается от стоимости автомобиля</p>
-            </div>
-            <div className="field-group term-group">
-              <span className="field-label" id="term-label">
-                Срок лизинга
-              </span>
-              <div className="term-options" role="group" aria-labelledby="term-label">
-                {(months.length ? months : [37, 48, 60]).map((month) => {
-                  const available = terms?.rates.some(
-                    (rate) => rate.months === month && rate.advancePercent === form.advancePercent,
-                  );
-                  return (
-                    <button
-                      key={month}
-                      aria-pressed={form.months === month}
-                      className={form.months === month ? "selected" : ""}
-                      disabled={!available}
-                      onClick={() => change({ months: month })}
-                    >
-                      {month} <span>мес.</span>
-                    </button>
-                  );
-                })}
+              <div className="field-group term-group">
+                <span className="field-label" id="term-label">
+                  Срок лизинга
+                </span>
+                <SegmentControl
+                  className="term-options"
+                  aria-labelledby="term-label"
+                  size="md"
+                  selectedId={form.months}
+                  onChange={(month) => change({ months: month })}
+                  items={(months.length ? months : [37, 48, 60]).map((month) => ({
+                    id: month,
+                    label: `${month} мес.`,
+                    disabled: !terms?.rates.some(
+                      (rate) =>
+                        rate.months === month && rate.advancePercent === form.advancePercent,
+                    ),
+                  }))}
+                />
               </div>
-            </div>
-            {validation && (
-              <p className="validation-message" role="alert">
-                <Info size={17} />
-                {validation}
-              </p>
-            )}
-            <div className="form-bottom">
-              <span className={`source-status ${terms?.source === "snapshot" ? "snapshot" : ""}`}>
-                {loading ? (
-                  <LoaderCircle size={14} className="spin" />
-                ) : (
-                  <span className="status-dot" />
-                )}
-                {loading
-                  ? "Получаем условия"
-                  : terms
-                    ? terms.source === "live"
-                      ? "Условия обновлены"
-                      : `Тарифы от ${dateLabel(terms.checkedAt)}`
-                    : "Условия недоступны"}
-              </span>
-              <button className="text-button muted" onClick={resetExample}>
-                <RefreshCw size={13} />
-                Пример расчета
-              </button>
-            </div>
+              {validation && (
+                <p className="validation-message" role="alert">
+                  <Info size={17} />
+                  {validation}
+                </p>
+              )}
+              <div className="form-bottom">
+                <span className={`source-status ${terms?.source === "snapshot" ? "snapshot" : ""}`}>
+                  {loading ? (
+                    <LoaderCircle size={14} className="spin" />
+                  ) : (
+                    <span className="status-dot" />
+                  )}
+                  {loading
+                    ? "Получаем условия"
+                    : terms
+                      ? terms.source === "live"
+                        ? "Условия обновлены"
+                        : `Тарифы от ${dateLabel(terms.checkedAt)}`
+                      : "Условия недоступны"}
+                </span>
+                <Button className="text-button muted" onClick={resetExample}>
+                  <RefreshCw size={13} />
+                  Пример расчета
+                </Button>
+              </div>
+            </Card>
           </section>
           <div className="right-column" ref={assistantAnchor}>
             {assistantOpen ? (
@@ -494,106 +503,113 @@ export function LeasingApp() {
               />
             ) : (
               <section className="summary-panel panel" aria-labelledby="summary-heading">
-                <div className="summary-topline">
-                  <h2 id="summary-heading">Ваш расчет</h2>
-                  <span className="summary-icon">
-                    <FileText size={20} />
-                  </span>
-                </div>
-                {loading ? (
-                  <div className="summary-loading" role="status">
-                    <div className="skeleton amount-skeleton" />
-                    <div className="skeleton short-skeleton" />
-                    <p>Рассчитываем платеж…</p>
-                  </div>
-                ) : quote ? (
-                  <>
-                    <div className="monthly-payment" aria-live="polite">
-                      <strong data-testid="monthly-payment">{money(quote.monthlyPayment)}</strong>
-                      <span>ежемесячный платеж</span>
-                    </div>
-                    {isApplied && quote.monthlyPayment <= applied.maxMonthly && (
-                      <span className="budget-badge">
-                        <Check size={14} />В бюджете до {money(applied.maxMonthly)}
-                      </span>
-                    )}
-                    <div className="summary-rule" />
-                    <dl className="summary-details">
-                      <div>
-                        <dt>Стоимость автомобиля</dt>
-                        <dd>{money(form.price)}</dd>
-                      </div>
-                      <div>
-                        <dt>
-                          Первоначальный взнос <span>· {percent(form.advancePercent)}%</span>
-                        </dt>
-                        <dd>{money(quote.advanceAmount)}</dd>
-                      </div>
-                      <div className="financing-row">
-                        <dt>Сумма финансирования</dt>
-                        <dd>{money(quote.principal)}</dd>
-                      </div>
-                      <div>
-                        <dt>Срок лизинга</dt>
-                        <dd>{form.months} месяцев</dd>
-                      </div>
-                      <div>
-                        <dt>Годовая ставка</dt>
-                        <dd>{percent(quote.rate.annualRate)}%</dd>
-                      </div>
-                    </dl>
-                    {isApplied && applied.previousQuote && (
-                      <div className="comparison">
-                        <CheckCheck size={17} />
-                        <div>
-                          Было {money(applied.previousQuote.monthlyPayment)} при сроке{" "}
-                          {applied.previous.months} мес.
-                          <span>
-                            {form.months > applied.previous.months
-                              ? `${quote.monthlyPayment < applied.previousQuote.monthlyPayment ? "Платеж ниже" : quote.monthlyPayment > applied.previousQuote.monthlyPayment ? "Платеж выше" : "Платеж прежний"}, срок больше на ${form.months - applied.previous.months} мес.`
-                              : "Условия обновлены по вашему бюджету"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    <button className="schedule-link" onClick={() => setScheduleOpen(true)}>
-                      <FileText size={17} />
-                      Показать график платежей
-                      <ArrowUpRight size={17} />
-                    </button>
-                    <button
-                      className="primary-button continue-button"
-                      onClick={() => setContinueOpen(true)}
-                    >
-                      Продолжить оформление
-                      <ArrowRight size={19} />
-                    </button>
-                    <p className="summary-disclaimer">
-                      Предварительный расчет. Без страхования и дополнительных расходов. Не является
-                      офертой.
-                    </p>
-                  </>
-                ) : (
-                  <div className="summary-empty">
-                    <span>
-                      <FileText size={29} />
+                <Card height="auto">
+                  <div className="summary-topline">
+                    <Typography.Title tag="h2" id="summary-heading">
+                      Ваш расчет
+                    </Typography.Title>
+                    <span className="summary-icon">
+                      <FileText size={20} />
                     </span>
-                    <h3>{form.price ? "Проверьте параметры" : "Начните со стоимости"}</h3>
-                    <p>
-                      {form.price
-                        ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
-                        : "Укажите цену автомобиля от продавца — здесь появится ваш платеж."}
-                    </p>
                   </div>
-                )}
-                <div className="summary-trust">
-                  <ShieldCheck size={16} />
-                  <span>Расчет без заявки и персональных данных</span>
-                </div>
+                  {loading ? (
+                    <div className="summary-loading" role="status">
+                      <div className="skeleton amount-skeleton" />
+                      <div className="skeleton short-skeleton" />
+                      <p>Рассчитываем платеж…</p>
+                    </div>
+                  ) : quote ? (
+                    <>
+                      <div className="monthly-payment" aria-live="polite">
+                        <strong data-testid="monthly-payment">{money(quote.monthlyPayment)}</strong>
+                        <span>ежемесячный платеж</span>
+                      </div>
+                      {isApplied && quote.monthlyPayment <= applied.maxMonthly && (
+                        <span className="budget-badge">
+                          <Check size={14} />В бюджете до {money(applied.maxMonthly)}
+                        </span>
+                      )}
+                      <div className="summary-rule" />
+                      <dl className="summary-details">
+                        <div>
+                          <dt>Стоимость автомобиля</dt>
+                          <dd>{money(form.price)}</dd>
+                        </div>
+                        <div>
+                          <dt>
+                            Первоначальный взнос <span>· {percent(form.advancePercent)}%</span>
+                          </dt>
+                          <dd>{money(quote.advanceAmount)}</dd>
+                        </div>
+                        <div className="financing-row">
+                          <dt>Сумма финансирования</dt>
+                          <dd>{money(quote.principal)}</dd>
+                        </div>
+                        <div>
+                          <dt>Срок лизинга</dt>
+                          <dd>{form.months} месяцев</dd>
+                        </div>
+                        <div>
+                          <dt>Годовая ставка</dt>
+                          <dd>{percent(quote.rate.annualRate)}%</dd>
+                        </div>
+                      </dl>
+                      {isApplied && applied.previousQuote && (
+                        <div className="comparison">
+                          <CheckCheck size={17} />
+                          <div>
+                            Было {money(applied.previousQuote.monthlyPayment)} при сроке{" "}
+                            {applied.previous.months} мес.
+                            <span>
+                              {form.months > applied.previous.months
+                                ? `${quote.monthlyPayment < applied.previousQuote.monthlyPayment ? "Платеж ниже" : quote.monthlyPayment > applied.previousQuote.monthlyPayment ? "Платеж выше" : "Платеж прежний"}, срок больше на ${form.months - applied.previous.months} мес.`
+                                : "Условия обновлены по вашему бюджету"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <Button className="schedule-link" onClick={() => setScheduleOpen(true)}>
+                        <FileText size={17} />
+                        Показать график платежей
+                        <ArrowUpRight size={17} />
+                      </Button>
+                      <Button
+                        view="accentPrimary"
+                        size="l"
+                        fullWidth
+                        className="primary-button continue-button"
+                        onClick={() => setContinueOpen(true)}
+                      >
+                        Продолжить оформление
+                        <ArrowRight size={19} />
+                      </Button>
+                      <p className="summary-disclaimer">
+                        Предварительный расчет. Без страхования и дополнительных расходов. Не
+                        является офертой.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="summary-empty">
+                      <span>
+                        <FileText size={29} />
+                      </span>
+                      <h3>{form.price ? "Проверьте параметры" : "Начните со стоимости"}</h3>
+                      <p>
+                        {form.price
+                          ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
+                          : "Укажите цену автомобиля от продавца — здесь появится ваш платеж."}
+                      </p>
+                    </div>
+                  )}
+                  <div className="summary-trust">
+                    <ShieldCheck size={16} />
+                    <span>Расчет без заявки и персональных данных</span>
+                  </div>
+                </Card>
               </section>
             )}
             {!assistantOpen && (
-              <button className="assistant-teaser" onClick={openAssistant}>
+              <Button className="assistant-teaser" onClick={openAssistant}>
                 <span className="teaser-icon">
                   <Sparkles size={22} />
                 </span>
@@ -602,7 +618,7 @@ export function LeasingApp() {
                   <small>Помощник подберет срок и аванс</small>
                 </span>
                 <ArrowUpRight size={19} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -639,14 +655,14 @@ export function LeasingApp() {
           <div className="faq-list">
             {questions.map((question, index) => (
               <div className="faq-item" key={question.title}>
-                <button
+                <Button
                   onClick={() => setFaq(faq === index ? null : index)}
                   aria-expanded={faq === index}
                   aria-controls={`faq-${index}`}
                 >
                   {question.title}
                   <ChevronDown size={17} className={faq === index ? "rotated" : ""} />
-                </button>
+                </Button>
                 <div id={`faq-${index}`} hidden={faq !== index}>
                   <p>{question.answer}</p>
                 </div>
@@ -706,7 +722,7 @@ export function LeasingApp() {
               подключен — параметры потребуется указать повторно.
             </p>
           </div>
-          <a
+          <ButtonLink
             className="primary-button"
             href="https://business.bcc.kz/online-leasing/"
             target="_blank"
@@ -714,10 +730,10 @@ export function LeasingApp() {
           >
             Открыть заявку BCC
             <ArrowUpRight size={18} />
-          </a>
-          <button className="text-button handoff-back" onClick={() => setContinueOpen(false)}>
+          </ButtonLink>
+          <Button className="text-button handoff-back" onClick={() => setContinueOpen(false)}>
             Вернуться к расчету
-          </button>
+          </Button>
         </Dialog>
       )}
     </>

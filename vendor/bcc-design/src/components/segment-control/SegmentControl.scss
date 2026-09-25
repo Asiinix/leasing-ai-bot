@@ -1,0 +1,94 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}segmentControl';
+
+#{$block} {
+  --segment-active-transition-duration: 0.15s;
+  --segment-active-transition-timing-function: linear;
+
+  font-family: var(--g-text-body-font-family);
+  display: flex;
+  list-style-type: none;
+  background: var(--b-color-content-default-forty);
+  border: 2px solid var(--b-color-content-default-forty);
+  border-radius: var(--b-border-radius-cof-4);
+  position: relative;
+  margin: 0;
+  padding: 0;
+  @include text-body-2;
+
+  .tab-item {
+    cursor: pointer;
+    padding: 0;
+    min-width: 0;
+    border-radius: 6px;
+    color: var(--b-color-content-default-dark-forty) !important;
+    position: relative;
+    z-index: 3;
+    flex-basis: 100%;
+    text-align: center;
+    button {
+      display: block;
+      width: 100%;
+      min-height: 40px;
+      padding: 4px 20px;
+      background: transparent;
+      border: 0;
+      border-radius: inherit;
+      color: inherit;
+      font: inherit;
+      white-space: nowrap;
+      &:disabled { opacity: 0.4; cursor: not-allowed; }
+      &:focus-visible { outline: 2px solid var(--b-color-brand-500); outline-offset: 2px; }
+    }
+  }
+
+  .plate {
+    position: absolute;
+    z-index: 2;
+    background-color: var(--b-color-background-secondary);
+    transition: all var(--segment-active-transition-duration) var(--segment-active-transition-timing-function);
+    border-radius: var(--b-border-radius-cof-3);
+    height: 100%;
+  }
+
+  .active {
+    color: var(--b-color-content-default-primary) !important;
+  }
+
+  &_shape {
+    &_rounded {
+      border-radius: var(--b-border-radius-cof-3);
+    }
+
+    &_rectangular {
+      border-radius: 0;
+
+      .plate,
+      .tab-item {
+        border-radius: 0;
+      }
+    }
+  }
+
+  &_size {
+    &_xs {
+      @include text-caption-1();
+    }
+
+    &_sm {
+      @include text-body-2();
+    }
+
+    &_md {
+      @include text-body-1();
+      font-weight: 500 !important;
+    }
+
+    &_lg {
+      @include text-heading-4();
+      font-weight: 500 !important;
+    }
+  }
+}

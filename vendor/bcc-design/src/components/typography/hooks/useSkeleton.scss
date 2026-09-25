@@ -1,0 +1,14 @@
+@use '../../../variables.scss';
+@import '../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}use-skeleton';
+
+#{$block} {
+  border-radius: 8px;
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}

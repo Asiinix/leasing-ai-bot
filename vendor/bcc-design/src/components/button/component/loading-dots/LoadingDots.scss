@@ -1,0 +1,100 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}button-loading-dots';
+
+#{$block} {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+
+  &__dot {
+    border-radius: var(--b-border-radius-circle);
+    animation: jump 1.2s infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    &_accentPrimary {
+      background-color: var(--b-color-ultimate-primary);
+    }
+
+    &_accentSecondary {
+      background-color: var(--b-color-brand-600);
+    }
+
+    &_accentTertiary {
+      background-color: var(--b-color-brand-500);
+    }
+
+    &_invertPrimary {
+      background-color: var(--b-color-base-gray-900);
+    }
+
+    &_invertSecondary {
+      background-color: var(--b-color-base-white-solid);
+    }
+
+    &_invertTertiary {
+      background-color: var(--b-color-base-white-solid);
+    }
+
+    &_destructive {
+      background-color: var(--b-color-ultimate-primary);
+    }
+
+    &_neutral {
+      background-color: var(--b-color-content-default-primary);
+    }
+
+    &_link {
+      background-color: var(--b-color-brand-600);
+    }
+
+    &_ghost {
+      background-color: var(--b-color-base-white-solid);
+    }
+
+    &_s {
+      width: 4px;
+      height: 4px;
+      margin: 0 2px;
+    }
+
+    &_m {
+      width: 5px;
+      height: 5px;
+      margin: 0 3px;
+    }
+
+    &_l {
+      width: 6px;
+      height: 6px;
+      margin: 0 3px;
+    }
+
+    &_xl {
+      width: 6px;
+      height: 6px;
+      margin: 0 3px;
+    }
+  }
+}
+
+@keyframes jump {
+  0%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

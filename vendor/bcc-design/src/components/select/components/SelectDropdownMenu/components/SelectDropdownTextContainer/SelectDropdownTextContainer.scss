@@ -1,0 +1,27 @@
+@use '../../../../../../variables.scss';
+@import '../../../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}select-dropdown-text-container';
+
+#{$block} {
+  display: flex;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: var(--g-spacing-3);
+  @include text-body-2;
+  font-weight: 400;
+
+  &_justify_start {
+    justify-content: start;
+  }
+  &_justify_center {
+    justify-content: center;
+  }
+  &_justify_end {
+    justify-content: end;
+  }
+
+  &:empty {
+    display: none;
+  }
+}

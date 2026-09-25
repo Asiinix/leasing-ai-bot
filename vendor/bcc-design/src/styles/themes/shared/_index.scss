@@ -1,0 +1,9 @@
+@use './typography';
+@use './spacing';
+@use './border-radius';
+
+@mixin b-theme-common {
+  @include typography.variables;
+  @include spacing.variables;
+  @include border-radius.variables;
+}

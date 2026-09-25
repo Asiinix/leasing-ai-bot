@@ -1,0 +1,109 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}skeleton';
+
+
+:root {
+  --skeleton-display: block;
+  /*--skeleton-default-color: var(--color-light-neutral-translucent-100);*/
+  --skeleton-border-radius: 4px;
+  --skeleton-backdrop-filter: none;
+
+  /* experimental animation switcher */
+  --skeleton-gradient-animation-display: block;
+  --skeleton-bg-animation-display: none;
+  --skeleton-bg-animation-color: transparent;
+}
+
+#{$block} {
+  position: relative;
+  display: var(--skeleton-display);
+  vertical-align: middle;
+  color: transparent;
+  border-radius: var(--skeleton-border-radius);
+  overflow: hidden;
+  backdrop-filter: var(--skeleton-backdrop-filter);
+  background: #ebedf2;
+
+  /* Safari overflow fix https://gist.github.com/ayamflow/b602ab436ac9f05660d9c15190f4fd7b */
+  /*-webkit-mask-image: -webkit-radial-gradient(white, black);*/
+
+
+  & > * {
+    visibility: hidden;
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--skeleton-bg-animation-color);
+  }
+
+  &_animate {
+    &:before {
+      display: var(--skeleton-bg-animation-display);
+      animation-name: background;
+      animation-duration: 0.5s;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+      animation-timing-function: ease-in-out;
+      animation-play-state: running;
+      opacity: 0.5;
+    }
+
+    &:after {
+      display: var(--skeleton-gradient-animation-display);
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 500%;
+      height: 100%;
+      transform: translateX(-80%);
+      animation-name: gradient;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+      background-image: linear-gradient(
+          to left,
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0) 40%,
+          rgba(0, 0, 0, 0.05) 50%,
+          rgba(0, 0, 0, 0) 60%,
+          rgba(0, 0, 0, 0)
+      );
+    }
+  }
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  #{$block}_animate:before {
+    opacity: 0.4;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    transform: translateX(-80%);
+  }
+  67% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes background {
+  0% {
+    background: rgb(182, 188, 195);
+  }
+  100% {
+    background: rgb(198, 205, 214);
+  }
+}

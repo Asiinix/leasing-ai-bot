@@ -1,0 +1,175 @@
+@use '../../../variables.scss';
+@import '../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}form-control';
+$transitionTime: 0.2s ease;
+
+#{$block} {
+  font-family: var(--g-text-body-font-family);
+  width: 100%;
+  max-width: 360px;
+
+  color: var(--b-color-content-default-primary);
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  cursor: text;
+
+
+  // модификаторы
+  &_fullWidth {
+    max-width: 100%;
+  }
+
+  &_disabled {
+    cursor: not-allowed;
+    color: var(--b-color-content-disabled-secondary);
+  }
+
+
+  // элементы
+  &__inputContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--g-spacing-2);
+    transition: background $transitionTime ease, box-shadow $transitionTime ease;
+    box-sizing: border-box;
+    background-color: var(--b-color-content-invert-secondary);
+    border-radius: var(--g-spacing-3);
+    padding: var(--g-spacing-3) var(--g-spacing-4);
+
+    caret-color: var(--b-color-brand-500);
+    outline: 3px solid transparent;
+    border: 1px solid transparent;
+
+    height: 48px;
+
+    cursor: text;
+
+    &:not(&_error):not(&_disabled):hover {
+      border: 1px solid var(--b-color-brand-500);
+    }
+
+    &_focused {
+      outline: 3px solid var(--b-color-brand-100);
+      border: 1px solid var(--b-color-brand-500);
+    }
+
+    &_disabled {
+      cursor: not-allowed;
+      outline: 3px solid transparent;
+      border: 1px solid transparent;
+      background-color: var(--b-color-content-disabled-primary);
+    }
+
+    &_error:not(&_disabled) {
+      outline: 3px solid transparent;
+      border: 1px solid var(--b-color-status-error-default);
+      caret-color: var(--b-color-status-error-default);
+    }
+  }
+
+
+  &__inputRoot {
+    position: relative;
+    flex-grow: 1;
+  }
+
+
+  &__label {
+    display: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: $transitionTime;
+    transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+
+    &_outerLabel {
+      display: block;
+      margin-bottom: var(--g-spacing-half);
+
+      @include text-body-1;
+      font-weight: 500;
+    }
+
+    &_innerLabel {
+      display: block;
+      font-size: var(--b-text-body-1-font-size);
+      line-height: var(--b-text-body-2-line-height);
+      font-weight: 400;
+      pointer-events: none;
+      color: var(--b-color-content-default-tertiary);
+
+      position: relative;
+    }
+
+    &_active {
+      transform: translateY(-75%);
+      font-size: var(--b-text-caption-1-font-size);
+      line-height: var(--b-text-caption-1-line-height);
+      color: var(--b-color-content-default-primary);
+    }
+
+    &_disabled {
+      color: var(--b-color-content-disabled-secondary);
+    }
+  }
+
+
+  &__addon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+
+    svg {
+      fill: var(--b-color-content-default-tertiary);
+      width: 24px;
+      height: 24px;
+    }
+
+    &:empty {
+      display: none;
+    }
+  }
+
+
+  &__caption {
+    @include text-caption-1;
+    margin-top: 0;
+    max-height: 0;
+    transition: max-height 0.2s ease, margin-top 0.2s ease;
+    user-select: none;
+    @include optimizedWordWrap;
+
+    &_active {
+      max-height: 48px;
+      margin-top: var(--g-spacing-1);
+    }
+
+    &_error {
+      color: var(--b-color-status-error-default);
+    }
+  }
+
+
+  &__input {
+    &_innerLabel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      transition: $transitionTime;
+    }
+
+    &_active {
+      transition: none;
+      transform: translateY(25%);
+    }
+  }
+
+  // инпут
+  input {
+    padding: 0;
+  }
+}

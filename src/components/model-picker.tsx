@@ -1,5 +1,8 @@
 "use client";
 
+import { Input } from "bcc-design";
+import { Button } from "./ui";
+
 import { useMemo, useState } from "react";
 import { CarFront, Check, Search } from "lucide-react";
 import { Dialog } from "./dialog";
@@ -40,8 +43,9 @@ export function ModelPicker({
         Модель и продавец определяют доступные условия. Стоимость вы укажете отдельно.
       </p>
       <div className="search-field">
-        <Search size={19} />
-        <input
+        <Input
+          fullWidth
+          leftAddon={<Search size={19} />}
           autoFocus
           aria-label="Поиск автомобиля"
           placeholder="Марка, модель или продавец"
@@ -51,7 +55,7 @@ export function ModelPicker({
       </div>
       <div className="model-list">
         {filtered.slice(0, 100).map((model) => (
-          <button
+          <Button
             key={model.id}
             className={`model-option ${model.id === selected ? "selected" : ""}`}
             onClick={() => onSelect(model)}
@@ -64,7 +68,7 @@ export function ModelPicker({
               <small>{model.partnerName}</small>
             </span>
             {model.id === selected && <Check size={19} className="green" />}
-          </button>
+          </Button>
         ))}
         {!filtered.length && (
           <div className="empty-search">

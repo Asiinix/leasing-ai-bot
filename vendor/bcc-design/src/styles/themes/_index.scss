@@ -1,0 +1,21 @@
+@import './shared';
+@import './bcc-light';
+@import './bcc-dark';
+@import './junior-light';
+@import './junior-dark';
+@import './shared/colors';
+
+@mixin b-theme-bcc-light {
+  @include b-colors-base-bcc-light();
+}
+@mixin b-theme-bcc-dark {
+  @include b-colors-base-bcc-dark();
+}
+
+@mixin b-theme-junior-light {
+  @include b-colors-base-junior-light();
+}
+
+@mixin b-theme-junior-dark {
+  @include b-colors-base-junior-dark();
+}

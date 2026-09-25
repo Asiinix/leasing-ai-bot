@@ -1,0 +1,86 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}typography-title';
+
+
+#{$block} {
+  color: var(--b-color-content-default-primary);
+  font-family: var(--g-text-body-font-family);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &_title {
+    margin: 0 !important;
+    padding: 0;
+
+    &_h1 {
+      @include text-heading-1();
+      margin: 0 !important;
+    }
+
+    &_h2 {
+      @include text-heading-2();
+      margin: 0 !important;
+    }
+
+    &_h3 {
+      @include text-heading-3();
+      margin: 0 !important;
+    }
+
+    &_h4 {
+      @include text-heading-4();
+      margin: 0 !important;
+    }
+
+    &_h1_mobile {
+      @include text-mobile-heading-1();
+      margin: 0 !important;
+    }
+
+    &_h2_mobile {
+      @include text-mobile-heading-2();
+      margin: 0 !important;
+    }
+
+    &_h3_mobile {
+      @include text-mobile-heading-3();
+      margin: 0 !important;
+    }
+
+    &_h4_mobile {
+      @include text-mobile-heading-3();
+      margin: 0 !important;
+    }
+
+    &_bold {
+      font-weight: bold;
+    }
+
+    &_medium {
+      font-weight: 500;
+    }
+
+    &_regular {
+      font-weight: normal;
+    }
+  }
+
+  &_rowLimit_none {
+    -webkit-line-clamp: none;
+  }
+
+  &_rowLimit_1 {
+    @include row_limit(1);
+  }
+
+  &_rowLimit_2 {
+    @include row_limit(2);
+  }
+
+  &_rowLimit_3 {
+    @include row_limit(3);
+  }
+}

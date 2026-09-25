@@ -1,6 +1,7 @@
 "use client";
 
-import { useId } from "react";
+import { Input } from "bcc-design";
+import { useId, type ReactNode } from "react";
 import { number, readMoney } from "@/lib/format";
 
 export function MoneyInput({
@@ -11,6 +12,7 @@ export function MoneyInput({
   suffix = "₸",
   className = "",
   invalid = false,
+  children,
 }: {
   label: string;
   value: number;
@@ -19,14 +21,24 @@ export function MoneyInput({
   suffix?: string;
   className?: string;
   invalid?: boolean;
+  children?: ReactNode;
 }) {
   const id = useId();
   return (
     <div className={`money-control ${className}`}>
-      <label htmlFor={id}>{label}</label>
-      <div className={`input-surface ${invalid ? "input-invalid" : ""}`}>
-        <input
+      <label className="money-label" htmlFor={id}>
+        {label}
+      </label>
+      <div
+        className={children ? "money-surface money-surface_composite" : "money-surface"}
+        data-invalid={invalid || undefined}
+      >
+        <Input
           id={id}
+          fullWidth
+          aria-label={label}
+          error={invalid}
+          rightAddon={<span className="money-suffix">{suffix}</span>}
           type="text"
           inputMode="numeric"
           autoComplete="off"
@@ -38,7 +50,7 @@ export function MoneyInput({
           }}
           placeholder={placeholder}
         />
-        <span>{suffix}</span>
+        {children}
       </div>
     </div>
   );

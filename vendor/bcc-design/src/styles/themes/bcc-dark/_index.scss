@@ -1,0 +1,7 @@
+@import './text';
+@import './base';
+
+@mixin b-colors-dark {
+    @include b-colors-base-dark;
+    @include b-colors-text-dark;
+}

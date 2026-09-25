@@ -1,0 +1,15 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}select-chevrone-down-icon';
+
+#{$block} {
+  transform-origin: center;
+  fill: var(--b-content-default-primary);
+  transition: 0.2s;
+  cursor: pointer;
+
+  &_open {
+    transform: rotate(180deg);
+  }
+}

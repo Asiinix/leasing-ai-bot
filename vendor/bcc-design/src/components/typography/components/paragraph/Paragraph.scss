@@ -1,0 +1,71 @@
+@use '../../../../variables.scss';
+@import '../../../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}typography-paragraph';
+
+#{$block} {
+  color: var(--b-color-content-default-primary);
+  font-family: var(--g-text-body-font-family);
+
+  &_paragraph {
+    margin: 0;
+    padding: 0;
+  }
+
+  &_paragraphWithMargins {
+    padding: 0;
+    margin: 0;
+  }
+
+  &_small {
+    font-size: var(--b-text-body-2-font-size);
+    line-height: var(--b-text-body-1-line-height);
+  }
+
+  &_medium {
+    font-size: var(--b-text-body-1-font-size);
+    line-height: var(--b-text-body-1-line-height);
+  }
+
+  &_underline {
+    text-decoration: underline;
+  }
+
+  &_line-through {
+    text-decoration: line-through;
+  }
+
+  &_bold {
+    font-weight: bold;
+  }
+
+  &_medium {
+    font-weight: 500;
+  }
+
+  &_regular {
+    font-weight: normal;
+  }
+
+  &_monospace {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &_rowLimitP_none {
+    -webkit-line-clamp: none;
+  }
+
+  &_rowLimit_1 {
+    @include row_limit(1);
+  }
+
+  &_rowLimit_2 {
+    @include row_limit(2);
+  }
+
+  &_rowLimit_3 {
+    @include row_limit(3);
+  }
+}
+
+
