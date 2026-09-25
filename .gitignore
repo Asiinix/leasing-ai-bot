@@ -7,3 +7,6 @@ next-env.d.ts
 test-results/
 playwright-report/
 .DS_Store
+
+# Keynote sources are too large for GitHub (>100 MB); the PDF export is tracked.
+docs/presentation/*.key
