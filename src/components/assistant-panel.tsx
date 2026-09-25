@@ -5,7 +5,7 @@ import { appPath } from "@/lib/app-path";
 import { Textarea } from "bcc-design";
 import { Button } from "./ui";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowUp,
   Check,
@@ -104,6 +104,7 @@ export function AssistantPanel({
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [showBudget, setShowBudget] = useState(false);
+  const budgetFormId = useId();
   const [listening, setListening] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState("");
   const [awaitedSlot, setAwaitedSlot] = useState<"price" | "maxAdvance" | "maxMonthly" | null>(
@@ -391,7 +392,7 @@ export function AssistantPanel({
         </Button>
       </div>
       <div className="assistant-context">
-        <span>{context.modelName}</span>
+        <span title={context.modelName}>{context.modelName}</span>
         <span>{context.price ? money(context.price) : "Стоимость не указана"}</span>
       </div>
       <div ref={scrollRef} className="conversation" aria-live="polite" aria-relevant="additions">
@@ -486,12 +487,14 @@ export function AssistantPanel({
           className="budget-toggle"
           onClick={() => setShowBudget(!showBudget)}
           aria-expanded={showBudget}
+          aria-controls={showBudget ? budgetFormId : undefined}
         >
           <SlidersHorizontal size={15} /> Настроить бюджет
           <ChevronDown size={15} className={showBudget ? "rotated" : ""} />
         </Button>
         {showBudget && (
           <form
+            id={budgetFormId}
             className="budget-form"
             onSubmit={(event) => {
               event.preventDefault();
