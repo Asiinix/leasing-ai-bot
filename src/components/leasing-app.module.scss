@@ -501,9 +501,10 @@
     border-radius: var(--b-border-radius-cof-16);
   }
 }
-// Семья на фото стоит справа, слева небо — под ним читается текст.
+// Герои справа, слева свободное место для текста BCC Life.
 .lifeHero {
-  background: url("./assets/bcclife-banner.webp") 70% 30% / cover no-repeat;
+  background: #19372d url("./assets/bcclife-brothers-90s.png") right bottom / auto
+    calc(100% - 104px) no-repeat;
   &::before {
     display: none;
   }
@@ -537,6 +538,11 @@
   .lifeHero {
     background-size: auto 55%;
     background-position: 75% 100%;
-    background-color: #8fc6e8;
+    background-color: #19372d;
   }
+}
+
+// Кнопка ИИ-помощника в пустом состоянии расчета — отделена от пояснения.
+.emptyAction {
+  padding-top: var(--g-spacing-2);
 }

@@ -533,9 +533,9 @@ export function LeasingApp() {
               <Flex direction="column" gap={24} className={s.heroContent}>
                 <Typography.Caption>BCC Life · Страхование жизни</Typography.Caption>
                 <Flex direction="column" gap={8}>
-                  <Typography.Title tag="h2">Страхование жизни от BCC Life</Typography.Title>
+                  <Typography.Title tag="h2">Застрахуй братуху</Typography.Title>
                   <Typography.Paragraph view="large" color="secondary">
-                    Надёжная защита в партнёрстве с Банком ЦентрКредит
+                    Даже если у него всё схвачено.
                   </Typography.Paragraph>
                 </Flex>
                 <div>
@@ -958,6 +958,22 @@ export function LeasingApp() {
                                 ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
                                 : "Укажите цену автомобиля от продавца, и здесь появится ваш платеж."}
                             </Typography.Paragraph>
+                            {/* Без расчета главный следующий шаг — помощник: он заполнит
+                                стоимость, аванс и срок по сообщению клиента. */}
+                            <Flex direction="column" gap={8} className={s.emptyAction}>
+                              <Button
+                                view="accentPrimary"
+                                size="l"
+                                fullWidth
+                                iconLeft={<Chat />}
+                                onClick={openAssistant}
+                              >
+                                Спросить ИИ-помощника
+                              </Button>
+                              <Typography.Caption view="large" color="secondary">
+                                Например: «Автомобиль за 20 млн тенге, аванс 20%, на 4 года»
+                              </Typography.Caption>
+                            </Flex>
                           </Flex>
                         )}
                         <Divider noGap />
