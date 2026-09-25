@@ -125,14 +125,21 @@ const MARKERS: ReadonlyArray<{ slot: Slot; pattern: RegExp }> = [
 ];
 
 export function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ё/g, "е")
-    .replace(/[\u00a0\u202f]/g, " ")
-    .replace(/(?<=\p{L})(?=\d)|(?<=\d)(?=\p{L})/gu, " ")
-    .replace(/(?<!\p{L})(тыс|млн|млрд)\.(?!\p{L})/gu, "$1")
-    .replace(/[\t ]+/g, " ")
-    .trim();
+  return (
+    text
+      .toLowerCase()
+      .replace(/ё/g, "е")
+      .replace(/[\u00a0\u202f]/g, " ")
+      // Colloquial amounts: «200к» = 200 тысяч, «2кк»/«2 ляма»/«2 лимона» = 2 млн.
+      .replace(/(?<=\d)\s*(?:кк|kk)(?!\p{L})/gu, " млн")
+      .replace(/(?<=\d)\s*[кk](?!\p{L})/gu, " тыс")
+      .replace(/(?<!\p{L})(?:ля+м[а-я]*|лимон(?:а|ов)?)(?!\p{L})/gu, "млн")
+      .replace(/(?<!\p{L})тыщ[а-я]*(?!\p{L})/gu, "тыс")
+      .replace(/(?<=\p{L})(?=\d)|(?<=\d)(?=\p{L})/gu, " ")
+      .replace(/(?<!\p{L})(тыс|млн|млрд)\.(?!\p{L})/gu, "$1")
+      .replace(/[\t ]+/g, " ")
+      .trim()
+  );
 }
 
 function parseNumber(raw: string): { value: number; scaled: boolean } {

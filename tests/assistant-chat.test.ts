@@ -311,3 +311,22 @@ test("an unavailable term from the chat is refused with the available options", 
   assert.equal(result.patch.months, undefined);
   assert.match(result.reply, /36 мес\. недоступен.*37, 48, 60/);
 });
+
+test("colloquial amounts and answers to clarifying questions are understood", async () => {
+  assert.equal(extractDraftFields("кобальт за 8 лямов").fields.price, 8_000_000);
+  assert.equal(extractDraftFields("машина за 15кк").fields.price, 15_000_000);
+  assert.equal(extractDraftFields("аванс 500к тенге").fields.advanceAmount, 500_000);
+  // «за ляям 200» is ambiguous: nothing is guessed, the number is asked about.
+  const unclear = extractDraftFields("Хочу купить кобальт за ляям 200");
+  assert.equal(unclear.fields.price, undefined);
+
+  let draft = initialDraft();
+  const history: Array<{ role: "user" | "assistant"; content: string }> = [];
+  for (const message of ["Хочу купить кобальт за ляям 200", "200к тенге"]) {
+    const result = await respond({ history, message, draft, deps });
+    draft = applyPatch(draft, result.patch, result.baseRevs).state;
+    history.push({ role: "user", content: message }, { role: "assistant", content: result.reply });
+  }
+  assert.equal(draft.values.modelId, 2637); // Chevrolet Cobalt from the first message
+  assert.equal(draft.values.price, 200_000); // the answer fills the field that was asked about
+});

@@ -105,10 +105,48 @@ function faqAnswer(text: string): string | null {
   return null;
 }
 
-async function runFallback(session: ToolSession, message: string): Promise<string> {
+/**
+ * Answer to our own clarifying question («Уточните единицы для «200»…»): put the new amount
+ * into the previous client message and read it again, so «200к тенге» becomes the price
+ * the client meant, not a lone number.
+ */
+function withClarification(message: string, history: ChatTurn[]): string | null {
+  const lastAssistant = [...history].reverse().find((turn) => turn.role === "assistant");
+  const asked = lastAssistant?.content
+    .match(/(?:единицы для|означает сумма)\s*«?([^»:?]+)»?/u)?.[1]
+    ?.trim();
+  if (!lastAssistant || !asked) return null;
+  const index = history.lastIndexOf(lastAssistant);
+  const previousUser = [...history.slice(0, index)]
+    .reverse()
+    .find((turn) => turn.role === "user" && turn.content.includes(asked));
+  if (!previousUser) return null;
+  // The field is taken from the words around the unclear number, the amount — from the answer.
+  const before = previousUser.content.slice(0, previousUser.content.indexOf(asked)).toLowerCase();
+  const field = /аванс|взнос/u.test(before)
+    ? "аванс"
+    : /за\s|стоит|стоимост|цен|авто|машин|купить/u.test(before)
+      ? "стоимость"
+      : /платеж|в месяц/u.test(before)
+        ? "платеж"
+        : null;
+  return field ? `${field} ${message.trim()}` : null;
+}
+
+async function runFallback(
+  session: ToolSession,
+  message: string,
+  history: ChatTurn[] = [],
+): Promise<string> {
   const text = message.toLowerCase().replace(/ё/g, "е");
   const parts: string[] = [];
-  const extraction = extractDraftFields(message);
+  let extraction = extractDraftFields(message);
+  const clarified = withClarification(message, history);
+  if (clarified) {
+    const merged = extractDraftFields(clarified);
+    if (Object.keys(merged.fields).length && merged.questions.length <= extraction.questions.length)
+      extraction = merged;
+  }
   const intent = parseMessage(message);
 
   if (extraction.unsupportedSubject)
@@ -124,7 +162,8 @@ async function runFallback(session: ToolSession, message: string): Promise<strin
         : "Нашел несколько записей в справочнике — выберите нужную в списке ниже.",
     );
   const hasFields = Object.keys(f).length > 0 || vehicleId !== null;
-  if (hasFields && !extraction.questions.length) {
+  // Apply everything that is clear; unclear numbers become questions but do not block the rest.
+  if (hasFields) {
     const update = await session.updateDraft({
       subject: f.subject ?? null,
       client_type: f.clientType ?? null,
@@ -140,7 +179,10 @@ async function runFallback(session: ToolSession, message: string): Promise<strin
     if (update.applied.length) parts.push(`Записал: ${update.applied.join(", ").toLowerCase()}.`);
     if (update.errors.length) parts.push(update.errors.join(" "));
   }
-  if (extraction.questions.length) return extraction.questions.slice(0, 2).join(" ");
+  if (extraction.questions.length) {
+    parts.push(...extraction.questions.slice(0, 2));
+    return parts.join(" ");
+  }
 
   // Budget request: "до 350 тысяч в месяц, аванс до 3 млн".
   if (intent.maxMonthly && intent.maxAdvance !== undefined) {
@@ -233,7 +275,7 @@ export async function respond(input: EngineInput): Promise<AssistantResponse> {
     );
     // A partially completed model run must not leak half-applied changes.
     const fallback = new ToolSession(input.draft, input.deps);
-    reply = await runFallback(fallback, input.message);
+    reply = await runFallback(fallback, input.message, input.history);
     mode = "fallback";
     notice =
       error instanceof ModelUnavailableError && !process.env.OPENAI_API_KEY && !input.complete

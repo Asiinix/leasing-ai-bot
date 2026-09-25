@@ -58,6 +58,14 @@ export function extractDraftFields(input: string): Extraction {
 
   const spans = findNumbers(text);
   spans.forEach((span, index) => {
+    // A bare scale word right before another number («за лям 200») is ambiguous: skip it,
+    // the following number will be asked about instead of summing a guess.
+    if (
+      /^(?:тыс|млн|млрд)\p{L}*$/u.test(span.raw) &&
+      spans[index + 1] &&
+      spans[index + 1].start - span.end <= 2
+    )
+      return;
     const before =
       text
         .slice(index ? spans[index - 1].end : 0, span.start)
