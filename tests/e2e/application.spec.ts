@@ -1,4 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+// Перед заявкой клиент проходит симуляцию скоринга; анкета ведет к одобрению.
+async function passScoring(page: Page) {
+  const scoring = page.getByRole("dialog");
+  await scoring.getByLabel("ИИН", { exact: true }).fill("123456789012");
+  await scoring.getByRole("button", { name: "Более 3 лет" }).click();
+  await scoring.getByLabel("Средняя выручка в месяц").fill("3000000");
+  await scoring.getByRole("button", { name: "Нет", exact: true }).click();
+  await scoring.getByText("Согласен на запрос данных").click();
+  await scoring.getByRole("button", { name: "Запустить скоринг" }).click();
+  await scoring.getByRole("button", { name: "Перейти к заявке" }).click({ timeout: 15_000 });
+}
 
 test("validates contacts, keeps them when reopened and opens BCC without personal data", async ({
   page,
@@ -33,6 +45,7 @@ test("validates contacts, keeps them when reopened and opens BCC without persona
     };
   });
   await page.getByRole("button", { name: "Продолжить оформление" }).click();
+  await passScoring(page);
   const fullName = page.getByLabel("ФИО", { exact: true });
   const email = page.getByLabel("Электронная почта", { exact: true });
   const phone = page.getByLabel("Телефон", { exact: true });
@@ -115,6 +128,7 @@ test("validates contacts, keeps them when reopened and opens BCC without persona
   await expect(consent).toBeChecked();
   await page.reload();
   await page.getByRole("button", { name: "Продолжить оформление" }).click();
+  await passScoring(page);
   await expect(fullName).toBeEmpty();
   await expect(email).toBeEmpty();
   await expect(phone).toBeEmpty();

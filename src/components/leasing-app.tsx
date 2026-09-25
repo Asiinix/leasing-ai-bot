@@ -50,6 +50,10 @@ const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
   { ssr: false },
 );
+const ScoringDialog = dynamic(
+  () => import("./scoring-dialog").then((module) => module.ScoringDialog),
+  { ssr: false },
+);
 const ProposalDialog = dynamic(
   () => import("./proposal-dialog").then((module) => module.ProposalDialog),
   { ssr: false },
@@ -131,6 +135,10 @@ export function LeasingApp() {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [proposalKey, setProposalKey] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scoringOpen, setScoringOpen] = useState(false);
+  // Скоринг проходится один раз на набор условий: повторно по тем же условиям
+  // «Продолжить оформление» сразу открывает заявку.
+  const [scoredKey, setScoredKey] = useState<string | null>(null);
   const [continueOpen, setContinueOpen] = useState(false);
   const [contact, setContact] = useState<ApplicationContact>({
     fullName: "",
@@ -740,7 +748,11 @@ export function LeasingApp() {
                                 fullWidth
                                 className={s.multilineButton}
                                 iconRight={<ArrowDirectionRight />}
-                                onClick={() => setContinueOpen(true)}
+                                onClick={() =>
+                                  scoredKey === formKey(form)
+                                    ? setContinueOpen(true)
+                                    : setScoringOpen(true)
+                                }
                               >
                                 Продолжить оформление
                               </Button>
@@ -858,6 +870,19 @@ export function LeasingApp() {
       )}
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
+      )}
+      {scoringOpen && quote && (
+        <ScoringDialog
+          quote={quote}
+          model={title}
+          clientType={form.clientType}
+          onClose={() => setScoringOpen(false)}
+          onProceed={() => {
+            setScoredKey(formKey(form));
+            setScoringOpen(false);
+            setContinueOpen(true);
+          }}
+        />
       )}
       {continueOpen && quote && (
         <Dialog
