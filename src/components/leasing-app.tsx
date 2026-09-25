@@ -63,7 +63,14 @@ const ProposalDialog = dynamic(
   () => import("./proposal-dialog").then((module) => module.ProposalDialog),
   { ssr: false },
 );
-type MarketPrice = { modelId: number; price: number; year: number | null; listings: number };
+type MarketPrice = {
+  modelId: number;
+  price: number;
+  year: number | null;
+  listings: number;
+  /** kolesa — медиана объявлений, preset — заготовка стоимости. */
+  source: "kolesa" | "preset";
+};
 type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
 const pickForm = ({
   clientType,
@@ -358,7 +365,7 @@ export function LeasingApp() {
         const latest = draft.latest.current.values;
         if (!data?.price || latest.modelId !== modelId || latest.price > 0) return;
         draft.update({ price: data.price }, "default");
-        setMarket({ modelId, price: data.price, year: data.year, listings: data.listings });
+        setMarket({ ...data, modelId, price: data.price });
       })
       .catch(() => {
         // Нет цены — клиент введет ее сам, поле уже пустое и в фокусе.
@@ -769,7 +776,9 @@ export function LeasingApp() {
                         error={costInvalid}
                         hint={
                           marketShown
-                            ? `Средняя цена${market.year ? ` ${market.year} г.` : ""} по объявлениям kolesa.kz. Уточните цену у продавца.`
+                            ? market.source === "preset"
+                              ? "Ориентировочная цена для этой модели. Уточните цену у продавца."
+                              : `Средняя цена${market.year ? ` ${market.year} г.` : ""} по объявлениям kolesa.kz. Уточните цену у продавца.`
                             : sample
                               ? "Для примера указано 15 млн ₸. Введите цену от продавца."
                               : "Укажите цену из предложения продавца или счета."

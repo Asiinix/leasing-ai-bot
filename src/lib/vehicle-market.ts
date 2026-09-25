@@ -5,6 +5,8 @@
  * model year on sale — a starting point the client then checks with the seller.
  * Results are cached in memory: kolesa.kz is queried at most once per model per day.
  */
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import type { LeaseModel } from "./types";
 
 export interface VehicleMarket {
@@ -24,6 +26,10 @@ interface Listing {
   imageUrl: string | null;
   year: number;
   price: number | null;
+}
+
+interface CaptionedListing extends Listing {
+  caption: string;
 }
 
 const BRAND_SLUGS: Record<string, string> = {
@@ -72,24 +78,15 @@ export function kolesaSearchUrl(model: Pick<LeaseModel, "brand" | "name">): stri
   return kolesaModelUrls(model).at(-1) ?? null;
 }
 
-/** Listings whose caption starts with «<Brand> <Model>», in page order. */
-export function parseListings(
-  html: string,
-  model: Pick<LeaseModel, "brand"> & { name?: string },
-): Listing[] {
-  // Without a model name any listing of the brand counts (brand-page fallback).
-  const first = model.name ? (modelWords({ brand: model.brand, name: model.name })[0] ?? "") : "";
-  const expected = letters(`${model.brand} ${first}`);
-  const brandWords = model.brand.trim().split(/\s+/).length + (first ? 1 : 0);
-  const listings: Listing[] = [];
+/** Every listing on a page with its caption: small enough to keep in memory per page. */
+export function parseAllListings(html: string): CaptionedListing[] {
+  const listings: CaptionedListing[] = [];
   for (const match of html.matchAll(/<img\b[^>]*>/gi)) {
     const tag = match[0];
-    const alt = (tag.match(/\balt="([^"]*)"/i)?.[1] ?? "").replace(/&nbsp;| /g, " ");
+    const alt = (tag.match(/\balt="([^"]*)"/i)?.[1] ?? "").replace(/&nbsp;|\u00a0/g, " ");
     // «Toyota Camry Luxe 2026 года за 25 190 000 тг. в Астана»
     const parts = alt.match(/^(.*?)\s+(\d{4})\s+(?:года|г\.)(?:\s+за\s+([\d\s]+)\s*(?:тг|₸))?/u);
     if (!parts) continue;
-    const words = parts[1].split(/\s+/);
-    if (letters(words.slice(0, brandWords).join(" ")) !== expected) continue;
     const src = tag.match(/\bsrc="([^"]*)"/i)?.[1];
     const imageUrl =
       src && /^https:\/\/[a-z0-9.-]+\.kcdn\.online\//.test(src)
@@ -97,9 +94,34 @@ export function parseListings(
           src.replace(/-255x138\.(jpg|webp)$/, "-510x276.$1")
         : null;
     const price = parts[3] ? Number(parts[3].replace(/\s/g, "")) : null;
-    listings.push({ imageUrl, year: Number(parts[2]), price: price && price > 0 ? price : null });
+    listings.push({
+      caption: parts[1],
+      imageUrl,
+      year: Number(parts[2]),
+      price: price && price > 0 ? price : null,
+    });
   }
   return listings;
+}
+
+/** Listings whose caption starts with «<Brand> <Model>» (any model without a name). */
+export function matchListings(
+  listings: CaptionedListing[],
+  model: Pick<LeaseModel, "brand"> & { name?: string },
+): Listing[] {
+  const first = model.name ? (modelWords({ brand: model.brand, name: model.name })[0] ?? "") : "";
+  const expected = letters(`${model.brand} ${first}`);
+  const count = model.brand.trim().split(/\s+/).length + (first ? 1 : 0);
+  return listings
+    .filter((item) => letters(item.caption.split(/\s+/).slice(0, count).join(" ")) === expected)
+    .map(({ imageUrl, year, price }) => ({ imageUrl, year, price }));
+}
+
+export function parseListings(
+  html: string,
+  model: Pick<LeaseModel, "brand"> & { name?: string },
+): Listing[] {
+  return matchListings(parseAllListings(html), model);
 }
 
 /** Photo and median price of the newest model year among the listings. */
@@ -130,10 +152,14 @@ export function summarizeListings(listings: Listing[], sourceUrl: string): Vehic
 }
 
 const DAY = 24 * 60 * 60 * 1000;
-const pages = new Map<string, { html: string | null; expires: number }>();
-const pending = new Map<string, Promise<string | null>>();
+const WEEK = 7 * DAY;
+/** Parsed listings per page URL; undefined value = page is not available right now. */
+const pages = new Map<string, { listings: CaptionedListing[] | null; expires: number }>();
+const pending = new Map<string, Promise<CaptionedListing[] | null | undefined>>();
 let active = 0;
 const queue: Array<() => void> = [];
+/** After a network failure kolesa.kz is not queried for a while: cards fall back at once. */
+let offlineUntil = 0;
 
 /** At most three requests to kolesa.kz at a time, however many cards are on screen. */
 async function limited<T>(task: () => Promise<T>): Promise<T> {
@@ -147,31 +173,92 @@ async function limited<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
-/** Page HTML, cached per URL: a day on success, briefly after a network error. */
-async function page(url: string, fetchImpl: typeof fetch): Promise<string | null> {
+/**
+ * Listings of a page, cached per URL for a day. null — the page has no data;
+ * undefined — kolesa.kz did not answer, the caller may use older saved data.
+ */
+async function page(
+  url: string,
+  fetchImpl: typeof fetch,
+): Promise<CaptionedListing[] | null | undefined> {
   const hit = pages.get(url);
-  if (hit && hit.expires > Date.now()) return hit.html;
+  if (hit && hit.expires > Date.now()) return hit.listings;
+  if (Date.now() < offlineUntil) return undefined;
   const running = pending.get(url);
   if (running) return running;
   const request = limited(async () => {
+    if (Date.now() < offlineUntil) return undefined;
     try {
       const response = await fetchImpl(url, {
         headers: { "User-Agent": "Mozilla/5.0 (BCC Leasing catalog)", Accept: "text/html" },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(6000),
       });
-      if (!response.ok) return { html: null, ttl: response.status === 404 ? DAY : 10 * 60_000 };
-      return { html: await response.text(), ttl: DAY };
+      if (!response.ok && response.status !== 404) throw new Error(`HTTP ${response.status}`);
+      const listings = response.ok ? parseAllListings(await response.text()) : null;
+      pages.set(url, { listings, expires: Date.now() + DAY });
+      return listings;
     } catch {
-      return { html: null, ttl: 60_000 };
+      offlineUntil = Date.now() + 2 * 60_000;
+      return undefined;
     }
-  })
-    .then(({ html, ttl }) => {
-      pages.set(url, { html, expires: Date.now() + ttl });
-      return html;
-    })
-    .finally(() => pending.delete(url));
+  }).finally(() => pending.delete(url));
   pending.set(url, request);
   return request;
+}
+
+/**
+ * Found photos and prices are saved to disk: after a restart or while kolesa.kz is
+ * unavailable, the catalog keeps showing them instead of placeholders.
+ */
+const storeFile = () =>
+  process.env.VEHICLE_MARKET_FILE ?? path.join(process.cwd(), ".data", "vehicle-market.json");
+let stored: Record<string, { value: VehicleMarket; savedAt: number }> | null = null;
+let saving: Promise<void> = Promise.resolve();
+
+async function loadStore() {
+  if (stored) return stored;
+  try {
+    stored = JSON.parse(await readFile(storeFile(), "utf8"));
+  } catch {
+    stored = {};
+  }
+  return stored!;
+}
+
+function saveStore() {
+  saving = saving
+    .then(async () => {
+      await mkdir(path.dirname(storeFile()), { recursive: true });
+      await writeFile(storeFile(), JSON.stringify(stored));
+    })
+    .catch(() => {
+      // The disk cache is an optimization: the catalog works without it.
+    });
+}
+
+async function lookup(
+  model: Pick<LeaseModel, "brand" | "name">,
+  fetchImpl: typeof fetch,
+): Promise<{ value: VehicleMarket | null; offline: boolean }> {
+  let offline = false;
+  for (const url of kolesaModelUrls(model)) {
+    const listings = await page(url, fetchImpl);
+    if (listings === undefined) offline = true;
+    const market = listings ? summarizeListings(matchListings(listings, model), url) : null;
+    if (market) return { value: market, offline: false };
+  }
+  const brandUrl = kolesaBrandUrl(model);
+  const listings = brandUrl ? await page(brandUrl, fetchImpl) : null;
+  if (listings === undefined) offline = true;
+  const brand = listings
+    ? summarizeListings(matchListings(listings, { brand: model.brand }), brandUrl!)
+    : null;
+  return {
+    value: brand?.imageUrl
+      ? { ...brand, price: null, year: null, listings: 0, brandPhoto: true }
+      : null,
+    offline,
+  };
 }
 
 /**
@@ -182,17 +269,16 @@ export async function findVehicleMarket(
   model: Pick<LeaseModel, "brand" | "name">,
   fetchImpl: typeof fetch = fetch,
 ): Promise<VehicleMarket | null> {
-  for (const url of kolesaModelUrls(model)) {
-    const html = await page(url, fetchImpl);
-    const market = html ? summarizeListings(parseListings(html, model), url) : null;
-    if (market) return market;
+  const key = `${model.brand}|${model.name}`.toUpperCase();
+  const store = await loadStore();
+  const saved = store[key];
+  if (saved && Date.now() - saved.savedAt < WEEK) return saved.value;
+  const { value, offline } = await lookup(model, fetchImpl);
+  if (value) {
+    store[key] = { value, savedAt: Date.now() };
+    saveStore();
+    return value;
   }
-  const brandUrl = kolesaBrandUrl(model);
-  const html = brandUrl ? await page(brandUrl, fetchImpl) : null;
-  const brand = html
-    ? summarizeListings(parseListings(html, { brand: model.brand }), brandUrl!)
-    : null;
-  return brand?.imageUrl
-    ? { ...brand, price: null, year: null, listings: 0, brandPhoto: true }
-    : null;
+  // kolesa.kz is down: an older saved result is better than a placeholder.
+  return offline && saved ? saved.value : null;
 }

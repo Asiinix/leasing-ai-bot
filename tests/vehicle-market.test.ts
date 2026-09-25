@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+
+import { pricePreset } from "../src/lib/price-presets.ts";
 
 import {
   findVehicleMarket,
@@ -9,6 +14,12 @@ import {
   parseListings,
   summarizeListings,
 } from "../src/lib/vehicle-market.ts";
+
+// Found photos are saved to disk: keep the tests away from the project's .data folder.
+process.env.VEHICLE_MARKET_FILE = path.join(
+  mkdtempSync(path.join(tmpdir(), "vehicle-market-")),
+  "store.json",
+);
 
 const card = (alt: string, id: string) =>
   `<img src="https://kolesa-photos.kcdn.online/webp/${id}/1-255x138.jpg" alt="${alt}" width="255">`;
@@ -90,4 +101,27 @@ test("market lookup is cached and survives network errors", async () => {
     throw new TypeError("fetch failed");
   }) as typeof fetch;
   assert.equal(await findVehicleMarket({ brand: "KIA", name: "SPORTAGE" }, down), null);
+});
+
+test("price presets cover model, brand and unknown brand", () => {
+  assert.deepEqual(pricePreset({ brand: "KIA", name: "CARNIVAL" }), {
+    price: 25_000_000,
+    level: "model",
+  });
+  assert.deepEqual(pricePreset({ brand: "TOYOTA", name: "LC300 VX" }), {
+    price: 55_000_000,
+    level: "model",
+  });
+  assert.equal(pricePreset({ brand: "KIA", name: "AVELLA" }).level, "brand");
+  assert.equal(pricePreset({ brand: "ГАЗ", name: "3302" }).price, 14_000_000);
+  assert.equal(pricePreset({ brand: "NONAME", name: "X" }).level, "default");
+});
+
+test("while kolesa.kz is down, saved results are still served", async () => {
+  // The previous test left kolesa.kz marked offline; the saved Kia Rio is still returned.
+  const never = (async () => {
+    throw new Error("must not be called");
+  }) as typeof fetch;
+  assert.equal((await findVehicleMarket({ brand: "KIA", name: "RIO" }, never))?.price, 8_000_000);
+  assert.equal(await findVehicleMarket({ brand: "KIA", name: "STINGER" }, never), null);
 });

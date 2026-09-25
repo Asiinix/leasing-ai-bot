@@ -148,14 +148,16 @@ function CatalogCard({
   const [failed, setFailed] = useState(false);
   const [price, setPrice] = useState<number | null | undefined>(undefined);
   const [brandPhoto, setBrandPhoto] = useState(false);
+  const [estimate, setEstimate] = useState(false);
   const label = modelLabel(model);
   // Та же рыночная цена, что подставится в калькулятор при выборе.
   useEffect(() => {
     const controller = new AbortController();
     fetch(appPath(`/api/catalog/market?id=${model.id}`), { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: { price: number | null; brandPhoto?: boolean } | null) => {
+      .then((data: { price: number | null; source?: string; brandPhoto?: boolean } | null) => {
         setPrice(data?.price ?? null);
+        setEstimate(data?.source === "preset");
         setBrandPhoto(Boolean(data?.brandPhoto));
       })
       .catch(() => {
@@ -194,7 +196,7 @@ function CatalogCard({
           {price === undefined
             ? "Цена загружается…"
             : price
-              ? `≈ ${money(price)}`
+              ? `≈ ${money(price)}${estimate ? " · ориентир" : ""}`
               : "Цену уточните у продавца"}
         </Typography.Paragraph>
       </Flex>
