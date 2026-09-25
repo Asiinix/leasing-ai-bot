@@ -25,6 +25,7 @@ import {
   Typography,
 } from "bcc-design";
 import ArrowDirectionRight from "bcc-design-icons/base/Arrows/ArrowDirectionRight";
+import Fullscreen from "bcc-design-icons/base/Arrows/Fullscreen";
 import Refresh from "bcc-design-icons/base/Arrows/Refresh";
 import CheckOutlinedBold from "bcc-design-icons/base/Basic/CheckOutlinedBold";
 import Chat from "bcc-design-icons/base/Communication/Chat";
@@ -130,23 +131,33 @@ export function LeasingApp() {
   const assistantAnchor = useRef<HTMLDivElement>(null);
   const colorMode = useColorMode();
   const headerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const fullscreen = useFullscreen();
 
   useEffect(() => {
     const header = headerRef.current;
-    if (!header) return;
+    const hero = heroRef.current;
+    if (!header || !hero) return;
     let frame = 0;
     const update = () => {
       frame = 0;
-      // Полный эффект — после прокрутки на 240px.
+      // Шапка: полный эффект после прокрутки на 240px. Баннер: прогресс от 0 до 1,
+      // пока он уходит за верх окна.
       header.style.setProperty("--header-progress", String(Math.min(window.scrollY / 240, 1)));
+      hero.style.setProperty(
+        "--hero-progress",
+        String(Math.min(window.scrollY / Math.max(hero.offsetHeight, 1), 1)),
+      );
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(frame);
     };
   }, []);
@@ -319,13 +330,25 @@ export function LeasingApp() {
               }
               onClick={colorMode.toggle}
             />
+            {fullscreen.supported && (
+              <Button
+                view={fullscreen.active ? "neutralFilledSecondary" : "neutral"}
+                size="m"
+                iconLeft={<Fullscreen />}
+                aria-label={
+                  fullscreen.active ? "Выйти из полноэкранного режима" : "Открыть на весь экран"
+                }
+                aria-pressed={fullscreen.active}
+                onClick={fullscreen.toggle}
+              />
+            )}
           </Flex>
         </Container>
       </div>
       {/* Баннер во всю ширину окна, как на bccleasing.kz: текст выровнен по колонке
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
-      <div className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
+      <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
         <Container maxWidth={1280} gutters={24} className={s.heroInner}>
           <Flex direction="column" gap={24} className={s.heroContent}>
             <div className={s.breadcrumbs}>
@@ -997,4 +1020,42 @@ function SliderSkeleton() {
       </Flex>
     </Flex>
   );
+}
+
+type FullscreenDocument = Document & {
+  webkitFullscreenEnabled?: boolean;
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+};
+type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+
+// Полноэкранный режим всего приложения через Fullscreen API. Safari до 16.4 знает
+// только webkit-версии методов. Поддержка определяется после монтирования: на
+// сервере document нет, а кнопка не должна давать рассинхрон гидратации.
+function useFullscreen() {
+  const [supported, setSupported] = useState(false);
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const doc = document as FullscreenDocument;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupported(Boolean(doc.fullscreenEnabled || doc.webkitFullscreenEnabled));
+    const sync = () => setActive(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement));
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+    };
+  }, []);
+  function toggle() {
+    const doc = document as FullscreenDocument;
+    const root = document.documentElement as FullscreenElement;
+    const request = active
+      ? (doc.exitFullscreen ?? doc.webkitExitFullscreen)?.call(doc)
+      : (root.requestFullscreen ?? root.webkitRequestFullscreen)?.call(root);
+    // Отказ браузера (например, запрет в iframe) не ломает страницу.
+    request?.catch(() => {});
+  }
+  return { supported, active, toggle };
 }
