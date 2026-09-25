@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { calculateQuote, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, number, percent } from "@/lib/format";
+import { appPath } from "@/lib/app-path";
 import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
 import { AssistantPanel } from "./assistant-panel";
 import { Dialog } from "./dialog";
@@ -92,7 +93,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/catalog", { signal: controller.signal })
+    fetch(appPath("/api/catalog"), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("catalog");
         return response.json() as Promise<CatalogData>;
@@ -109,7 +110,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`, {
+    fetch(appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`), {
       signal: controller.signal,
     })
       .then((response) => {
@@ -244,7 +245,7 @@ export function LeasingApp() {
         <div className="header-inner">
           <Link href="/" className="brand" aria-label="BCC Leasing — главная">
             <Image
-              src="/brand/bcc-leasing-logo.png"
+              src={appPath("/brand/bcc-leasing-logo.png")}
               alt="BCC Leasing"
               width={966}
               height={160}
