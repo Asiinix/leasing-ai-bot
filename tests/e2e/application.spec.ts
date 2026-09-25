@@ -1,15 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// Перед заявкой клиент проходит симуляцию скоринга; анкета ведет к одобрению.
-async function passScoring(page: Page) {
+// После отправки заявки открывается симуляция скоринга; анкета ведет к одобрению.
+// ИИН подставлен из контактов заявки.
+async function passScoring(page: Page, iin: string) {
   const scoring = page.getByRole("dialog");
-  await scoring.getByLabel("ИИН", { exact: true }).fill("123456789012");
+  await expect(scoring.getByLabel("ИИН", { exact: true })).toHaveValue(iin);
   await scoring.getByRole("button", { name: "Более 3 лет" }).click();
   await scoring.getByLabel("Средняя выручка в месяц").fill("3000000");
   await scoring.getByRole("button", { name: "Нет", exact: true }).click();
   await scoring.getByText("Согласен на запрос данных").click();
   await scoring.getByRole("button", { name: "Запустить скоринг" }).click();
-  await scoring.getByRole("button", { name: "Перейти к заявке" }).click({ timeout: 15_000 });
+  await expect(scoring.getByText("Предварительно одобрено")).toBeVisible({ timeout: 15_000 });
 }
 
 test("validates contacts, keeps them when reopened and saves the application once", async ({
@@ -45,7 +46,6 @@ test("validates contacts, keeps them when reopened and saves the application onc
     };
   });
   await page.getByRole("button", { name: "Продолжить оформление" }).click();
-  await passScoring(page);
   const fullName = page.getByLabel("ФИО", { exact: true });
   const email = page.getByLabel("Электронная почта", { exact: true });
   const phone = page.getByLabel("Телефон", { exact: true });
@@ -133,13 +133,15 @@ test("validates contacts, keeps them when reopened and saves the application onc
   await expect(consent).toBeChecked();
   // Double submit creates one application; contacts go to this service, not to BCC.
   await submit.dblclick();
-  const saved = page.getByRole("dialog");
-  await expect(saved.getByText(/Номер обращения BL-\d{6}/)).toBeVisible();
-  const number = await saved.getByText(/Номер обращения BL-\d{6}/).innerText();
-  await expect(saved.getByText(/в систему BCC пока не подключена/)).toBeVisible();
+  // The saved application hands over to a separate scoring modal.
+  const scoring = page.getByRole("dialog");
+  await expect(scoring.getByRole("heading", { name: "Предварительный скоринг" })).toBeVisible();
+  await expect(scoring.getByText(/Заявка BL-\d{6} сохранена/)).toBeVisible();
+  const number = (await scoring.getByText(/Заявка BL-\d{6}/).innerText()).match(/BL-\d{6}/)![0];
+  await passScoring(page, "012345678901");
   // Nothing opens by itself; BCC opens only on the explicit button.
   await expect(page.locator("body")).not.toHaveAttribute("data-opened-url");
-  await saved.getByRole("button", { name: "Продолжить в сервисе BCC Leasing" }).click();
+  await scoring.getByRole("button", { name: "Продолжить в сервисе BCC Leasing" }).click();
   await expect(page.locator("body")).toHaveAttribute(
     "data-opened-url",
     "https://business.bcc.kz/online-leasing/",
@@ -150,12 +152,13 @@ test("validates contacts, keeps them when reopened and saves the application onc
   expect(body.contact).toEqual({ email: "ivan@example.kz", iin: "012345678901" });
   expect(body.draft.values.contactName).toBe("Иванов Иван Иванович");
   // Reopening shows the same saved application instead of a new submission.
-  await saved.getByRole("button", { name: "Готово" }).click();
+  await scoring.getByRole("button", { name: "Готово" }).click();
   await page.getByRole("button", { name: "Продолжить оформление" }).click();
-  await expect(page.getByRole("dialog").getByText(number)).toBeVisible();
+  const saved = page.getByRole("dialog");
+  await expect(saved.getByText(`Номер обращения ${number}`)).toBeVisible();
+  await expect(saved.getByText(/в систему BCC пока не подключена/)).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Продолжить оформление" }).click();
-  await passScoring(page);
   await expect(fullName).toBeEmpty();
   await expect(email).toBeEmpty();
   await expect(phone).toBeEmpty();
