@@ -38,6 +38,7 @@ import { dateLabel, money, number, percent } from "@/lib/format";
 import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
 import { useColorMode } from "@/app/providers";
 import { AssistantPanel } from "./assistant-panel";
+import { ApplicationContactForm, type ApplicationContact } from "./application-contact-form";
 import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
@@ -131,6 +132,13 @@ export function LeasingApp() {
   const [proposalKey, setProposalKey] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [continueOpen, setContinueOpen] = useState(false);
+  const [contact, setContact] = useState<ApplicationContact>({
+    fullName: "",
+    email: "",
+    phone: "",
+    iin: "",
+    consent: false,
+  });
   const [sample, setSample] = useState(true);
   const [applied, setApplied] = useState<Applied | null>(null);
   const assistantAnchor = useRef<HTMLDivElement>(null);
@@ -366,7 +374,9 @@ export function LeasingApp() {
               <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
             </div>
             <Flex direction="column" gap={8}>
-              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
+              <Typography.Title tag="h1" id="promo-banner-heading">
+                Продукт только для избранных, но не для вас
+              </Typography.Title>
               <Typography.Paragraph view="large" color="secondary">
                 Рассчитайте платеж и выберите удобные условия
               </Typography.Paragraph>
@@ -849,7 +859,7 @@ export function LeasingApp() {
       )}
       {continueOpen && quote && (
         <Dialog
-          title="Ваш расчет готов"
+          title="Заявка на лизинг"
           description={`${title}, ${money(form.price)}`}
           onClose={() => setContinueOpen(false)}
           footer={
@@ -858,9 +868,8 @@ export function LeasingApp() {
                 view="accentPrimary"
                 size="l"
                 fullWidth
-                href="https://business.bcc.kz/online-leasing/"
-                target="_blank"
-                rel="noreferrer"
+                htmlType="submit"
+                form="leasing-contact-form"
                 iconRight={<ArrowDirectionRight />}
               >
                 Открыть заявку BCC
@@ -884,9 +893,21 @@ export function LeasingApp() {
               <Detail label="Первоначальный взнос" value={money(quote.advanceAmount)} />
               <Detail label="Тип клиента" value={form.clientType === "IP" ? "ИП" : "ТОО"} />
             </dl>
+            <ApplicationContactForm
+              value={contact}
+              onChange={setContact}
+              onValid={(value) => {
+                setContact(value);
+                window.open(
+                  "https://business.bcc.kz/online-leasing/",
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              }}
+            />
             <Alert variant="info" fullWidth disableTruncate autoCloseDelay={null}>
-              Оформление продолжится в сервисе BCC Leasing. Автоматический перенос расчета пока не
-              подключен, параметры потребуется указать повторно.
+              Оформление продолжится в сервисе BCC Leasing. Автоматический перенос расчета и
+              контактов пока не подключен, данные потребуется указать повторно.
             </Alert>
           </Flex>
         </Dialog>
