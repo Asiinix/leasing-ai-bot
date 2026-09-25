@@ -531,11 +531,15 @@
 // Герои справа во всю высоту баннера, левый край фото растворяется в фоне.
 .lifeHero {
   background-color: #19372d;
+  // Кадр рисует ролик (фото, оживленное в Higgsfield), постер — то же фото.
   &::before {
-    content: "";
+    display: none;
+  }
+  > .heroVideo {
     aspect-ratio: 1672 / 941;
     min-width: 62%;
-    background: url("./assets/bcclife-brothers-90s.webp") right bottom / cover no-repeat;
+    object-fit: cover;
+    object-position: right bottom;
     mask-image: linear-gradient(to right, transparent, black 22%);
   }
   .heroContent {
@@ -566,8 +570,7 @@
   .investHero .heroContent {
     margin-top: var(--g-spacing-8);
   }
-  .lifeHero::before,
-  .investHero::before {
+  .lifeHero > .heroVideo {
     width: 150%;
     min-width: 0;
     mask-image: linear-gradient(to bottom, transparent, black 20%);

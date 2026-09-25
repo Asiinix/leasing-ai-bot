@@ -222,6 +222,7 @@ export function LeasingApp() {
   const heroRef = useRef<HTMLDivElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const ironVideoRef = useRef<HTMLVideoElement>(null);
+  const lifeVideoRef = useRef<HTMLVideoElement>(null);
   const investVideoRef = useRef<HTMLVideoElement>(null);
   const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
   const [heroSlide, setHeroSlide] = useState(0);
@@ -234,8 +235,9 @@ export function LeasingApp() {
   // ролика — через HERO_SLIDE_MS. Отсчет заново при каждой смене слайда, в том числе ручной.
   useEffect(() => {
     const next = () => carouselRef.current?.goToNext(true);
-    // Ролики по номерам слайдов: 0 — «Лизинг», 1 — IronCard, 3 — BCC Invest.
-    const video = [heroVideoRef, ironVideoRef, null, investVideoRef][heroSlide]?.current ?? null;
+    // Ролики по номерам слайдов: 0 — «Лизинг», 1 — IronCard, 2 — BCC Life, 3 — BCC Invest.
+    const video =
+      [heroVideoRef, ironVideoRef, lifeVideoRef, investVideoRef][heroSlide]?.current ?? null;
     // Пока курсор на баннере, ролик крутится по кругу и слайд не уходит.
     if (heroPaused) {
       if (video) video.loop = true;
@@ -261,13 +263,18 @@ export function LeasingApp() {
 
   useEffect(() => {
     // Видео играет только на своем слайде: фургон — на «Лизинге», карты — на IronCard,
-    // график — на BCC Invest.
+    // братухи — на BCC Life, график — на BCC Invest.
     // Уходящий ролик замирает на текущем кадре (без перемотки: иначе во время
     // перелистывания мелькнет его начало), а свой слайд всегда начинает ролик сначала.
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncPlayback = () => {
-      for (const [slide, ref] of [heroVideoRef, ironVideoRef, null, investVideoRef].entries()) {
-        const video = ref?.current;
+      for (const [slide, ref] of [
+        heroVideoRef,
+        ironVideoRef,
+        lifeVideoRef,
+        investVideoRef,
+      ].entries()) {
+        const video = ref.current;
         if (!video) continue;
         if (motion.matches || heroSlide !== slide) {
           video.pause();
@@ -651,6 +658,18 @@ export function LeasingApp() {
             inert={heroSlide !== 2}
             aria-hidden={heroSlide !== 2}
           >
+            <video
+              ref={lifeVideoRef}
+              className={s.heroVideo}
+              src={appPath("/videos/bcclife.mp4")}
+              poster={appPath("/videos/bcclife-poster.jpg")}
+              width={1672}
+              height={941}
+              muted
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            />
             <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
               <Flex direction="column" gap={24} className={s.heroContent}>
                 <Typography.Caption>BCC Life · Страхование жизни</Typography.Caption>
