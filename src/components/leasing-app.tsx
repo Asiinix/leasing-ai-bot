@@ -442,7 +442,10 @@ export function LeasingApp({
   ];
 
   return (
-    <>
+    <div
+      className="leasing-calculator-page"
+      style={{ backgroundImage: `url("${appPath("/brand/triangle-blue.svg")}")` }}
+    >
       <a className="skip-link" href="#calculator">
         Перейти к калькулятору
       </a>
@@ -1062,6 +1065,6 @@ export function LeasingApp({
           </Button>
         </Dialog>
       )}
-    </>
+    </div>
   );
 }

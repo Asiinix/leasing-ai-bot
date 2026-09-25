@@ -1,0 +1,25 @@
+/* Prepared #CCD9ED SVG: decoration belongs only to the calculator route.
+ * The wrapper includes the opaque header, so offsets start at the document top.
+ * A CSS background needs no extra stacking, clipping, focus or pointer handling.
+ * The image URL is supplied by LeasingApp to respect the configured base path.
+ */
+.leasing-calculator-page {
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-size: clamp(440px, 48.4375vw, 760px) auto;
+  background-position: right -120px top 90px;
+}
+
+@media (max-width: 899px) {
+  .leasing-calculator-page {
+    background-size: 420px auto;
+    background-position: right -160px top 90px;
+  }
+}
+
+@media (max-width: 599px) {
+  .leasing-calculator-page {
+    background-size: 280px auto;
+    background-position: right -150px top 80px;
+  }
+}
