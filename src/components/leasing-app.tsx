@@ -4,12 +4,13 @@ import { appPath } from "@/lib/app-path";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import {
   Accordion,
   Alert,
   Breadcrumbs,
   Button,
+  Carousel,
   Card,
   Chip,
   Container,
@@ -24,6 +25,7 @@ import {
   Tag,
   Typography,
 } from "bcc-design";
+import ArrowDirectionLeft from "bcc-design-icons/base/Arrows/ArrowDirectionLeft";
 import ArrowDirectionRight from "bcc-design-icons/base/Arrows/ArrowDirectionRight";
 import Fullscreen from "bcc-design-icons/base/Arrows/Fullscreen";
 import Refresh from "bcc-design-icons/base/Arrows/Refresh";
@@ -45,6 +47,7 @@ import { type ApplicationContact } from "./application-contact-form";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
 import { PropertyParameters, PropertySummary, type PropertyDraft } from "./property-parameters";
+import { VehicleCatalog } from "./vehicle-catalog";
 import faqIllustration from "./assets/faq-question.png";
 import leasingLogo from "./assets/bcc-leasing-logo.png";
 import bccLifeBanner from "./assets/bcc-life-90s.png";
@@ -62,6 +65,14 @@ const ProposalDialog = dynamic(
   () => import("./proposal-dialog").then((module) => module.ProposalDialog),
   { ssr: false },
 );
+type MarketPrice = {
+  modelId: number;
+  price: number;
+  year: number | null;
+  listings: number;
+  /** kolesa — медиана объявлений, preset — заготовка стоимости. */
+  source: "kolesa" | "preset";
+};
 type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
 const pickForm = ({
   clientType,
@@ -125,6 +136,36 @@ const questions = [
   },
 ];
 
+/**
+ * Load reference data with automatic retries (after 1 s and 2 s): a short network drop or a
+ * server restart must not leave the calculator empty. Client errors (4xx) are not retried.
+ */
+async function fetchJson<T>(url: string, signal: AbortSignal, attempts = 3): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const response = await fetch(url, { signal });
+      if (response.ok) return (await response.json()) as T;
+      if (response.status < 500 && response.status !== 429)
+        throw Object.assign(new Error(`HTTP ${response.status}`), { final: true });
+      if (attempt + 1 >= attempts) throw new Error(`HTTP ${response.status}`);
+    } catch (error) {
+      const failure = error as Error & { final?: boolean };
+      if (failure.name === "AbortError" || failure.final || attempt + 1 >= attempts) throw error;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, 1000 * 2 ** attempt);
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+  }
+}
+
 function closestRate(rates: LeaseRate[], form: FormState) {
   return [...rates].sort(
     (a, b) =>
@@ -158,6 +199,11 @@ export function LeasingApp() {
   const [continueOpen, setContinueOpen] = useState(false);
   // Стоимость из примера — не данные клиента.
   const sample = draft.state.sources.price === "default";
+  // Рыночная цена выбранной модели (медиана свежих объявлений kolesa.kz). Подставляется
+  // как пример, а не как данные клиента: перед заявкой ее нужно подтвердить.
+  const [market, setMarket] = useState<MarketPrice | null>(null);
+  const marketShown =
+    market !== null && market.modelId === form.modelId && market.price === form.price && sample;
   // Контакты заявки живут только в памяти страницы: в localStorage не пишутся.
   const [contact, setContact] = useState<ApplicationContact>({
     fullName: "",
@@ -172,6 +218,19 @@ export function LeasingApp() {
   const headerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
+  const [heroSlide, setHeroSlide] = useState(0);
+  // Баннеры листаются сами каждые 3 секунды; пауза, пока курсор или фокус внутри,
+  // чтобы клиент успел прочитать и нажать кнопку.
+  const [heroPaused, setHeroPaused] = useState(false);
+  // Свой таймер вместо autoPlay из DS: тот листает только миниатюры и не обновляет
+  // currentIndex, от которого зависят кнопки навигации и inert у слайдов. Таймер
+  // перезапускается при каждой смене слайда, в том числе ручной.
+  useEffect(() => {
+    if (heroPaused) return;
+    const timer = setTimeout(() => carouselRef.current?.goToNext(true), 3000);
+    return () => clearTimeout(timer);
+  }, [heroSlide, heroPaused]);
   const fullscreen = useFullscreen();
 
   useEffect(() => {
@@ -179,7 +238,7 @@ export function LeasingApp() {
     if (!video) return;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncPlayback = () => {
-      if (motion.matches) {
+      if (motion.matches || heroSlide !== 0) {
         video.pause();
         video.currentTime = 0;
       } else {
@@ -189,7 +248,7 @@ export function LeasingApp() {
     syncPlayback();
     motion.addEventListener("change", syncPlayback);
     return () => motion.removeEventListener("change", syncPlayback);
-  }, []);
+  }, [heroSlide]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -227,11 +286,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(appPath("/api/catalog"), { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error("catalog");
-        return response.json() as Promise<CatalogData>;
-      })
+    fetchJson<CatalogData>(appPath("/api/catalog"), controller.signal)
       .then((data) => {
         setCatalog(data);
         setCatalogError(false);
@@ -245,13 +300,10 @@ export function LeasingApp() {
   useEffect(() => {
     const controller = new AbortController();
     if (category === "property") return;
-    fetch(appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`), {
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("terms");
-        return response.json() as Promise<TermsData>;
-      })
+    fetchJson<TermsData>(
+      appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`),
+      controller.signal,
+    )
       .then((data) => {
         if (controller.signal.aborted) return;
         setLoadedTerms({ key: termsKey, data });
@@ -325,6 +377,28 @@ export function LeasingApp() {
 
   function change(patch: Partial<FormState>) {
     draft.update(patch, "form");
+  }
+  /**
+   * Выбор автомобиля в поле или в каталоге. Если цена еще не введена, подставляем
+   * рыночную: запрос асинхронный, поэтому пишем ее, только если клиент за это время
+   * не сменил модель и не ввел цену сам.
+   */
+  function pickModel(modelId: number) {
+    if (modelId !== form.modelId) change({ modelId, price: 0 });
+    setApplied(null);
+    const current = draft.latest.current.values;
+    if (modelId === form.modelId && current.price > 0) return;
+    fetch(appPath(`/api/catalog/market?id=${modelId}`))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: Omit<MarketPrice, "modelId"> | null) => {
+        const latest = draft.latest.current.values;
+        if (!data?.price || latest.modelId !== modelId || latest.price > 0) return;
+        draft.update({ price: data.price }, "default");
+        setMarket({ ...data, modelId, price: data.price });
+      })
+      .catch(() => {
+        // Нет цены — клиент введет ее сам, поле уже пустое и в фокусе.
+      });
   }
   /** Единый вход в заявку из калькулятора и чата: заявка, после отправки — скоринг. */
   function openApplication() {
@@ -430,48 +504,238 @@ export function LeasingApp() {
       {/* Баннер во всю ширину окна, как на bccleasing.kz: текст выровнен по колонке
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
-      <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
-        <video
-          ref={heroVideoRef}
-          className={s.heroVideo}
-          src={appPath("/videos/gazelle-next.mp4")}
-          poster={appPath("/videos/gazelle-next-poster.jpg")}
-          width={2206}
-          height={946}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-        <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
-          <Flex direction="column" gap={24} className={s.heroContent}>
-            <div className={s.breadcrumbs}>
-              <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
-            </div>
-            <Flex direction="column" gap={8}>
-              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
-              <Typography.Paragraph view="large" color="secondary">
-                Рассчитайте платеж и выберите удобные условия
-              </Typography.Paragraph>
-            </Flex>
-            {category === "transport" && (
-              <div>
-                <Button
-                  view="accentPrimary"
-                  size="l"
-                  iconLeft={<Chat />}
-                  aria-expanded={assistantOpen}
-                  onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
-                >
-                  {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
-                </Button>
-              </div>
-            )}
+      <section
+        ref={heroRef}
+        className={s.heroCarousel}
+        aria-label="Предложения"
+        aria-roledescription="карусель"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+        onFocus={() => setHeroPaused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
+        }}
+      >
+        <Carousel
+          ref={carouselRef}
+          visibleSlides={1}
+          slideGap={0}
+          autoPlay={false}
+          showFade={false}
+          onStateUpdate={(state) => setHeroSlide(state.currentIndex)}
+        >
+          <div
+            className={`${s.hero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 0}
+            aria-hidden={heroSlide !== 0}
+          >
+            <video
+              ref={heroVideoRef}
+              className={s.heroVideo}
+              src={appPath("/videos/gazelle-next.mp4")}
+              poster={appPath("/videos/gazelle-next-poster.jpg")}
+              width={2206}
+              height={946}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+            />
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <div className={s.breadcrumbs}>
+                  <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
+                </div>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Рассчитайте платеж и выберите удобные условия
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    iconLeft={<Chat />}
+                    aria-expanded={assistantOpen}
+                    onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
+                  >
+                    {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+
+          <div
+            className={`${s.hero} ${s.ironHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 1}
+            aria-hidden={heroSlide !== 1}
+          >
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>Банк ЦентрКредит · Премиальная карта</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Премиальная #IronCard</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Карта для ценителей комфорта и эксклюзивности
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open(
+                        "https://www.bcc.kz/personal/cards/ironcard/",
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
+                    }
+                  >
+                    Оформить кредит на IronCard
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+
+          <div
+            className={`${s.hero} ${s.lifeHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 2}
+            aria-hidden={heroSlide !== 2}
+          >
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>BCC Life · Страхование жизни</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Застрахуй братуху</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    Даже если у него всё схвачено.
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open("https://bcclife.kz/ru", "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    Получить консультацию
+                  </Button>
+                </div>
+              </Flex>
+            </Container>
+          </div>
+
+          <div
+            className={`${s.hero} ${s.investHero} bcc-root_theme_bcc-leasing-light`}
+            inert={heroSlide !== 3}
+            aria-hidden={heroSlide !== 3}
+          >
+            <svg
+              className={s.investChart}
+              viewBox="0 0 400 220"
+              preserveAspectRatio="xMaxYMax meet"
+              aria-hidden
+            >
+              <g opacity="0.9">
+                <line x1="20" x2="20" y1="205" y2="178" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="11" y="185" width="18" height="15" rx="2" fill="#3ddc97" />
+                <line x1="55" x2="55" y1="200" y2="180" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="46" y="186" width="18" height="9" rx="2" fill="#ff6b6b" />
+                <line x1="90" x2="90" y1="198" y2="162" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="81" y="170" width="18" height="24" rx="2" fill="#3ddc97" />
+                <line x1="125" x2="125" y1="178" y2="144" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="116" y="150" width="18" height="22" rx="2" fill="#3ddc97" />
+                <line x1="160" x2="160" y1="166" y2="140" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="151" y="150" width="18" height="8" rx="2" fill="#ff6b6b" />
+                <line x1="195" x2="195" y1="160" y2="120" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="186" y="128" width="18" height="29" rx="2" fill="#3ddc97" />
+                <line x1="230" x2="230" y1="138" y2="104" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="221" y="112" width="18" height="18" rx="2" fill="#3ddc97" />
+                <line x1="265" x2="265" y1="128" y2="100" stroke="#ff6b6b" strokeWidth="2" />
+                <rect x="256" y="114" width="18" height="6" rx="2" fill="#ff6b6b" />
+                <line x1="300" x2="300" y1="124" y2="80" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="291" y="88" width="18" height="31" rx="2" fill="#3ddc97" />
+                <line x1="335" x2="335" y1="96" y2="54" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="326" y="62" width="18" height="28" rx="2" fill="#3ddc97" />
+                <line x1="370" x2="370" y1="70" y2="24" stroke="#3ddc97" strokeWidth="2" />
+                <rect x="361" y="34" width="18" height="30" rx="2" fill="#3ddc97" />
+              </g>
+              <path
+                d="M10 205 C 120 190, 200 150, 390 20"
+                fill="none"
+                stroke="#ffffff"
+                strokeOpacity="0.5"
+                strokeWidth="3"
+                strokeDasharray="8 8"
+              />
+            </svg>
+            <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
+              <Flex direction="column" gap={24} className={s.heroContent}>
+                <Typography.Caption>BCC Invest · Брокерский счет</Typography.Caption>
+                <Flex direction="column" gap={8}>
+                  <Typography.Title tag="h2">Деньги под матрасом не качаются</Typography.Title>
+                  <Typography.Paragraph view="large" color="secondary">
+                    В отличие от братухи. Пусть капитал тоже поработает.
+                  </Typography.Paragraph>
+                </Flex>
+                <div>
+                  <Button
+                    view="accentPrimary"
+                    size="l"
+                    // BCC DS 4.4.11 drops href in BaseButton; open the product page explicitly.
+                    onClick={() =>
+                      window.open("https://bccinvest.kz", "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    Открыть счет
+                  </Button>
+                </div>
+                <Typography.Caption color="secondary">
+                  Инвестиции связаны с риском, доходность в прошлом не гарантирует доходность в
+                  будущем.
+                </Typography.Caption>
+              </Flex>
+            </Container>
+          </div>
+        </Carousel>
+        <Container maxWidth={1280} className={`${s.container} ${s.heroNavigation}`}>
+          <Flex gap={8} alignItems="center" wrap>
+            <Button
+              view="neutralFilledSecondary"
+              size="m"
+              iconLeft={<ArrowDirectionLeft />}
+              aria-label="Предыдущий баннер"
+              onClick={() => carouselRef.current?.goToPrevious(true)}
+            />
+            {["Лизинг", "IronCard", "BCC Life", "BCC Invest"].map((label, index) => (
+              <Button
+                key={label}
+                view={heroSlide === index ? "accentPrimary" : "neutralFilledSecondary"}
+                size="m"
+                aria-current={heroSlide === index ? "true" : undefined}
+                onClick={() => carouselRef.current?.goToSlide(index)}
+              >
+                {label}
+              </Button>
+            ))}
+            <Button
+              view="neutralFilledSecondary"
+              size="m"
+              iconLeft={<ArrowDirectionRight />}
+              aria-label="Следующий баннер"
+              onClick={() => carouselRef.current?.goToNext(true)}
+            />
           </Flex>
         </Container>
-      </div>
+      </section>
       <main id="calculator" aria-busy={category === "transport" && booting}>
         <Container maxWidth={1280} className={`${s.container} ${s.page}`}>
           {category === "transport" && isApplied && (
@@ -497,6 +761,26 @@ export function LeasingApp() {
               title="Не удалось загрузить условия. Проверьте подключение и попробуйте снова."
               actionButtonText="Повторить"
               actionButtonHandler={() => setRetry((value) => value + 1)}
+            />
+          )}
+
+          {/* Каталог: выбор карточки — то же, что выбор в поле «Автомобиль», затем
+              возвращаем клиента к полям расчета, чтобы указать цену. */}
+          {category === "transport" && catalog && (
+            <VehicleCatalog
+              models={catalog.models}
+              selected={form.modelId}
+              onSelect={(selected) => {
+                pickModel(selected.id);
+                // К полю стоимости: рыночную цену клиент сверяет с ценой продавца.
+                const fields = document.getElementById("calculator-form");
+                fields?.scrollIntoView({ behavior: "smooth", block: "start" });
+                requestAnimationFrame(() =>
+                  fields
+                    ?.querySelector<HTMLInputElement>('input[inputmode="numeric"]')
+                    ?.focus({ preventScroll: true }),
+                );
+              }}
             />
           )}
 
@@ -582,9 +866,13 @@ export function LeasingApp() {
                             placeholder="Укажите стоимость"
                             error={costInvalid}
                             hint={
-                              sample
-                                ? "Для примера указано 15 млн ₸. Введите цену от продавца."
-                                : "Укажите цену из предложения продавца или счета."
+                              marketShown
+                                ? market.source === "preset"
+                                  ? "Ориентировочная цена для этой модели. Уточните цену у продавца."
+                                  : `Средняя цена${market.year ? ` ${market.year} г.` : ""} по объявлениям kolesa.kz. Уточните цену у продавца.`
+                                : sample
+                                  ? "Для примера указано 15 млн ₸. Введите цену от продавца."
+                                  : "Укажите цену из предложения продавца или счета."
                             }
                             onChange={(price) => {
                               change({ price });
@@ -882,6 +1170,22 @@ export function LeasingApp() {
                                 ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
                                 : "Укажите цену автомобиля от продавца, и здесь появится ваш платеж."}
                             </Typography.Paragraph>
+                            {/* Без расчета главный следующий шаг — помощник: он заполнит
+                                стоимость, аванс и срок по сообщению клиента. */}
+                            <Flex direction="column" gap={8} className={s.emptyAction}>
+                              <Button
+                                view="accentPrimary"
+                                size="l"
+                                fullWidth
+                                iconLeft={<Chat />}
+                                onClick={openAssistant}
+                              >
+                                Спросить ИИ-помощника
+                              </Button>
+                              <Typography.Caption view="large" color="secondary">
+                                Например: «Автомобиль за 20 млн тенге, аванс 20%, на 4 года»
+                              </Typography.Caption>
+                            </Flex>
                           </Flex>
                         )}
                         <Divider noGap />

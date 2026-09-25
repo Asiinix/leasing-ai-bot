@@ -1,0 +1,107 @@
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-6);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--g-spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--g-spacing-3);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-3);
+  height: 100%;
+  padding: var(--g-spacing-3);
+  border-radius: var(--b-border-radius-cof-16);
+  background: var(--b-color-object-bg-neutral-weak-0);
+  box-shadow: 0 0 0 1px var(--b-color-object-border-neutral-weak-100);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 var(--g-spacing-1) var(--g-spacing-6)
+      color-mix(in srgb, var(--b-color-object-bg-overlay-strong-800) 12%, transparent);
+  }
+}
+
+// Выбранная модель подсвечена рамкой акцентного цвета.
+.selected {
+  box-shadow: 0 0 0 2px var(--b-color-object-bg-accent-primary-500);
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 510 / 276;
+  overflow: hidden;
+  border-radius: var(--b-border-radius-cof-12);
+  background: var(--b-color-object-bg-neutral-weak-50);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: photo-in 0.4s ease-out both;
+  }
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--b-color-text-neutral-weak-400);
+
+  svg {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.body {
+  flex: 1;
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo img {
+    animation: none;
+  }
+}
+
+// Фото другой модели той же марки — подписано, чтобы не выдавать его за эту модель.
+.badge {
+  position: absolute;
+  left: var(--g-spacing-2);
+  bottom: var(--g-spacing-2);
+  padding: 2px var(--g-spacing-2);
+  border-radius: var(--b-border-radius-cof-8);
+  background: color-mix(in srgb, var(--b-color-object-bg-overlay-strong-800) 70%, transparent);
+  color: var(--b-color-text-inverse-strong-0);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// В модальном окне (880px) карточки мельче, чтобы в ряд вставало три-четыре.
+.compact {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

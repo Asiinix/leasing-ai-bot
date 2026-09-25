@@ -199,6 +199,7 @@
   // Видео — отдельным слоем с исходными пропорциями: левый край плавно растворяется
   // в фоне маской (не видно стыка и скругленных углов картинки), при загрузке
   // картинка плавно проявляется.
+  &::before,
   > .heroVideo {
     position: absolute;
     z-index: -1;
@@ -224,6 +225,7 @@
   // На средних экранах картинка по высоте баннера заехала бы под текст:
   // уменьшаем ее и прижимаем к правому нижнему углу.
   @media (min-width: 768px) and (max-width: 1199px) {
+    &::before,
     > .heroVideo {
       top: auto;
       bottom: 0;
@@ -236,6 +238,7 @@
   @media (max-width: 767px) {
     padding-bottom: 80%;
 
+    &::before,
     > .heroVideo {
       top: auto;
       right: 0;
@@ -259,6 +262,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero::before,
   .heroVideo {
     animation: none;
   }
@@ -457,6 +461,7 @@
     );
 
   // Картинка заметно отстает от страницы и слегка приближается.
+  &::before,
   > .heroVideo {
     transform-origin: 70% 60%;
     translate: 0 calc(var(--g-spacing-12) * 5 * var(--hero-progress, 0));
@@ -475,6 +480,7 @@
   }
 
   .hero,
+  .hero::before,
   .heroVideo,
   .heroContent {
     scale: none;
@@ -485,4 +491,102 @@
 
 .lifeBanner {
   overflow: hidden;
+}
+
+.heroCarousel {
+  position: relative;
+}
+.heroNavigation {
+  position: absolute;
+  inset: auto 0 var(--g-spacing-6);
+  height: auto;
+  z-index: 2;
+}
+.ironHero {
+  background: url("./assets/ironcard-banner.webp") center / cover no-repeat;
+  &::before {
+    display: none;
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+// Герои справа во всю высоту баннера, левый край фото растворяется в фоне.
+.lifeHero {
+  background-color: #19372d;
+  &::before {
+    content: "";
+    aspect-ratio: 1672 / 941;
+    min-width: 62%;
+    background: url("./assets/bcclife-brothers-90s.webp") right bottom / cover no-repeat;
+    mask-image: linear-gradient(to right, transparent, black 22%);
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+.heroCarousel .heroInner {
+  min-height: calc(var(--g-spacing-12) * 13);
+  padding-bottom: calc(var(--g-spacing-12) * 2);
+}
+@media (max-width: 767px) {
+  .heroCarousel .hero {
+    padding-bottom: 0;
+    min-height: 740px;
+  }
+  .heroCarousel .heroInner {
+    min-height: 0;
+  }
+  .ironHero {
+    background-size: auto 55%;
+    background-position: 70% 85%;
+    background-color: var(--b-color-object-bg-neutral-weak-50);
+  }
+  .ironHero .heroContent,
+  .lifeHero .heroContent,
+  .investHero .heroContent {
+    margin-top: var(--g-spacing-8);
+  }
+  .lifeHero::before,
+  .investHero::before {
+    width: 150%;
+    min-width: 0;
+    mask-image: linear-gradient(to bottom, transparent, black 20%);
+  }
+  .investHero .investChart {
+    right: 5%;
+    bottom: 140px;
+    width: 90%;
+    height: 220px;
+  }
+}
+
+// BCC Invest: темно-синий фон и растущий график рисуются без картинки.
+.investHero {
+  background: radial-gradient(circle at 80% 40%, #1d4f91, #0b1f3a 60%);
+  &::before {
+    display: none;
+  }
+  .heroContent {
+    background: color-mix(in srgb, var(--b-color-object-bg-neutral-weak-0) 80%, transparent);
+    padding: var(--g-spacing-6);
+    border-radius: var(--b-border-radius-cof-16);
+  }
+}
+.investChart {
+  position: absolute;
+  z-index: -1;
+  right: 4%;
+  bottom: 12%;
+  width: 46%;
+  height: 70%;
+}
+
+// Кнопка ИИ-помощника в пустом состоянии расчета — отделена от пояснения.
+.emptyAction {
+  padding-top: var(--g-spacing-2);
 }
