@@ -314,3 +314,33 @@
     padding-top: var(--g-spacing-8);
   }
 }
+
+// Заглушки полей формы — по контуру контролов DS size="lg".
+.fieldSkeletonFrame {
+  border: 1px solid transparent; // как у корня .bcc-form-control
+}
+
+.fieldSkeleton {
+  height: var(--g-size-xl-height);
+}
+
+// Дорожка ползунка: 4px по центру 16px строки, как у Slider DS.
+.sliderSkeletonTrack {
+  padding-block: calc(var(--g-spacing-1) + var(--g-spacing-half));
+}
+
+.sliderSkeleton {
+  height: var(--g-spacing-1);
+}
+
+// Строчный скелетон — по ширине текста, а не на всю строку (Skeleton DS — блочный div).
+.inlineSkeleton {
+  display: inline-block;
+}
+
+// Логотип в шапке: высота как у Logotype DS size="sm", ширина по пропорции файла.
+.logo {
+  display: block;
+  width: auto;
+  height: var(--g-spacing-6);
+}

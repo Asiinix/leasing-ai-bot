@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accordion,
@@ -13,7 +14,6 @@ import {
   Divider,
   Flex,
   Input,
-  Logotype,
   Select,
   Slider,
   Skeleton,
@@ -38,6 +38,7 @@ import { AssistantPanel } from "./assistant-panel";
 import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import leasingLogo from "./assets/bcc-leasing-logo.png";
 import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
@@ -296,9 +297,9 @@ export function LeasingApp() {
           {/* HeaderDesktop не подошел: он всегда резервирует справа пустой блок
               пользователя и на мобиле обрезает левую часть. */}
           <Flex as="header" alignItems="center" gap={16} className={s.headerBar}>
-            {/* Логотип выбирает вариант по теме из контекста, а шапка всегда светлая:
-                в темной теме инвертируем обратно в светлый вариант. */}
-            <Logotype.BccBusiness size="sm" invert={colorMode.mode === "dark"} />
+            {/* Логотипа BCC Leasing в DS нет — используем фирменный файл. Шапка всегда
+                светлая, поэтому один вариант логотипа подходит для обеих тем. */}
+            <Image src={leasingLogo} alt="BCC Leasing" priority className={s.logo} />
             <Divider orientation="vertical" noGap height={24} className={s.headerCaption} />
             <Typography.Paragraph view="medium" color="secondary" className={s.headerCaption}>
               Лизинг для бизнеса
@@ -409,7 +410,9 @@ export function LeasingApp() {
                     )}
                   </Flex>
 
-                  <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                  {booting ? (
+                    <FieldSkeleton hint="Справочник моделей и продавцов" />
+                  ) : (
                     <ModelPicker
                       models={catalog?.models ?? []}
                       selected={form.modelId}
@@ -422,10 +425,12 @@ export function LeasingApp() {
                         setApplied(null);
                       }}
                     />
-                  </Skeleton>
+                  )}
 
                   <Flex direction="column" gap={12}>
-                    <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                    {booting ? (
+                      <FieldSkeleton hint="Для примера указано 15 млн ₸. Введите цену от продавца." />
+                    ) : (
                       <MoneyInput
                         label="Стоимость автомобиля"
                         value={form.price}
@@ -441,40 +446,49 @@ export function LeasingApp() {
                           setSample(false);
                         }}
                       />
-                    </Skeleton>
-                    <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
-                      <div className={s.priceSlider}>
-                        <Slider
-                          aria-label="Стоимость автомобиля, ползунок"
-                          min={rangeMin}
-                          max={rangeMax}
-                          step={50000}
-                          value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
-                          disabled={!activeRate}
-                          onUpdate={(value) => {
-                            if (typeof value !== "number") return;
-                            change({ price: value });
-                            setSample(false);
-                          }}
-                        />
-                      </div>
-                      <Flex justifyContent="space-between">
-                        <Typography.Caption view="large" color="secondary" monospaceNumbers>
-                          {number(rangeMin)} ₸
-                        </Typography.Caption>
-                        <Typography.Caption
-                          className={s.end}
-                          view="large"
-                          color="secondary"
-                          monospaceNumbers
-                        >
-                          {number(rangeMax)} ₸
-                        </Typography.Caption>
-                      </Flex>
-                    </Skeleton>
+                    )}
+                    {booting ? (
+                      <SliderSkeleton />
+                    ) : (
+                      <>
+                        <div className={s.priceSlider}>
+                          <Slider
+                            aria-label="Стоимость автомобиля, ползунок"
+                            min={rangeMin}
+                            max={rangeMax}
+                            step={50000}
+                            value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
+                            disabled={!activeRate}
+                            onUpdate={(value) => {
+                              if (typeof value !== "number") return;
+                              change({ price: value });
+                              setSample(false);
+                            }}
+                          />
+                        </div>
+                        <Flex justifyContent="space-between">
+                          <Typography.Caption view="large" color="secondary" monospaceNumbers>
+                            {number(rangeMin)} ₸
+                          </Typography.Caption>
+                          <Typography.Caption
+                            className={s.end}
+                            view="large"
+                            color="secondary"
+                            monospaceNumbers
+                          >
+                            {number(rangeMax)} ₸
+                          </Typography.Caption>
+                        </Flex>
+                      </>
+                    )}
                   </Flex>
 
-                  <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                  {booting ? (
+                    <div className={s.advanceRow}>
+                      <FieldSkeleton hint="Сумма рассчитывается от стоимости автомобиля" />
+                      <FieldSkeleton />
+                    </div>
+                  ) : (
                     <div className={s.advanceRow}>
                       <Flex direction="column">
                         <Input
@@ -503,7 +517,7 @@ export function LeasingApp() {
                         />
                       </div>
                     </div>
-                  </Skeleton>
+                  )}
 
                   <Flex direction="column" gap={8}>
                     <Typography.Paragraph view="small" color="secondary" id="term-label">
@@ -931,5 +945,52 @@ function SummarySkeleton() {
         </Button>
       </Skeleton>
     </>
+  );
+}
+
+// Заглушка поля формы DS (size="lg") по его контуру: контрол 56px со скруглением
+// 12px, подсказка в 8px под ним — полосой по ширине текста; все вместе, как у DS,
+// в прозрачной рамке 1px.
+function FieldSkeleton({ hint }: { hint?: string }) {
+  return (
+    <Flex direction="column" gap={8} className={s.fieldSkeletonFrame} aria-hidden>
+      <Skeleton visible br="var(--b-border-radius-cof-6)">
+        <div className={s.fieldSkeleton} />
+      </Skeleton>
+      {hint && (
+        <Flex>
+          <Skeleton visible br="var(--b-border-radius-cof-2)" className={s.inlineSkeleton}>
+            <Typography.Caption tag="div" view="large">
+              {hint}
+            </Typography.Caption>
+          </Skeleton>
+        </Flex>
+      )}
+    </Flex>
+  );
+}
+
+// Заглушка ползунка стоимости: тонкая дорожка и подписи границ диапазона.
+function SliderSkeleton() {
+  return (
+    <Flex direction="column" gap={12} aria-hidden>
+      <div className={s.sliderSkeletonTrack}>
+        <Skeleton visible br="var(--b-border-radius-circle)">
+          <div className={s.sliderSkeleton} />
+        </Skeleton>
+      </div>
+      <Flex justifyContent="space-between">
+        <Skeleton visible br="var(--b-border-radius-cof-2)" className={s.inlineSkeleton}>
+          <Typography.Caption tag="div" view="large">
+            6 250 000 ₸
+          </Typography.Caption>
+        </Skeleton>
+        <Skeleton visible br="var(--b-border-radius-cof-2)" className={s.inlineSkeleton}>
+          <Typography.Caption tag="div" view="large">
+            62 500 000 ₸
+          </Typography.Caption>
+        </Skeleton>
+      </Flex>
+    </Flex>
   );
 }
