@@ -44,8 +44,10 @@ import { AssistantPanel } from "./assistant-panel";
 import { type ApplicationContact } from "./application-contact-form";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import { PropertyParameters, PropertySummary, type PropertyDraft } from "./property-parameters";
 import faqIllustration from "./assets/faq-question.png";
 import leasingLogo from "./assets/bcc-leasing-logo.png";
+import bccLifeBanner from "./assets/bcc-life-90s.png";
 import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
@@ -82,6 +84,12 @@ type Applied = {
 };
 const formKey = (form: FormState) =>
   `${form.clientType}:${form.modelId}:${form.price}:${form.advancePercent}:${form.months}`;
+
+type AssetCategory = "transport" | "property";
+const categoryOptions: { value: AssetCategory; label: string }[] = [
+  { value: "transport", label: "Транспорт" },
+  { value: "property", label: "Недвижимость" },
+];
 
 const clientOptions: { value: ClientType; label: string }[] = [
   { value: "IP", label: "ИП" },
@@ -127,6 +135,8 @@ function closestRate(rates: LeaseRate[], form: FormState) {
 }
 
 export function LeasingApp() {
+  const [category, setCategory] = useState<AssetCategory>("transport");
+  const [property, setProperty] = useState<PropertyDraft>({ name: "", price: 0 });
   // Единое состояние заявки: калькулятор, помощник и форма заявки читают и пишут его.
   const draft = useLeaseDraft();
   const form = draft.state.values;
@@ -161,7 +171,25 @@ export function LeasingApp() {
   const colorMode = useColorMode();
   const headerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const fullscreen = useFullscreen();
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPlayback = () => {
+      if (motion.matches) {
+        video.pause();
+        video.currentTime = 0;
+      } else {
+        void video.play().catch(() => {});
+      }
+    };
+    syncPlayback();
+    motion.addEventListener("change", syncPlayback);
+    return () => motion.removeEventListener("change", syncPlayback);
+  }, []);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -216,6 +244,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
+    if (category === "property") return;
     fetch(appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`), {
       signal: controller.signal,
     })
@@ -255,7 +284,7 @@ export function LeasingApp() {
       });
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.modelId, form.clientType, retry, termsKey]);
+  }, [form.modelId, form.clientType, retry, termsKey, category]);
 
   const model = catalog?.models.find((item) => item.id === form.modelId);
   const title = modelLabel(model);
@@ -402,6 +431,20 @@ export function LeasingApp() {
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
       <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
+        <video
+          ref={heroVideoRef}
+          className={s.heroVideo}
+          src={appPath("/videos/gazelle-next.mp4")}
+          poster={appPath("/videos/gazelle-next-poster.jpg")}
+          width={2206}
+          height={946}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        />
         <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
           <Flex direction="column" gap={24} className={s.heroContent}>
             <div className={s.breadcrumbs}>
@@ -413,23 +456,25 @@ export function LeasingApp() {
                 Рассчитайте платеж и выберите удобные условия
               </Typography.Paragraph>
             </Flex>
-            <div>
-              <Button
-                view="accentPrimary"
-                size="l"
-                iconLeft={<Chat />}
-                aria-expanded={assistantOpen}
-                onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
-              >
-                {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
-              </Button>
-            </div>
+            {category === "transport" && (
+              <div>
+                <Button
+                  view="accentPrimary"
+                  size="l"
+                  iconLeft={<Chat />}
+                  aria-expanded={assistantOpen}
+                  onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
+                >
+                  {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
+                </Button>
+              </div>
+            )}
           </Flex>
         </Container>
       </div>
-      <main id="calculator" aria-busy={booting}>
+      <main id="calculator" aria-busy={category === "transport" && booting}>
         <Container maxWidth={1280} className={`${s.container} ${s.page}`}>
-          {isApplied && (
+          {category === "transport" && isApplied && (
             <Alert
               variant="success"
               fullWidth
@@ -444,7 +489,7 @@ export function LeasingApp() {
               onClose={() => setApplied(null)}
             />
           )}
-          {(catalogError || termsError === termsKey) && (
+          {category === "transport" && (catalogError || termsError === termsKey) && (
             <Alert
               variant="error"
               fullWidth
@@ -471,6 +516,25 @@ export function LeasingApp() {
                   </Typography.Title>
 
                   <Flex direction="column" gap={8}>
+                    <Typography.Paragraph view="small" color="secondary" id="category-label">
+                      Предмет лизинга
+                    </Typography.Paragraph>
+                    <ChoiceChips
+                      labelledBy="category-label"
+                      options={categoryOptions}
+                      value={category}
+                      onChange={(value) => {
+                        setCategory(value);
+                        setAssistantOpen(false);
+                        setProposalKey(null);
+                        setScheduleOpen(false);
+                        setContinueOpen(false);
+                        setScoring(null);
+                      }}
+                    />
+                  </Flex>
+
+                  <Flex direction="column" gap={8}>
                     <Typography.Paragraph view="small" color="secondary" id="client-label">
                       Клиент
                     </Typography.Paragraph>
@@ -478,180 +542,197 @@ export function LeasingApp() {
                       labelledBy="client-label"
                       options={clientOptions}
                       value={form.clientType}
-                      loading={booting}
+                      loading={category === "transport" && booting}
                       onChange={(clientType) => change({ clientType })}
                     />
-                    {form.clientType === "TOO" && (
+                    {category === "transport" && form.clientType === "TOO" && (
                       <Typography.Caption view="large" color="secondary">
                         Обычный лизинг для ТОО со сроком деятельности более 1 года.
                       </Typography.Caption>
                     )}
                   </Flex>
 
-                  {booting ? (
-                    <FieldSkeleton hint="Справочник моделей и продавцов" />
+                  {category === "property" ? (
+                    <PropertyParameters value={property} onChange={setProperty} />
                   ) : (
-                    <ModelPicker
-                      models={catalog?.models ?? []}
-                      selected={form.modelId}
-                      loading={!catalog}
-                      onSelect={(selected) => {
-                        if (selected.id !== form.modelId) {
-                          change({ modelId: selected.id, price: 0 });
-                        }
-                        setApplied(null);
-                      }}
-                    />
-                  )}
-
-                  <Flex direction="column" gap={12}>
-                    {booting ? (
-                      <FieldSkeleton hint="Для примера указано 15 млн ₸. Введите цену от продавца." />
-                    ) : (
-                      <MoneyInput
-                        label="Стоимость автомобиля"
-                        value={form.price}
-                        placeholder="Укажите стоимость"
-                        error={costInvalid}
-                        hint={
-                          sample
-                            ? "Для примера указано 15 млн ₸. Введите цену от продавца."
-                            : "Укажите цену из предложения продавца или счета."
-                        }
-                        onChange={(price) => {
-                          change({ price });
-                        }}
-                      />
-                    )}
-                    {booting ? (
-                      <SliderSkeleton />
-                    ) : (
-                      <>
-                        <div className={s.priceSlider}>
-                          <Slider
-                            aria-label="Стоимость автомобиля, ползунок"
-                            min={rangeMin}
-                            max={rangeMax}
-                            step={50000}
-                            value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
-                            disabled={!activeRate}
-                            onUpdate={(value) => {
-                              if (typeof value !== "number") return;
-                              change({ price: value });
-                            }}
-                          />
-                        </div>
-                        <Flex justifyContent="space-between">
-                          <Typography.Caption view="large" color="secondary" monospaceNumbers>
-                            {number(rangeMin)} ₸
-                          </Typography.Caption>
-                          <Typography.Caption
-                            className={s.end}
-                            view="large"
-                            color="secondary"
-                            monospaceNumbers
-                          >
-                            {number(rangeMax)} ₸
-                          </Typography.Caption>
-                        </Flex>
-                      </>
-                    )}
-                  </Flex>
-
-                  {booting ? (
-                    <div className={s.advanceRow}>
-                      <FieldSkeleton hint="Сумма рассчитывается от стоимости автомобиля" />
-                      <FieldSkeleton />
-                    </div>
-                  ) : (
-                    <div className={s.advanceRow}>
-                      <Flex direction="column">
-                        <Input
-                          fullWidth
-                          size="lg"
-                          readOnly
-                          label="Первоначальный взнос"
-                          value={money(Math.round((form.price * form.advancePercent) / 100))}
-                          hint="Сумма рассчитывается от стоимости автомобиля"
-                        />
-                      </Flex>
-                      <div>
-                        <Select
-                          fullWidth
-                          size="lg"
-                          label="Аванс"
-                          mobileTitle="Первоначальный взнос"
-                          options={(advances.length ? advances : [form.advancePercent]).map(
-                            (advance) => ({ value: advance, label: `${percent(advance)}%` }),
-                          )}
-                          value={form.advancePercent}
-                          disabled={!terms?.rates.length}
-                          onChange={({ value }) => {
-                            if (typeof value === "number") setAdvance(value);
+                    <>
+                      {booting ? (
+                        <FieldSkeleton hint="Справочник моделей и продавцов" />
+                      ) : (
+                        <ModelPicker
+                          models={catalog?.models ?? []}
+                          selected={form.modelId}
+                          loading={!catalog}
+                          onSelect={(selected, price) => {
+                            if (selected.id !== form.modelId || price !== undefined) {
+                              change({ modelId: selected.id, price: price ?? 0 });
+                            }
+                            setApplied(null);
                           }}
                         />
-                      </div>
-                    </div>
+                      )}
+
+                      <Flex direction="column" gap={12}>
+                        {booting ? (
+                          <FieldSkeleton hint="Для примера указано 15 млн ₸. Введите цену от продавца." />
+                        ) : (
+                          <MoneyInput
+                            label="Стоимость автомобиля"
+                            value={form.price}
+                            placeholder="Укажите стоимость"
+                            error={costInvalid}
+                            hint={
+                              sample
+                                ? "Для примера указано 15 млн ₸. Введите цену от продавца."
+                                : "Укажите цену из предложения продавца или счета."
+                            }
+                            onChange={(price) => {
+                              change({ price });
+                            }}
+                          />
+                        )}
+                        {booting ? (
+                          <SliderSkeleton />
+                        ) : (
+                          <>
+                            <div className={s.priceSlider}>
+                              <Slider
+                                aria-label="Стоимость автомобиля, ползунок"
+                                min={rangeMin}
+                                max={rangeMax}
+                                step={50000}
+                                value={Math.max(
+                                  rangeMin,
+                                  Math.min(rangeMax, form.price || rangeMin),
+                                )}
+                                disabled={!activeRate}
+                                onUpdate={(value) => {
+                                  if (typeof value !== "number") return;
+                                  change({ price: value });
+                                }}
+                              />
+                            </div>
+                            <Flex justifyContent="space-between">
+                              <Typography.Caption view="large" color="secondary" monospaceNumbers>
+                                {number(rangeMin)} ₸
+                              </Typography.Caption>
+                              <Typography.Caption
+                                className={s.end}
+                                view="large"
+                                color="secondary"
+                                monospaceNumbers
+                              >
+                                {number(rangeMax)} ₸
+                              </Typography.Caption>
+                            </Flex>
+                          </>
+                        )}
+                      </Flex>
+
+                      {booting ? (
+                        <div className={s.advanceRow}>
+                          <FieldSkeleton hint="Сумма рассчитывается от стоимости автомобиля" />
+                          <FieldSkeleton />
+                        </div>
+                      ) : (
+                        <div className={s.advanceRow}>
+                          <Flex direction="column">
+                            <Input
+                              fullWidth
+                              size="lg"
+                              readOnly
+                              label="Первоначальный взнос"
+                              value={money(Math.round((form.price * form.advancePercent) / 100))}
+                              hint="Сумма рассчитывается от стоимости автомобиля"
+                            />
+                          </Flex>
+                          <div>
+                            <Select
+                              fullWidth
+                              size="lg"
+                              label="Аванс"
+                              mobileTitle="Первоначальный взнос"
+                              options={(advances.length ? advances : [form.advancePercent]).map(
+                                (advance) => ({ value: advance, label: `${percent(advance)}%` }),
+                              )}
+                              value={form.advancePercent}
+                              disabled={!terms?.rates.length}
+                              onChange={({ value }) => {
+                                if (typeof value === "number") setAdvance(value);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <Flex direction="column" gap={8}>
+                        <Typography.Paragraph view="small" color="secondary" id="term-label">
+                          Срок лизинга
+                        </Typography.Paragraph>
+                        <ChoiceChips
+                          labelledBy="term-label"
+                          options={(months.length ? months : [37, 48, 60]).map((month) => ({
+                            value: month,
+                            label: `${month} мес.`,
+                            disabled: !terms?.rates.some(
+                              (rate) =>
+                                rate.months === month &&
+                                rate.advancePercent === form.advancePercent,
+                            ),
+                          }))}
+                          value={form.months}
+                          loading={booting}
+                          onChange={(months) => change({ months })}
+                        />
+                      </Flex>
+
+                      {validation && (
+                        <Alert
+                          variant="warning"
+                          fullWidth
+                          autoCloseDelay={null}
+                          title={validation}
+                        />
+                      )}
+
+                      <Divider noGap />
+                      <Flex justifyContent="space-between" alignItems="center" gap={16} wrap>
+                        <Tag
+                          size="sm"
+                          color={
+                            loading
+                              ? "neutral"
+                              : !terms
+                                ? "error"
+                                : terms.source === "snapshot"
+                                  ? "warning"
+                                  : "success"
+                          }
+                          leftIcon={loading ? <Spinner size="xs" /> : undefined}
+                        >
+                          {loading
+                            ? "Получаем условия"
+                            : terms
+                              ? terms.source === "live"
+                                ? "Условия обновлены"
+                                : `Тарифы от ${dateLabel(terms.checkedAt)}`
+                              : "Условия недоступны"}
+                        </Tag>
+                        <Button view="link" size="s" iconLeft={<Refresh />} onClick={resetExample}>
+                          Пример расчета
+                        </Button>
+                      </Flex>
+                    </>
                   )}
-
-                  <Flex direction="column" gap={8}>
-                    <Typography.Paragraph view="small" color="secondary" id="term-label">
-                      Срок лизинга
-                    </Typography.Paragraph>
-                    <ChoiceChips
-                      labelledBy="term-label"
-                      options={(months.length ? months : [37, 48, 60]).map((month) => ({
-                        value: month,
-                        label: `${month} мес.`,
-                        disabled: !terms?.rates.some(
-                          (rate) =>
-                            rate.months === month && rate.advancePercent === form.advancePercent,
-                        ),
-                      }))}
-                      value={form.months}
-                      loading={booting}
-                      onChange={(months) => change({ months })}
-                    />
-                  </Flex>
-
-                  {validation && (
-                    <Alert variant="warning" fullWidth autoCloseDelay={null} title={validation} />
-                  )}
-
-                  <Divider noGap />
-                  <Flex justifyContent="space-between" alignItems="center" gap={16} wrap>
-                    <Tag
-                      size="sm"
-                      color={
-                        loading
-                          ? "neutral"
-                          : !terms
-                            ? "error"
-                            : terms.source === "snapshot"
-                              ? "warning"
-                              : "success"
-                      }
-                      leftIcon={loading ? <Spinner size="xs" /> : undefined}
-                    >
-                      {loading
-                        ? "Получаем условия"
-                        : terms
-                          ? terms.source === "live"
-                            ? "Условия обновлены"
-                            : `Тарифы от ${dateLabel(terms.checkedAt)}`
-                          : "Условия недоступны"}
-                    </Tag>
-                    <Button view="link" size="s" iconLeft={<Refresh />} onClick={resetExample}>
-                      Пример расчета
-                    </Button>
-                  </Flex>
                 </Flex>
               </section>
             </Card>
 
             {/* Ваш расчет или помощник */}
             <div className={s.side} ref={assistantAnchor}>
-              {assistantOpen ? (
+              {category === "property" ? (
+                <PropertySummary value={property} />
+              ) : assistantOpen ? (
                 <AssistantPanel
                   draft={draft.state}
                   modelName={title}
@@ -838,34 +919,57 @@ export function LeasingApp() {
             </div>
           </div>
 
-          {/* Как это работает */}
-          {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
+          {category === "transport" && (
+            <>
+              {/* Как это работает */}
+              {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
               на SSR дают рассинхрон. Поэтому рендерим обе ориентации и показываем
               нужную CSS-медиазапросом. */}
-          <section aria-label="Как это работает" className={s.section}>
-            <StepperDesktop className={s.stepsHorizontal} steps={steps} currentStep={currentStep} />
-            <StepperDesktop
-              className={s.stepsVertical}
-              orientation="vertical"
-              steps={steps}
-              currentStep={currentStep}
-            />
-          </section>
+              <section aria-label="Как это работает" className={s.section}>
+                <StepperDesktop
+                  className={s.stepsHorizontal}
+                  steps={steps}
+                  currentStep={currentStep}
+                />
+                <StepperDesktop
+                  className={s.stepsVertical}
+                  orientation="vertical"
+                  steps={steps}
+                  currentStep={currentStep}
+                />
+              </section>
 
-          {/* Полезно знать: слева заголовок и иллюстрация, справа вопросы. Каждый вопрос —
+              {/* Полезно знать: слева заголовок и иллюстрация, справа вопросы. Каждый вопрос —
               отдельный Accordion DS из одного пункта: DS рисует его белой скругленной
               карточкой, так вопросы стоят отдельными плашками, как на bccleasing.kz. */}
-          <section aria-labelledby="faq-heading" className={`${s.faq} ${s.section}`}>
-            <div className={s.faqAside}>
-              <Typography.Title tag="h2" id="faq-heading">
-                Полезно знать
-              </Typography.Title>
-              <Image src={faqIllustration} alt="" className={s.faqImage} />
-            </div>
+              <section aria-labelledby="faq-heading" className={`${s.faq} ${s.section}`}>
+                <div className={s.faqAside}>
+                  <Typography.Title tag="h2" id="faq-heading">
+                    Полезно знать
+                  </Typography.Title>
+                  <Image src={faqIllustration} alt="" className={s.faqImage} />
+                </div>
+                <Flex direction="column" gap={16}>
+                  {questions.map((question) => (
+                    <Accordion key={question.id} items={[question]} disableImages />
+                  ))}
+                </Flex>
+              </section>
+            </>
+          )}
+          <section aria-labelledby="bcc-life-heading" id="bcc-life" className={s.section}>
             <Flex direction="column" gap={16}>
-              {questions.map((question) => (
-                <Accordion key={question.id} items={[question]} disableImages />
-              ))}
+              <Typography.Title tag="h2" id="bcc-life-heading">
+                BCC Life
+              </Typography.Title>
+              <Card type="primary" height="auto" padding="0" className={s.lifeBanner}>
+                <Image
+                  src={bccLifeBanner}
+                  alt="Брат, застрахуй жизнь. Даже если всё схвачено. Шуточный сюжет BCC Life в стиле 90-х."
+                  sizes="(max-width: 1280px) 100vw, 1232px"
+                  style={{ display: "block", width: "100%", height: "auto" }}
+                />
+              </Card>
             </Flex>
           </section>
 
@@ -876,7 +980,8 @@ export function LeasingApp() {
                 © {new Date().getFullYear()} BCC Leasing
               </Typography.Caption>
               <Typography.Caption className={s.footerEnd} view="large" color="secondary">
-                Демонстрационная версия. Обычный автолизинг
+                Демонстрационная версия.{" "}
+                {category === "transport" ? "Обычный автолизинг" : "Лизинг недвижимости"}
               </Typography.Caption>
             </div>
           </footer>

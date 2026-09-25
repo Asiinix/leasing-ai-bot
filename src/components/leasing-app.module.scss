@@ -183,7 +183,7 @@
   }
 }
 
-// Баннер во всю ширину окна. Картинка 1440×667 (фургон справа, слева пусто под
+// Баннер во всю ширину окна. Видео 2206×946 (фургон справа, слева пусто под
 // текст) вписана по высоте баннера целиком, без обрезки, и прижата вправо;
 // нижние углы баннера скруглены, как на сайте.
 .hero {
@@ -196,18 +196,19 @@
   color: var(--b-color-text-neutral-strong-900);
   border-radius: 0 0 var(--b-border-radius-cof-16) var(--b-border-radius-cof-16);
 
-  // Картинка — отдельным слоем точно своего размера: левый край плавно растворяется
+  // Видео — отдельным слоем с исходными пропорциями: левый край плавно растворяется
   // в фоне маской (не видно стыка и скругленных углов картинки), при загрузке
   // картинка плавно проявляется.
-  &::before {
-    content: "";
+  > .heroVideo {
     position: absolute;
     z-index: -1;
     top: 0;
     right: 0;
     height: 100%;
-    aspect-ratio: 1440 / 667;
-    background: url("./assets/gazel-banner.webp") center / 100% 100% no-repeat;
+    width: auto;
+    aspect-ratio: 2206 / 946;
+    object-fit: contain;
+    pointer-events: none;
     // Края картинки плавно растворяются в фоне (в маске важна только прозрачность):
     // слева — стык с пустой частью баннера, по остальным сторонам — места, где
     // синий контур упирается в обрез баннера.
@@ -223,7 +224,7 @@
   // На средних экранах картинка по высоте баннера заехала бы под текст:
   // уменьшаем ее и прижимаем к правому нижнему углу.
   @media (min-width: 768px) and (max-width: 1199px) {
-    &::before {
+    > .heroVideo {
       top: auto;
       bottom: 0;
       height: 75%;
@@ -235,7 +236,7 @@
   @media (max-width: 767px) {
     padding-bottom: 80%;
 
-    &::before {
+    > .heroVideo {
       top: auto;
       right: 0;
       bottom: 0;
@@ -258,7 +259,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero::before {
+  .heroVideo {
     animation: none;
   }
 }
@@ -325,6 +326,7 @@
 
   // На 320px логотип, «Демо» и две кнопки с зазорами по 16px не помещаются в строку.
   @media (max-width: 575px) {
+    margin-inline: 0;
     gap: var(--g-spacing-2);
     padding-inline: var(--g-spacing-3);
   }
@@ -455,7 +457,7 @@
     );
 
   // Картинка заметно отстает от страницы и слегка приближается.
-  &::before {
+  > .heroVideo {
     transform-origin: 70% 60%;
     translate: 0 calc(var(--g-spacing-12) * 5 * var(--hero-progress, 0));
     scale: calc(1 + 0.14 * var(--hero-progress, 0));
@@ -473,10 +475,14 @@
   }
 
   .hero,
-  .hero::before,
+  .heroVideo,
   .heroContent {
     scale: none;
     translate: none;
     opacity: 1;
   }
+}
+
+.lifeBanner {
+  overflow: hidden;
 }

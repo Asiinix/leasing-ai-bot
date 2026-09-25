@@ -1,0 +1,7 @@
+# BCC Life: концепт баннера
+
+Generated with built-in image_gen. Draft asset; not integrated into a page.
+
+## Prompt
+
+Create a polished humorous Russian-language web banner concept for BCC Life life insurance. Wide landscape 16:9 composition. Photorealistic cinematic staged comedy, 1990s post-Soviet aesthetic: three entirely fictional adult men with deadpan tough-guy expressions, one wearing an iconic raspberry blazer and black turtleneck with a modest gold chain, companions in oversized dark leather jackets. They stand beside a boxy black 1990s luxury sedan in a sunlit residential courtyard. The central tough guy carefully holds a neat insurance folder, his companion earnestly reads its paperwork: the joke is that even these swaggering 90s gangsters are serious about life insurance. Warm nostalgic film grain, natural believable faces, tasteful editorial photography, not gritty violence. Make the characters occupy the right portion and reserve spacious dark deep green area on the left for very legible refined white Cyrillic typography. Exact text only: small plain brand text 'BCC Life'; big headline on separate lines 'Брат, застрахуй жизнь.'; smaller supporting line 'Даже если всё схвачено.' A subtle light green accent. Do not invent a brand logo, prices, financial benefits, guarantees, legal terms or a fake interactive button. No weapons, blood, threats, real people, movie characters, watermarks or other text. High-quality funny but composed insurance advertising concept, professional typography.
