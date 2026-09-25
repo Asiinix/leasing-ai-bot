@@ -1,0 +1,29 @@
+// Крестик ModalV2 всегда стоит снаружи окна (right: -56px) и, пока окно почти во
+// всю ширину экрана, уходит за край. Тогда переносим его внутрь, в правый верхний
+// угол, а заголовку даем поля, чтобы текст не попадал под кнопку.
+@mixin close-inside {
+  :global(.bcc-modal__external-close) {
+    z-index: 1;
+    top: var(--g-spacing-2);
+    right: var(--g-spacing-2);
+  }
+
+  :global(.bcc-modal-header__title) {
+    padding-inline: var(--g-spacing-10);
+  }
+}
+
+// Снаружи крестику нужно 56px справа от окна и зазор до края экрана:
+// ширина окна + 2 × (56 + 8). Окно 560px → экран уже 688px.
+.narrow {
+  @media (max-width: 687px) {
+    @include close-inside;
+  }
+}
+
+// Широкое окно 880px → экран уже 1008px.
+.wide {
+  @media (max-width: 1007px) {
+    @include close-inside;
+  }
+}

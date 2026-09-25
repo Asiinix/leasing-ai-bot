@@ -326,10 +326,10 @@ export function LeasingApp() {
           пишется из обработчика scroll без перерисовки React). Шапка — часть баннера
           по стилю, поэтому всегда в светлой теме. */}
       <div ref={headerRef} className={`${s.headerSticky} bcc-root_theme_bcc-leasing-light`}>
-        <Container maxWidth={1280} gutters={24}>
+        <Container maxWidth={1280} className={s.container}>
           {/* HeaderDesktop не подошел: он всегда резервирует справа пустой блок
               пользователя и на мобиле обрезает левую часть. */}
-          <Flex as="header" alignItems="center" gap={16} className={s.headerBar}>
+          <Flex as="header" alignItems="center" className={s.headerBar}>
             {/* Логотипа BCC Leasing в DS нет — используем фирменный файл. Шапка всегда
                 светлая, поэтому один вариант логотипа подходит для обеих тем. */}
             <Image src={leasingLogo} alt="BCC Leasing" priority className={s.logo} />
@@ -368,7 +368,7 @@ export function LeasingApp() {
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
       <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
-        <Container maxWidth={1280} gutters={24} className={s.heroInner}>
+        <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
           <Flex direction="column" gap={24} className={s.heroContent}>
             <div className={s.breadcrumbs}>
               <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
@@ -396,7 +396,7 @@ export function LeasingApp() {
         </Container>
       </div>
       <main id="calculator" aria-busy={booting}>
-        <Container maxWidth={1280} gutters={24} className={s.page}>
+        <Container maxWidth={1280} className={`${s.container} ${s.page}`}>
           {isApplied && (
             <Alert
               variant="success"
@@ -728,6 +728,7 @@ export function LeasingApp() {
                                 view="accentSecondary"
                                 size="l"
                                 fullWidth
+                                className={s.multilineButton}
                                 disabled={!currentProposalKey}
                                 onClick={() => setProposalKey(currentProposalKey)}
                               >
@@ -737,6 +738,7 @@ export function LeasingApp() {
                                 view="accentPrimary"
                                 size="l"
                                 fullWidth
+                                className={s.multilineButton}
                                 iconRight={<ArrowDirectionRight />}
                                 onClick={() => setContinueOpen(true)}
                               >
