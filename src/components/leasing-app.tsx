@@ -73,6 +73,9 @@ type MarketPrice = {
   source: "kolesa" | "preset";
 };
 type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
+/** Сколько показывается слайд без ролика (и ждем запуска ролика), мс. */
+const HERO_SLIDE_MS = 5000;
+
 const pickForm = ({
   clientType,
   modelId,
@@ -220,33 +223,53 @@ export function LeasingApp() {
   const ironVideoRef = useRef<HTMLVideoElement>(null);
   const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
   const [heroSlide, setHeroSlide] = useState(0);
-  // Баннеры листаются сами каждые 5 секунд (ровно ролик IronCard); пауза, пока курсор или фокус внутри,
-  // чтобы клиент успел прочитать и нажать кнопку.
+  // Баннеры листаются сами; пауза, пока курсор или фокус внутри, чтобы клиент успел
+  // прочитать и нажать кнопку.
   const [heroPaused, setHeroPaused] = useState(false);
   // Свой таймер вместо autoPlay из DS: тот листает только миниатюры и не обновляет
-  // currentIndex, от которого зависят кнопки навигации и inert у слайдов. Таймер
-  // перезапускается при каждой смене слайда, в том числе ручной.
+  // currentIndex, от которого зависят кнопки навигации и inert у слайдов. Слайд с роликом
+  // листается, когда ролик доиграл, — переход совпадает с концом ролика; слайд без
+  // ролика — через HERO_SLIDE_MS. Отсчет заново при каждой смене слайда, в том числе ручной.
   useEffect(() => {
-    if (heroPaused) return;
-    const timer = setTimeout(() => carouselRef.current?.goToNext(true), 5000);
+    const next = () => carouselRef.current?.goToNext(true);
+    // Ролики по номерам слайдов: 0 — «Лизинг», 1 — IronCard.
+    const video = [heroVideoRef, ironVideoRef][heroSlide]?.current ?? null;
+    // Пока курсор на баннере, ролик крутится по кругу и слайд не уходит.
+    if (heroPaused) {
+      if (video) video.loop = true;
+      return;
+    }
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (video && !reduced) {
+      video.loop = false;
+      video.addEventListener("ended", next);
+      // Ролик так и не запустился (нет автовоспроизведения, ошибка сети) — как без ролика.
+      const fallback = setTimeout(() => {
+        if (video.paused && !video.ended) next();
+      }, HERO_SLIDE_MS + 1000);
+      return () => {
+        video.removeEventListener("ended", next);
+        clearTimeout(fallback);
+      };
+    }
+    const timer = setTimeout(next, HERO_SLIDE_MS);
     return () => clearTimeout(timer);
   }, [heroSlide, heroPaused]);
   const fullscreen = useFullscreen();
 
   useEffect(() => {
     // Видео играет только на своем слайде: фургон — на «Лизинге», карты — на IronCard.
-    const videos = [
-      { video: heroVideoRef.current, slide: 0 },
-      { video: ironVideoRef.current, slide: 1 },
-    ];
+    // Уходящий ролик замирает на текущем кадре (без перемотки: иначе во время
+    // перелистывания мелькнет его начало), а свой слайд всегда начинает ролик сначала.
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncPlayback = () => {
-      for (const { video, slide } of videos) {
+      for (const [slide, ref] of [heroVideoRef, ironVideoRef].entries()) {
+        const video = ref.current;
         if (!video) continue;
         if (motion.matches || heroSlide !== slide) {
           video.pause();
-          video.currentTime = 0;
         } else {
+          video.currentTime = 0;
           void video.play().catch(() => {});
         }
       }
@@ -544,7 +567,6 @@ export function LeasingApp() {
               height={946}
               autoPlay
               muted
-              loop
               playsInline
               preload="auto"
               aria-hidden="true"
@@ -588,7 +610,6 @@ export function LeasingApp() {
               width={2206}
               height={946}
               muted
-              loop
               playsInline
               preload="metadata"
               aria-hidden="true"
