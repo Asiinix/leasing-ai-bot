@@ -40,6 +40,7 @@ import { AssistantPanel } from "./assistant-panel";
 import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import faqIllustration from "./assets/faq-question.png";
 import leasingLogo from "./assets/bcc-leasing-logo.png";
 import s from "./leasing-app.module.scss";
 
@@ -750,7 +751,7 @@ export function LeasingApp() {
           {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
               на SSR дают рассинхрон. Поэтому рендерим обе ориентации и показываем
               нужную CSS-медиазапросом. */}
-          <section aria-label="Как это работает">
+          <section aria-label="Как это работает" className={s.section}>
             <StepperDesktop className={s.stepsHorizontal} steps={steps} currentStep={currentStep} />
             <StepperDesktop
               className={s.stepsVertical}
@@ -760,23 +761,24 @@ export function LeasingApp() {
             />
           </section>
 
-          {/* Полезно знать */}
-          <section aria-labelledby="faq-heading">
-            <Flex direction="column" gap={16}>
-              <Typography.Title
-                tag="div"
-                view="block"
-                role="heading"
-                aria-level={2}
-                id="faq-heading"
-              >
+          {/* Полезно знать: слева заголовок и иллюстрация, справа вопросы. Каждый вопрос —
+              отдельный Accordion DS из одного пункта: DS рисует его белой скругленной
+              карточкой, так вопросы стоят отдельными плашками, как на bccleasing.kz. */}
+          <section aria-labelledby="faq-heading" className={`${s.faq} ${s.section}`}>
+            <div className={s.faqAside}>
+              <Typography.Title tag="h2" id="faq-heading">
                 Полезно знать
               </Typography.Title>
-              <Accordion items={questions} closeOthersOnClick disableImages />
+              <Image src={faqIllustration} alt="" className={s.faqImage} />
+            </div>
+            <Flex direction="column" gap={16}>
+              {questions.map((question) => (
+                <Accordion key={question.id} items={[question]} disableImages />
+              ))}
             </Flex>
           </section>
 
-          <footer>
+          <footer className={s.section}>
             <Divider noGap />
             <div className={s.footer}>
               <Typography.Caption view="large" color="secondary">

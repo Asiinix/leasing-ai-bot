@@ -344,3 +344,44 @@
   width: auto;
   height: var(--g-spacing-6);
 }
+
+// Полезно знать: заголовок с иллюстрацией слева, вопросы справа; на узком экране —
+// столбиком, иллюстрация скрыта.
+.faq {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+  gap: var(--g-spacing-8);
+  align-items: start;
+
+  @media (max-width: 991px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--g-spacing-6);
+  }
+}
+
+.faqAside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-10);
+}
+
+// Картинка обрезана по контуру знака и стоит по левому краю, под заголовком.
+.faqImage {
+  width: calc(var(--g-spacing-12) * 4);
+  max-width: 100%;
+  height: auto;
+
+  @media (max-width: 991px) {
+    display: none;
+  }
+}
+
+// Крупные секции страницы (шаги, «Полезно знать», футер) отделены сильнее, чем
+// блоки внутри калькулятора: к общему gap страницы (32px) добавляем 48px.
+.section {
+  margin-top: var(--g-spacing-12);
+
+  @media (max-width: 767px) {
+    margin-top: var(--g-spacing-6);
+  }
+}
