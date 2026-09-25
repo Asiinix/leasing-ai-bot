@@ -48,6 +48,10 @@ const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
   { ssr: false },
 );
+const ProposalDialog = dynamic(
+  () => import("./proposal-dialog").then((module) => module.ProposalDialog),
+  { ssr: false },
+);
 type FormState = {
   clientType: ClientType;
   modelId: number;
@@ -123,6 +127,7 @@ export function LeasingApp() {
   const [termsError, setTermsError] = useState("");
   const [retry, setRetry] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [proposalKey, setProposalKey] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [continueOpen, setContinueOpen] = useState(false);
   const [sample, setSample] = useState(true);
@@ -222,6 +227,12 @@ export function LeasingApp() {
         : null,
     [activeRate, form.price, terms],
   );
+  const currentProposalKey =
+    quote && model && !catalogError
+      ? JSON.stringify([formKey(form), quote, model, termsKey])
+      : null;
+  // Invalidate the open preview permanently, including change-and-revert.
+  if (proposalKey !== null && proposalKey !== currentProposalKey) setProposalKey(null);
   // Шаг 1 — пока нет расчета, шаг 2 — расчет есть и можно подбирать условия.
   const currentStep = quote ? 2 : 1;
   const advances = [...new Set(terms?.rates.map((rate) => rate.advancePercent))].sort(
@@ -681,6 +692,15 @@ export function LeasingApp() {
                                 </Button>
                               </div>
                               <Button
+                                view="accentSecondary"
+                                size="l"
+                                fullWidth
+                                disabled={!currentProposalKey}
+                                onClick={() => setProposalKey(currentProposalKey)}
+                              >
+                                Сформировать коммерческое предложение
+                              </Button>
+                              <Button
                                 view="accentPrimary"
                                 size="l"
                                 fullWidth
@@ -792,6 +812,15 @@ export function LeasingApp() {
         </Container>
       </main>
 
+      {proposalKey && proposalKey === currentProposalKey && quote && (
+        <ProposalDialog
+          key={proposalKey}
+          quote={quote}
+          model={title}
+          clientType={form.clientType}
+          onClose={() => setProposalKey(null)}
+        />
+      )}
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
       )}
