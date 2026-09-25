@@ -1,5 +1,7 @@
 "use client";
 
+import { appPath } from "@/lib/app-path";
+
 import { useEffect, useRef, useState } from "react";
 import { Button, Card, Chip, Flex, Spinner, Tag, Textarea, Typography } from "bcc-design";
 import ArrowLineDirectionUp from "bcc-design-icons/base/Arrows/ArrowLineDirectionUp";
@@ -223,7 +225,7 @@ export function AssistantPanel({
       let data = terms;
       if (!data || next.clientType !== context.clientType) {
         const response = await fetch(
-          `/api/terms?modelId=${context.modelId}&clientType=${next.clientType}`,
+          appPath(`/api/terms?modelId=${context.modelId}&clientType=${next.clientType}`),
         );
         if (!response.ok) throw new Error("terms");
         data = (await response.json()) as TermsData;

@@ -1,5 +1,7 @@
 "use client";
 
+import { appPath } from "@/lib/app-path";
+
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -156,7 +158,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/catalog", { signal: controller.signal })
+    fetch(appPath("/api/catalog"), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("catalog");
         return response.json() as Promise<CatalogData>;
@@ -173,7 +175,7 @@ export function LeasingApp() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`, {
+    fetch(appPath(`/api/terms?modelId=${form.modelId}&clientType=${form.clientType}`), {
       signal: controller.signal,
     })
       .then((response) => {
