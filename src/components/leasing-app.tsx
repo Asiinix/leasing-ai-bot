@@ -501,7 +501,7 @@ export function LeasingApp() {
             <Image src={leasingLogo} alt="BCC Leasing" priority className={s.logo} />
             <Divider orientation="vertical" noGap height={24} className={s.headerCaption} />
             <Typography.Paragraph view="medium" color="secondary" className={s.headerCaption}>
-              Лизинг для бизнеса
+              Палата номер 6
             </Typography.Paragraph>
             <Tag color="info" variant="default" size="sm">
               Демо
