@@ -7,11 +7,18 @@ import Search from "bcc-design-icons/base/Basic/Search";
 import Car from "bcc-design-icons/base/TransportationLogistics/Car";
 import { appPath } from "@/lib/app-path";
 import { money } from "@/lib/format";
+import { pricePreset } from "@/lib/price-presets";
 import type { LeaseModel } from "@/lib/types";
 import { modelLabel } from "@/lib/vehicle";
+import { Dialog } from "./dialog";
 import s from "./vehicle-catalog.module.scss";
 
-const PAGE = 12;
+/** Карточек на странице; остальные — в модальном окне. */
+const PREVIEW = 8;
+/** Порция карточек в модальном окне. */
+const PAGE = 24;
+const DISCLAIMER =
+  "Фото и цены — ориентир по объявлениям kolesa.kz или типичной цене модели: комплектация, цвет и цена у продавца могут отличаться.";
 // Меняется вместе с логикой подбора фото: старые ответы из кэша браузера не используются.
 const PHOTO_VERSION = 2;
 const ACRONYMS = new Set(["BMW", "BYD", "GAC", "JAC", "FAW", "UAZ", "ГАЗ", "MINI"]);
@@ -23,9 +30,68 @@ function brandLabel(brand: string) {
 }
 const TOP_BRANDS = 10;
 
+/** Самые ходовые модели в Казахстане — первыми на странице. */
+const BESTSELLERS = [
+  "TOYOTA|CAMRY",
+  "HYUNDAI|TUCSON",
+  "KIA|SPORTAGE",
+  "CHEVROLET|COBALT",
+  "HYUNDAI|ELANTRA",
+  "LADA|GRANTA",
+  "CHANGAN|CS35",
+  "GEELY|COOLRAY",
+  "TOYOTA|RAV4",
+  "KIA|K5",
+  "HYUNDAI|ACCENT",
+  "HAVAL|JOLION",
+  "CHERY|TIGGO",
+  "JAC|S3",
+  "TOYOTA|LAND",
+  "HYUNDAI|SANTA",
+];
+
+function popularity(model: LeaseModel) {
+  const key = `${model.brand}|${model.name.split(/\s+/)[0]}`.toUpperCase();
+  const rank = BESTSELLERS.indexOf(key);
+  if (rank >= 0) return rank;
+  return pricePreset(model).level === "model" ? BESTSELLERS.length : BESTSELLERS.length + 1;
+}
+
+/** «BMW 320I» → «BMW 320i», «ГАЗ 3302» вместо «газ 3302». */
+function cardLabel(model: LeaseModel): string {
+  const label = modelLabel(model);
+  const brand = model.brand.trim();
+  return label.toLowerCase().startsWith(brand.toLowerCase())
+    ? `${brandLabel(brand)}${label.slice(brand.length)}`
+    : label;
+}
+
+/** Слова поиска по марке, модели и продавцу, как в поле «Автомобиль». */
+function useFound(models: LeaseModel[], brand: string, query: string) {
+  return useMemo(() => {
+    const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    return (
+      models
+        .filter(
+          (model) =>
+            (!brand || model.brand === brand) &&
+            words.every((word) =>
+              `${model.brand} ${model.name} ${model.partnerName}`
+                .toLocaleLowerCase()
+                .includes(word),
+            ),
+        )
+        // Сначала самые ходовые модели, затем остальные популярные (с заготовкой цены),
+        // внутри — порядок каталога банка.
+        .sort((a, b) => popularity(a) - popularity(b))
+    );
+  }, [models, brand, query]);
+}
+
 /**
- * Каталог автомобилей банка карточками с фото. Выбор карточки подставляет модель
- * в калькулятор — то же действие, что выбор в поле «Автомобиль».
+ * Каталог автомобилей банка карточками с фото. На странице — первые карточки,
+ * весь каталог открывается в модальном окне с теми же фильтрами. Выбор карточки
+ * подставляет модель в калькулятор — то же действие, что выбор в поле «Автомобиль».
  */
 export function VehicleCatalog({
   models,
@@ -38,7 +104,21 @@ export function VehicleCatalog({
 }) {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("");
-  const [limit, setLimit] = useState(PAGE);
+  const [open, setOpen] = useState(false);
+  const found = useFound(models, brand, query);
+  // На странице — по одной карточке на модель: комплектации (Camry, Camry Gracia…)
+  // и дубли у разных продавцов остаются в полном каталоге.
+  const preview = useMemo(() => {
+    const seen = new Set<string>();
+    return found
+      .filter((model) => {
+        const key = `${model.brand}|${model.name.split(/\s+/)[0]}`.toUpperCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, PREVIEW);
+  }, [found]);
 
   const brands = useMemo(() => {
     const counts = new Map<string, number>();
@@ -49,22 +129,9 @@ export function VehicleCatalog({
       .map(([name]) => name);
   }, [models]);
 
-  const found = useMemo(() => {
-    const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-    return models.filter(
-      (model) =>
-        (!brand || model.brand === brand) &&
-        words.every((word) =>
-          `${model.brand} ${model.name} ${model.partnerName}`.toLocaleLowerCase().includes(word),
-        ),
-    );
-  }, [models, brand, query]);
-
-  function filter(next: { query?: string; brand?: string }) {
-    if (next.query !== undefined) setQuery(next.query);
-    if (next.brand !== undefined) setBrand(next.brand);
-    setLimit(PAGE);
-  }
+  const filters = (
+    <Filters query={query} brand={brand} brands={brands} onQuery={setQuery} onBrand={setBrand} />
+  );
 
   return (
     <section aria-labelledby="catalog-heading" className={s.catalog} id="catalog">
@@ -78,61 +145,156 @@ export function VehicleCatalog({
         </Typography.Paragraph>
       </Flex>
 
-      <Flex direction="column" gap={12}>
-        <Input
-          fullWidth
-          label="Марка или модель"
-          value={query}
-          leftAddon={<Search />}
-          autoComplete="off"
-          onChange={(event) => filter({ query: event.target.value })}
-        />
-        <Flex gap={8} wrap role="group" aria-label="Марка">
-          {["", ...brands].map((name) => (
-            <Chip
-              key={name || "all"}
-              clickable
-              size="s"
-              variant={brand === name ? "active" : "inactive"}
-              aria-pressed={brand === name}
-              onClick={() => filter({ brand: brand === name ? "" : name })}
-            >
-              {name ? brandLabel(name) : "Все марки"}
-            </Chip>
-          ))}
-        </Flex>
-      </Flex>
-
-      {found.length === 0 ? (
-        <Typography.Paragraph view="medium" color="secondary">
-          Ничего не нашли. Попробуйте другую марку или модель.
-        </Typography.Paragraph>
-      ) : (
-        <ul className={s.grid}>
-          {found.slice(0, limit).map((model) => (
-            <li key={model.id}>
-              <CatalogCard
-                model={model}
-                selected={model.id === selected}
-                onSelect={() => onSelect(model)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {filters}
+      <CatalogGrid models={preview} selected={selected} onSelect={onSelect} />
 
       <Flex direction="column" alignItems="center" gap={8}>
-        {found.length > limit && (
-          <Button view="neutralFilledSecondary" size="l" onClick={() => setLimit(limit + PAGE)}>
-            Показать еще ({found.length - limit})
+        {found.length > preview.length && (
+          <Button
+            view="neutralFilledSecondary"
+            size="l"
+            aria-haspopup="dialog"
+            onClick={() => setOpen(true)}
+          >
+            Показать все ({found.length})
           </Button>
         )}
         <Typography.Caption view="large" color="secondary">
-          Фото и цены — ориентир по объявлениям kolesa.kz: комплектация, цвет и цена у продавца
-          могут отличаться.
+          {DISCLAIMER}
         </Typography.Caption>
       </Flex>
+
+      {open && (
+        <Dialog
+          wide
+          title="Каталог автомобилей"
+          description={`Найдено ${found.length} из ${models.length}`}
+          onClose={() => setOpen(false)}
+        >
+          <CatalogModalBody
+            found={found}
+            filters={filters}
+            selected={selected}
+            onSelect={(model) => {
+              setOpen(false);
+              // Окно при закрытии возвращает фокус на кнопку «Показать еще» и прокручивает
+              // к ней; переход к калькулятору — после закрытия.
+              setTimeout(() => onSelect(model), 350);
+            }}
+          />
+        </Dialog>
+      )}
     </section>
+  );
+}
+
+/** Весь каталог в окне: карточки порциями, чтобы не грузить сотни фото сразу. */
+function CatalogModalBody({
+  found,
+  filters,
+  selected,
+  onSelect,
+}: {
+  found: LeaseModel[];
+  filters: React.ReactNode;
+  selected: number;
+  onSelect: (model: LeaseModel) => void;
+}) {
+  const [limit, setLimit] = useState(PAGE);
+  // Новый фильтр — снова с первой порции.
+  const [shownFor, setShownFor] = useState(found);
+  if (shownFor !== found) {
+    setShownFor(found);
+    setLimit(PAGE);
+  }
+  return (
+    <Flex direction="column" gap={24}>
+      {filters}
+      <CatalogGrid models={found.slice(0, limit)} selected={selected} onSelect={onSelect} compact />
+      {found.length > limit && (
+        <Flex justifyContent="center">
+          <Button view="neutralFilledSecondary" size="l" onClick={() => setLimit(limit + PAGE)}>
+            Показать еще ({found.length - limit})
+          </Button>
+        </Flex>
+      )}
+      <Typography.Caption view="large" color="secondary">
+        {DISCLAIMER}
+      </Typography.Caption>
+    </Flex>
+  );
+}
+
+function Filters({
+  query,
+  brand,
+  brands,
+  onQuery,
+  onBrand,
+}: {
+  query: string;
+  brand: string;
+  brands: string[];
+  onQuery: (value: string) => void;
+  onBrand: (value: string) => void;
+}) {
+  return (
+    <Flex direction="column" gap={12}>
+      <Input
+        fullWidth
+        label="Марка или модель"
+        value={query}
+        leftAddon={<Search />}
+        autoComplete="off"
+        onChange={(event) => onQuery(event.target.value)}
+      />
+      <Flex gap={8} wrap role="group" aria-label="Марка">
+        {["", ...brands].map((name) => (
+          <Chip
+            key={name || "all"}
+            clickable
+            size="s"
+            variant={brand === name ? "active" : "inactive"}
+            aria-pressed={brand === name}
+            onClick={() => onBrand(brand === name ? "" : name)}
+          >
+            {name ? brandLabel(name) : "Все марки"}
+          </Chip>
+        ))}
+      </Flex>
+    </Flex>
+  );
+}
+
+function CatalogGrid({
+  models,
+  selected,
+  onSelect,
+  compact = false,
+}: {
+  models: LeaseModel[];
+  selected: number;
+  onSelect: (model: LeaseModel) => void;
+  compact?: boolean;
+}) {
+  if (!models.length)
+    return (
+      <Typography.Paragraph view="medium" color="secondary">
+        Ничего не нашли. Попробуйте другую марку или модель.
+      </Typography.Paragraph>
+    );
+  return (
+    <ul className={`${s.grid} ${compact ? s.compact : ""}`}>
+      {models.map((model) => (
+        <li key={model.id}>
+          <CatalogCard
+            model={model}
+            selected={model.id === selected}
+            onSelect={() => onSelect(model)}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -149,7 +311,7 @@ function CatalogCard({
   const [price, setPrice] = useState<number | null | undefined>(undefined);
   const [brandPhoto, setBrandPhoto] = useState(false);
   const [estimate, setEstimate] = useState(false);
-  const label = modelLabel(model);
+  const label = cardLabel(model);
   // Та же рыночная цена, что подставится в калькулятор при выборе.
   useEffect(() => {
     const controller = new AbortController();
@@ -196,9 +358,14 @@ function CatalogCard({
           {price === undefined
             ? "Цена загружается…"
             : price
-              ? `≈ ${money(price)}${estimate ? " · ориентир" : ""}`
+              ? `≈ ${money(price)}`
               : "Цену уточните у продавца"}
         </Typography.Paragraph>
+        {Boolean(price) && (
+          <Typography.Caption view="large" color="secondary">
+            {estimate ? "Ориентировочная цена" : "По объявлениям kolesa.kz"}
+          </Typography.Caption>
+        )}
       </Flex>
       <Button
         view={selected ? "accentSecondary" : "accentPrimary"}
@@ -208,7 +375,7 @@ function CatalogCard({
         aria-pressed={selected}
         onClick={onSelect}
       >
-        {selected ? "Выбран в расчете" : "Рассчитать лизинг"}
+        {selected ? "Выбран" : "Рассчитать"}
       </Button>
     </article>
   );

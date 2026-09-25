@@ -96,3 +96,12 @@
   font-size: 12px;
   line-height: 16px;
 }
+
+// В модальном окне (880px) карточки мельче, чтобы в ряд вставало три-четыре.
+.compact {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

@@ -721,6 +721,26 @@ export function LeasingApp() {
             />
           )}
 
+          {/* Каталог: выбор карточки — то же, что выбор в поле «Автомобиль», затем
+              возвращаем клиента к полям расчета, чтобы указать цену. */}
+          {catalog && (
+            <VehicleCatalog
+              models={catalog.models}
+              selected={form.modelId}
+              onSelect={(selected) => {
+                pickModel(selected.id);
+                // К полю стоимости: рыночную цену клиент сверяет с ценой продавца.
+                const fields = document.getElementById("calculator-form");
+                fields?.scrollIntoView({ behavior: "smooth", block: "start" });
+                requestAnimationFrame(() =>
+                  fields
+                    ?.querySelector<HTMLInputElement>('input[inputmode="numeric"]')
+                    ?.focus({ preventScroll: true }),
+                );
+              }}
+            />
+          )}
+
           <div className={s.grid}>
             {/* Параметры лизинга */}
             <Card size="m" type="primary" height="auto">
@@ -1118,28 +1138,6 @@ export function LeasingApp() {
               )}
             </div>
           </div>
-
-          {/* Каталог: выбор карточки — то же, что выбор в поле «Автомобиль», затем
-              возвращаем клиента к полям расчета, чтобы указать цену. */}
-          {catalog && (
-            <div className={s.section}>
-              <VehicleCatalog
-                models={catalog.models}
-                selected={form.modelId}
-                onSelect={(selected) => {
-                  pickModel(selected.id);
-                  // К полю стоимости: рыночную цену клиент сверяет с ценой продавца.
-                  const fields = document.getElementById("calculator-form");
-                  fields?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  requestAnimationFrame(() =>
-                    fields
-                      ?.querySelector<HTMLInputElement>('input[inputmode="numeric"]')
-                      ?.focus({ preventScroll: true }),
-                  );
-                }}
-              />
-            </div>
-          )}
 
           {/* Как это работает */}
           {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
