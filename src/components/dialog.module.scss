@@ -27,3 +27,17 @@
     @include close-inside;
   }
 }
+
+@media (max-width: 767px) {
+  .narrow,
+  .wide {
+    [role="group"] {
+      gap: var(--g-spacing-2);
+
+      > :global(.bcc-chip) {
+        flex: 1 1 auto;
+        margin: 0;
+      }
+    }
+  }
+}

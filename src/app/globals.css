@@ -39,3 +39,23 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* Размеры и отступы задает bcc-design; здесь только перенос длинных подписей. */
+@media (max-width: 767px) {
+  .bcc-button:not(.bcc-button_iconOnly) {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .bcc-button__childrenWrapper {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .bcc-button_iconOnly {
+    flex-shrink: 0;
+  }
+}

@@ -336,7 +336,6 @@
 // держит текст в одну строку и обрезает его с обеих сторон по центру.
 .multilineButton {
   height: auto;
-  padding-block: var(--g-spacing-3);
 
   :global(.bcc-button__childrenWrapper) {
     overflow: visible;
@@ -494,6 +493,12 @@
   height: auto;
   z-index: 2;
 }
+.heroNavigationItems {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--g-spacing-2);
+}
 .ironHero {
   // Ролик с картами на весь баннер; небо слева служит фоном для текста.
   background: url("./assets/ironcard-banner.webp") center / cover no-repeat;
@@ -604,4 +609,55 @@
 // Кнопка ИИ-помощника в пустом состоянии расчета — отделена от пояснения.
 .emptyAction {
   padding-top: var(--g-spacing-2);
+}
+
+@media (max-width: 767px) {
+  .choices {
+    gap: var(--g-spacing-2);
+
+    .chipSkeleton {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin: 0;
+
+      > * {
+        width: 100%;
+      }
+    }
+  }
+
+  .heroContent :global(.bcc-button),
+  .assistantPrompt > :global(.bcc-button) {
+    width: 100%;
+  }
+
+  .assistantPrompt {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroNavigationItems {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-block: var(--g-spacing-1);
+
+    > :global(.bcc-button) {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    :global(.bcc-button__childrenWrapper) {
+      white-space: nowrap;
+    }
+
+    > :global(.bcc-button_iconOnly) {
+      display: none;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }

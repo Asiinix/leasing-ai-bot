@@ -223,7 +223,16 @@ export function LeasingApp() {
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const ironVideoRef = useRef<HTMLVideoElement>(null);
   const carouselRef = useRef<ComponentRef<typeof Carousel>>(null);
+  const heroNavigationRef = useRef<HTMLDivElement>(null);
   const [heroSlide, setHeroSlide] = useState(0);
+  useEffect(() => {
+    const navigation = heroNavigationRef.current;
+    const active = navigation?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!navigation || !active || navigation.scrollWidth <= navigation.clientWidth) return;
+    const container = navigation.getBoundingClientRect();
+    const button = active.getBoundingClientRect();
+    navigation.scrollLeft += button.left - container.left - (container.width - button.width) / 2;
+  }, [heroSlide]);
   // Баннеры листаются сами; пауза, пока курсор или фокус внутри, чтобы клиент успел
   // прочитать и нажать кнопку.
   const [heroPaused, setHeroPaused] = useState(false);
@@ -748,7 +757,7 @@ export function LeasingApp() {
           </div>
         </Carousel>
         <Container maxWidth={1280} className={`${s.container} ${s.heroNavigation}`}>
-          <Flex gap={8} alignItems="center" wrap>
+          <div ref={heroNavigationRef} className={s.heroNavigationItems}>
             <Button
               view="neutralFilledSecondary"
               size="m"
@@ -774,7 +783,7 @@ export function LeasingApp() {
               aria-label="Следующий баннер"
               onClick={() => carouselRef.current?.goToNext(true)}
             />
-          </Flex>
+          </div>
         </Container>
       </section>
       <main id="calculator" aria-busy={category === "transport" && booting}>
@@ -1242,7 +1251,13 @@ export function LeasingApp() {
                     </section>
                   </Card>
                   <Card size="m" type="secondary">
-                    <Flex gap={16} alignItems="center" justifyContent="space-between" wrap>
+                    <Flex
+                      gap={16}
+                      alignItems="center"
+                      justifyContent="space-between"
+                      wrap
+                      className={s.assistantPrompt}
+                    >
                       <Flex direction="column" gap={4}>
                         <Typography.Paragraph view="medium" weight="semibold">
                           Есть комфортный платеж?
@@ -1408,9 +1423,9 @@ function ChoiceChips<T extends string | number>({
   loading?: boolean;
   onChange: (value: T) => void;
 }) {
-  // Отступы между чипами дает сам Chip (margin-right 8, margin-bottom 4), gap не нужен.
+  // На телефоне группа распределяет варианты по всей доступной ширине.
   return (
-    <Flex wrap role="group" aria-labelledby={labelledBy}>
+    <Flex wrap role="group" aria-labelledby={labelledBy} className={s.choices}>
       {options.map((option) => (
         <Skeleton
           key={option.value}

@@ -78,6 +78,24 @@
   }
 }
 
+// Названия моделей длиннее однострочного Chip: Button DS растет по содержимому.
+.vehicleOptions {
+  min-width: 0;
+
+  > :global(.bcc-button) {
+    min-width: 0;
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  :global(.bcc-button__childrenWrapper) {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+}
+
 // Блок «Данные заявки»: свернутая строка со статусом, по клику — список полей.
 .fields {
   display: flex;
@@ -184,5 +202,42 @@
 @media (prefers-reduced-motion: reduce) {
   .recDot {
     animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .choices {
+    gap: var(--g-spacing-2);
+
+    > * {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin: 0;
+    }
+  }
+
+  .actions {
+    width: 100%;
+    flex-wrap: wrap;
+
+    > * {
+      flex: 1 1 140px;
+    }
+  }
+
+  .recording {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .offerDetails {
+    flex-wrap: wrap;
+  }
+
+  .userMessage,
+  .assistantMessage {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 }

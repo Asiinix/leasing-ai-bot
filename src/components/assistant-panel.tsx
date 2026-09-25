@@ -439,7 +439,7 @@ export function AssistantPanel({
                   );
                 })}
               </dl>
-              <Flex gap={8} wrap>
+              <Flex gap={8} wrap className={s.actions}>
                 <Button view="accentSecondary" size="s" onClick={onEditData}>
                   Изменить данные
                 </Button>
@@ -532,7 +532,7 @@ export function AssistantPanel({
         </div>
 
         {/* Быстрые действия и ввод */}
-        <Flex wrap>
+        <Flex wrap className={s.choices}>
           {QUICK_ACTIONS.map((action) => (
             <Chip
               key={action}
@@ -567,7 +567,7 @@ export function AssistantPanel({
                     Запись {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
                   </Typography.Paragraph>
                 </Flex>
-                <Flex gap={8}>
+                <Flex gap={8} className={s.actions}>
                   <Button view="neutral" size="s" onClick={() => stopRecording(true)}>
                     Отменить
                   </Button>
@@ -770,18 +770,18 @@ function CardView({
           <Typography.Caption view="large" color="secondary">
             Выберите запись справочника:
           </Typography.Caption>
-          <Flex wrap>
+          <Flex direction="column" gap={8} className={s.vehicleOptions}>
             {card.options.map((option) => (
-              <Chip
+              <Button
                 key={option.id}
-                clickable
-                variant="inactive"
-                size="s"
+                view="neutralFilledSecondary"
+                size="m"
+                fullWidth
                 disabled={busy}
                 onClick={() => onSelectVehicle(option)}
               >
                 {option.label} · {option.partner}
-              </Chip>
+              </Button>
             ))}
           </Flex>
         </Flex>
