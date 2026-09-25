@@ -50,7 +50,6 @@ import { PropertyParameters, PropertySummary, type PropertyDraft } from "./prope
 import { VehicleCatalog } from "./vehicle-catalog";
 import faqIllustration from "./assets/faq-question.png";
 import leasingLogo from "./assets/bcc-leasing-logo.png";
-import bccLifeBanner from "./assets/bcc-life-90s.png";
 import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
@@ -1261,22 +1260,6 @@ export function LeasingApp() {
               </section>
             </>
           )}
-          <section aria-labelledby="bcc-life-heading" id="bcc-life" className={s.section}>
-            <Flex direction="column" gap={16}>
-              <Typography.Title tag="h2" id="bcc-life-heading">
-                BCC Life
-              </Typography.Title>
-              <Card type="primary" height="auto" padding="0" className={s.lifeBanner}>
-                <Image
-                  src={bccLifeBanner}
-                  alt="Брат, застрахуй жизнь. Даже если всё схвачено. Шуточный сюжет BCC Life в стиле 90-х."
-                  sizes="(max-width: 1280px) 100vw, 1232px"
-                  style={{ display: "block", width: "100%", height: "auto" }}
-                />
-              </Card>
-            </Flex>
-          </section>
-
           <footer className={s.section}>
             <Divider noGap />
             <div className={s.footer}>
