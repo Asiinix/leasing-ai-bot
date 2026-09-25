@@ -17,7 +17,9 @@ export async function GET(request: Request): Promise<Response> {
     if (!model) return new Response(null, { status: 404 });
     const market = await findVehicleMarket(model);
     if (!market?.imageUrl)
-      return new Response(null, { status: 404, headers: { "Cache-Control": "max-age=600" } });
+      // No browser caching of «no photo»: the server cache already limits kolesa.kz requests,
+      // and a photo found later (for example after a network error) must show up right away.
+      return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
     return new Response(null, {
       status: 302,
       headers: { Location: market.imageUrl, "Cache-Control": "public, max-age=86400" },

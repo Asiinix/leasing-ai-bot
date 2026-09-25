@@ -12,6 +12,8 @@ import { modelLabel } from "@/lib/vehicle";
 import s from "./vehicle-catalog.module.scss";
 
 const PAGE = 12;
+// Меняется вместе с логикой подбора фото: старые ответы из кэша браузера не используются.
+const PHOTO_VERSION = 2;
 const ACRONYMS = new Set(["BMW", "BYD", "GAC", "JAC", "FAW", "UAZ", "ГАЗ", "MINI"]);
 
 /** «MERCEDES-BENZ» → «Mercedes-Benz», аббревиатуры как есть. */
@@ -172,7 +174,7 @@ function CatalogCard({
           // Внешнее фото через редирект нашего API: next/image тут не нужен.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={appPath(`/api/catalog/photo?id=${model.id}`)}
+            src={appPath(`/api/catalog/photo?id=${model.id}&v=${PHOTO_VERSION}`)}
             alt={label}
             loading="lazy"
             decoding="async"
