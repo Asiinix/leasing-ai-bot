@@ -2,14 +2,46 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
 
+const title = "Калькулятор лизинга | BCC Leasing";
+const description =
+  "Рассчитайте ежемесячный платеж по автолизингу для ИП и ТОО и подберите срок и аванс под свой бюджет вместе с ИИ-помощником.";
+
+// Иконка вкладки, иконка iOS и превью для соцсетей — файлы в src/app
+// (icon.png, apple-icon.png, opengraph-image.png, twitter-image.png), Next подключает их сам.
+// Абсолютный адрес для ссылок превью (og:image): явный NEXT_PUBLIC_SITE_URL,
+// иначе публичный домен Railway, иначе локальный сервер.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "Калькулятор лизинга | BCC Leasing",
-  description: "Рассчитайте платеж по лизингу и подберите условия под свой бюджет.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "BCC Leasing",
   robots: { index: false, follow: false },
+  openGraph: {
+    type: "website",
+    locale: "ru_KZ",
+    siteName: "BCC Leasing",
+    title,
+    description,
+  },
+  twitter: { card: "summary_large_image", title, description },
 };
-// Цвет адресной строки браузера: meta-тег не принимает CSS-переменную, значение —
-// --b-color-cobalt-500 темы bcc-leasing-light.
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#2f6ac1" };
+
+// Цвет интерфейса браузера под фон страницы. meta-тег не принимает CSS-переменную,
+// поэтому значения токенов фона: --b-color-gray-50 (светлая) и --b-color-gray-800 (темная).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f5fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#47484c" },
+  ],
+};
 
 // Ключ совпадает с COLOR_MODE_KEY в providers.tsx: константу из клиентского модуля
 // серверный layout получает ссылкой, а не значением.
