@@ -2,6 +2,16 @@
 // двухколоночная сетка с «липкой» правой колонкой и CSS-брейкпоинтом без JS
 // (адаптивные пропы Flex/Grid вычисляются в JS и на SSR дают прыжок раскладки).
 
+// Боковые поля страницы: 24px, на телефоне 16px. Не через gutters Container:
+// он пишет отступ inline-стилем и брейкпоинтов не принимает.
+.container {
+  padding-inline: var(--g-spacing-6);
+
+  @media (max-width: 575px) {
+    padding-inline: var(--g-spacing-4);
+  }
+}
+
 // Container DS по умолчанию height: 100% — страница растет по контенту.
 .page {
   display: flex;
@@ -26,7 +36,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--g-spacing-4);
-  scroll-margin-top: var(--g-spacing-6);
+  // На узком экране openAssistant прокручивает к колонке: верх панели не должен
+  // уходить под липкую шапку (отступ шапки 24 + сжатая плашка 64 + зазор 16).
+  scroll-margin-top: calc(var(--g-spacing-6) + var(--g-spacing-4) * 5);
 
   @media (min-width: 992px) {
     position: sticky;
@@ -286,6 +298,7 @@
   // При прокрутке плашка сжимается: 80px → 64px по высоте, чуть уже по бокам.
   min-height: calc(var(--g-spacing-4) * 5 - var(--g-spacing-4) * var(--header-progress, 0));
   margin-inline: calc(var(--g-spacing-8) * var(--header-progress, 0));
+  gap: var(--g-spacing-4);
   padding: var(--g-spacing-3) var(--g-spacing-6);
   animation: header-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   border-radius: var(--b-border-radius-cof-10);
@@ -308,6 +321,25 @@
   @media (max-width: 767px) {
     margin-inline: calc(var(--g-spacing-2) * var(--header-progress, 0));
     padding-inline: var(--g-spacing-4);
+  }
+
+  // На 320px логотип, «Демо» и две кнопки с зазорами по 16px не помещаются в строку.
+  @media (max-width: 575px) {
+    gap: var(--g-spacing-2);
+    padding-inline: var(--g-spacing-3);
+  }
+}
+
+// Длинные подписи кнопок на узком экране переносятся на вторую строку: Button DS
+// держит текст в одну строку и обрезает его с обеих сторон по центру.
+.multilineButton {
+  height: auto;
+  padding-block: var(--g-spacing-3);
+
+  :global(.bcc-button__childrenWrapper) {
+    overflow: visible;
+    white-space: normal;
+    text-align: center;
   }
 }
 
