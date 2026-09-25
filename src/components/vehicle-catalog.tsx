@@ -9,7 +9,8 @@ import { appPath } from "@/lib/app-path";
 import { money } from "@/lib/format";
 import { pricePreset } from "@/lib/price-presets";
 import type { LeaseModel } from "@/lib/types";
-import { modelLabel } from "@/lib/vehicle";
+import { brandLabel, modelLabel } from "@/lib/vehicle";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
 import { Dialog } from "./dialog";
 import s from "./vehicle-catalog.module.scss";
 
@@ -18,16 +19,9 @@ const PREVIEW = 8;
 /** Порция карточек в модальном окне. */
 const PAGE = 24;
 const DISCLAIMER =
-  "Фото и цены — ориентир по объявлениям kolesa.kz или типичной цене модели: комплектация, цвет и цена у продавца могут отличаться.";
+  "Фото иллюстрируют модель. Комплектация, год выпуска и цвет у продавца могут отличаться. Цены ориентировочные.";
 // Меняется вместе с логикой подбора фото: старые ответы из кэша браузера не используются.
 const PHOTO_VERSION = 2;
-const ACRONYMS = new Set(["BMW", "BYD", "GAC", "JAC", "FAW", "UAZ", "ГАЗ", "MINI"]);
-
-/** «MERCEDES-BENZ» → «Mercedes-Benz», аббревиатуры как есть. */
-function brandLabel(brand: string) {
-  if (ACRONYMS.has(brand)) return brand;
-  return brand.toLocaleLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m) => m.toLocaleUpperCase());
-}
 const TOP_BRANDS = 10;
 
 /** Самые ходовые модели в Казахстане — первыми на странице. */
@@ -55,15 +49,6 @@ function popularity(model: LeaseModel) {
   const rank = BESTSELLERS.indexOf(key);
   if (rank >= 0) return rank;
   return pricePreset(model).level === "model" ? BESTSELLERS.length : BESTSELLERS.length + 1;
-}
-
-/** «BMW 320I» → «BMW 320i», «ГАЗ 3302» вместо «газ 3302». */
-function cardLabel(model: LeaseModel): string {
-  const label = modelLabel(model);
-  const brand = model.brand.trim();
-  return label.toLowerCase().startsWith(brand.toLowerCase())
-    ? `${brandLabel(brand)}${label.slice(brand.length)}`
-    : label;
 }
 
 /** Слова поиска по марке, модели и продавцу, как в поле «Автомобиль». */
@@ -147,6 +132,11 @@ export function VehicleCatalog({
 
       {filters}
       <CatalogGrid models={preview} selected={selected} onSelect={onSelect} />
+      <Typography.Caption color="secondary">
+        <a href={appPath("/vehicles/sources.html")} target="_blank" rel="noopener noreferrer">
+          Источники фотографий
+        </a>
+      </Typography.Caption>
 
       {found.length > preview.length && (
         <Flex justifyContent="center">
@@ -308,7 +298,8 @@ function CatalogCard({
   const [price, setPrice] = useState<number | null | undefined>(undefined);
   const [brandPhoto, setBrandPhoto] = useState(false);
   const [estimate, setEstimate] = useState(false);
-  const label = cardLabel(model);
+  const label = modelLabel(model);
+  const localPhoto = vehiclePhoto(model);
   // Та же рыночная цена, что подставится в калькулятор при выборе.
   useEffect(() => {
     const controller = new AbortController();
@@ -332,17 +323,17 @@ function CatalogCard({
             <Car />
           </span>
         ) : (
-          // Внешнее фото через редирект нашего API: next/image тут не нужен.
+          // Подобранные фото храним локально; для остальных моделей используем API.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={appPath(`/api/catalog/photo?id=${model.id}&v=${PHOTO_VERSION}`)}
+            src={appPath(localPhoto ?? `/api/catalog/photo?id=${model.id}&v=${PHOTO_VERSION}`)}
             alt={label}
             loading="lazy"
             decoding="async"
             onError={() => setFailed(true)}
           />
         )}
-        {!failed && brandPhoto && <span className={s.badge}>Фото марки</span>}
+        {!failed && !localPhoto && brandPhoto && <span className={s.badge}>Фото марки</span>}
       </div>
       <Flex direction="column" gap={4} className={s.body}>
         <Typography.Paragraph view="medium" weight="semibold">

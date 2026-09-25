@@ -197,6 +197,8 @@ export function applyPatch(
   patch: DraftPatch,
   baseRevs: Record<DraftField, number>,
   source: FieldSource = "chat",
+  /** Поля с ориентировочными значениями: остаются неподтвержденными (как пример). */
+  estimated: DraftField[] = [],
 ): { state: DraftState; applied: DraftField[]; skipped: DraftField[] } {
   const next: DraftState = {
     values: { ...state.values },
@@ -212,7 +214,7 @@ export function applyPatch(
       continue;
     }
     (next.values as unknown as Record<string, unknown>)[field] = patch[field];
-    next.sources[field] = source;
+    next.sources[field] = estimated.includes(field) ? "default" : source;
     next.revs[field] = state.revs[field] + 1;
     applied.push(field);
   }

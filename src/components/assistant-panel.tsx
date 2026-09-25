@@ -134,6 +134,7 @@ export function AssistantPanel({
   onPatch: (
     patch: DraftPatch,
     baseRevs: DraftState["revs"],
+    estimated?: DraftField[],
   ) => { applied: DraftField[]; skipped: DraftField[] };
   onSelectModel: (modelId: number) => void;
   onApplyOffer: (quote: Quote, maxMonthly: number, clientType: ClientType) => void;
@@ -218,7 +219,8 @@ export function AssistantPanel({
         if (!response.ok || !data || data.error)
           throw new Error(data?.error || "Помощник сейчас недоступен.");
         // Late answers: fields the user changed after sending keep the user's value.
-        const filled = onPatch(data.patch, data.baseRevs);
+        // Ориентировочная цена из каталога попадает в расчет неподтвержденной.
+        const filled = onPatch(data.patch, data.baseRevs, data.estimated);
         setMessages((current) => [
           ...current,
           {

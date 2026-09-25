@@ -21,6 +21,16 @@ import { findVehiclesInText, modelLabel, searchModels } from "./vehicle";
 export interface ToolDeps {
   getCatalog(): Promise<CatalogData>;
   getTerms(modelId: number, clientType: ClientType): Promise<TermsData>;
+  /** Ориентировочная цена модели (kolesa.kz или заготовка); без нее цена не подставляется. */
+  getMarketPrice?(
+    modelId: number,
+  ): Promise<{ price: number; source: "kolesa" | "preset"; year: number | null } | null>;
+}
+
+export interface PriceEstimate {
+  priceKzt: number;
+  source: "kolesa" | "preset";
+  year: number | null;
 }
 
 /** Mutable per-request context: a working copy of the draft plus what changed. */
@@ -28,6 +38,10 @@ export class ToolSession {
   state: DraftState;
   patch: DraftPatch = {};
   cards: AssistantCard[] = [];
+  /** Поля патча, которые клиент не подтверждал (ориентировочная цена модели). */
+  estimated: DraftField[] = [];
+  /** Последняя подставленная ориентировочная цена — для ответа клиенту. */
+  priceEstimate: PriceEstimate | null = null;
 
   constructor(
     initial: DraftState,
@@ -44,6 +58,31 @@ export class ToolSession {
     this.state.values[field] = value;
     this.state.sources[field] = "chat";
     (this.patch as Record<string, unknown>)[field] = value;
+    this.estimated = this.estimated.filter((f) => f !== field);
+  }
+
+  /**
+   * Клиент выбрал автомобиль, но цену не называл: подставляем ориентировочную цену
+   * модели (как каталог) неподтвержденной. Своя цена клиента не перезаписывается.
+   */
+  private async estimatePrice(): Promise<PriceEstimate | null> {
+    const { values, sources } = this.state;
+    if (!this.deps.getMarketPrice || (values.price > 0 && sources.price !== "default")) return null;
+    let found: Awaited<ReturnType<NonNullable<ToolDeps["getMarketPrice"]>>> = null;
+    try {
+      found = await this.deps.getMarketPrice(values.modelId);
+    } catch {
+      return null;
+    }
+    if (!found?.price) return null;
+    const checked = validateField("price", found.price);
+    if (!checked.ok) return null;
+    values.price = checked.value;
+    sources.price = "default";
+    this.patch.price = checked.value;
+    if (!this.estimated.includes("price")) this.estimated.push("price");
+    this.priceEstimate = { priceKzt: checked.value, source: found.source, year: found.year };
+    return this.priceEstimate;
   }
 
   private card(card: AssistantCard) {
@@ -56,6 +95,16 @@ export class ToolSession {
       return await this.deps.getTerms(values.modelId, values.clientType);
     } catch {
       return null;
+    }
+  }
+
+  /** Название выбранной модели без продавца: «BMW 330i». */
+  async vehicleLabel(modelId = this.state.values.modelId) {
+    try {
+      const model = (await this.deps.getCatalog()).models.find((m) => m.id === modelId);
+      return model ? modelLabel(model) : `модель ${modelId}`;
+    } catch {
+      return `модель ${modelId}`;
     }
   }
 
@@ -221,9 +270,21 @@ export class ToolSession {
         applied.push(FIELD_LABELS[field]);
       }
 
+    const vehicleChosen = args.vehicle_model_id != null && next.modelId === args.vehicle_model_id;
+    const estimate = vehicleChosen && args.price_kzt == null ? await this.estimatePrice() : null;
+
     return {
       applied,
       errors,
+      ...(estimate && {
+        price_estimate: {
+          ...estimate,
+          note:
+            estimate.source === "kolesa"
+              ? "Ориентировочная цена по свежим объявлениям kolesa.kz. Подставлена неподтвержденной: скажите клиенту и попросите цену продавца."
+              : "Типичная цена модели (заготовка). Подставлена неподтвержденной: скажите клиенту и попросите цену продавца.",
+        },
+      }),
       draft: await this.getDraft(),
     };
   }
@@ -255,7 +316,16 @@ export class ToolSession {
   async vehiclesInText(text: string) {
     try {
       const catalog = await this.deps.getCatalog();
-      const found = findVehiclesInText(catalog.models, text);
+      let found = findVehiclesInText(catalog.models, text);
+      // «bmw 330»: число сужает марку до моделей, чье название с него начинается.
+      const numbers = text.match(/(?<![\p{L}\d])\d{2,}(?![\p{L}\d])/gu) ?? [];
+      const narrowed = found.filter((m) =>
+        m.name
+          .toLowerCase()
+          .split(/\s+/)
+          .some((word) => numbers.some((n) => word.startsWith(n) && word !== n)),
+      );
+      if (narrowed.length) found = narrowed;
       if (found.length > 1)
         this.card({
           type: "vehicles",
@@ -343,6 +413,7 @@ export class ToolSession {
     return {
       preliminary: true,
       monthlyPaymentKzt: quote.monthlyPayment,
+      advancePercent: rate.advancePercent,
       advanceKzt: quote.advanceAmount,
       financingKzt: quote.principal,
       annualRatePercent: rate.annualRate,
@@ -475,7 +546,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: "update_draft",
       description:
-        "Сохранить в черновик только значения, явно названные клиентом. Неназванные поля передавай как null. Сервер проверяет значения и вернет ошибки.",
+        "Сохранить в черновик только значения, явно названные клиентом. Неназванные поля передавай как null. Сервер проверяет значения и вернет ошибки. При выборе автомобиля без цены сервер подставит ориентировочную цену модели и вернет price_estimate.",
       parameters: {
         type: "object",
         properties: {

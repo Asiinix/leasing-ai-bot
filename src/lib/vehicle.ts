@@ -1,8 +1,32 @@
 import type { LeaseModel } from "./types";
 
+const BRAND_ACRONYMS = new Set([
+  "BMW",
+  "BYD",
+  "GAC",
+  "JAC",
+  "FAW",
+  "UAZ",
+  "ГАЗ",
+  "MINI",
+  "MG",
+  "IM",
+  "BAW",
+]);
+
+/** «MERCEDES-BENZ» → «Mercedes-Benz», аббревиатуры (BMW, ГАЗ) как есть. */
+export function brandLabel(brand: string) {
+  const upper = brand.trim().toUpperCase();
+  if (BRAND_ACRONYMS.has(upper)) return upper;
+  return brand
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/(^|[\s-])(\p{L})/gu, (match) => match.toLocaleUpperCase());
+}
+
 export function modelLabel(model?: LeaseModel) {
   if (!model) return "Выберите автомобиль";
-  const brand = model.brand.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  const brand = brandLabel(model.brand);
   const name = model.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   return name.toLowerCase().startsWith(brand.toLowerCase()) ? name : `${brand} ${name}`;
 }

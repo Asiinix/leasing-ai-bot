@@ -6,6 +6,8 @@ import {
 } from "../../../lib/assistant-contract";
 import { respond } from "../../../lib/assistant-engine";
 import { getCatalog, getTerms } from "../../../lib/colvir";
+import { marketPrice } from "../../../lib/market-price";
+import { pricePreset } from "../../../lib/price-presets";
 import { parseDraftState } from "../../../lib/draft";
 import { allow } from "../../../lib/rate-limit";
 
@@ -52,7 +54,26 @@ export async function POST(request: Request): Promise<Response> {
     return bad("Слишком много сообщений. Подождите минуту.", 429);
 
   try {
-    const result = await respond({ history, message, draft, deps: { getCatalog, getTerms } });
+    const result = await respond({
+      history,
+      message,
+      draft,
+      deps: {
+        getCatalog,
+        getTerms,
+        // Та же ориентировочная цена, что подставляет каталог.
+        // Чат не ждет медленный kolesa.kz дольше 2,5 с: тогда берется заготовка стоимости.
+        async getMarketPrice(modelId) {
+          const model = (await getCatalog()).models.find((item) => item.id === modelId);
+          if (!model) return null;
+          const preset = { ...pricePreset(model), source: "preset" as const, year: null };
+          return Promise.race([
+            marketPrice(model).catch(() => preset),
+            new Promise<typeof preset>((resolve) => setTimeout(() => resolve(preset), 2500)),
+          ]);
+        },
+      },
+    });
     return Response.json(result, { headers: NO_STORE });
   } catch (error) {
     // No message text or personal data in logs.

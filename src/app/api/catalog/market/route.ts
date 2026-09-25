@@ -1,6 +1,5 @@
 import { getCatalog } from "../../../../lib/colvir";
-import { pricePreset } from "../../../../lib/price-presets";
-import { findVehicleMarket } from "../../../../lib/vehicle-market";
+import { marketPrice } from "../../../../lib/market-price";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,21 +16,23 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const model = (await getCatalog()).models.find((item) => item.id === id);
     if (!model) return Response.json({ error: "Модель не найдена" }, { status: 404 });
-    const market = await findVehicleMarket(model);
-    // Нет цены в объявлениях — заготовка стоимости: калькулятор всегда получает ориентир.
-    const preset = market?.price ? null : pricePreset(model);
+    const { price, source, presetLevel, year, market } = await marketPrice(model);
     return Response.json(
       {
-        price: market?.price ?? preset!.price,
-        source: preset ? "preset" : "kolesa",
-        presetLevel: preset?.level ?? null,
-        year: market?.price ? market.year : null,
+        price,
+        source,
+        presetLevel,
+        year,
         listings: market?.listings ?? 0,
         sourceUrl: market?.sourceUrl ?? null,
         brandPhoto: market?.brandPhoto ?? false,
       },
       // Заготовку не кэшируем надолго: как только kolesa.kz ответит, покажем рыночную цену.
-      { headers: { "Cache-Control": preset ? "no-store" : "private, max-age=3600" } },
+      {
+        headers: {
+          "Cache-Control": source === "preset" ? "no-store" : "private, max-age=3600",
+        },
+      },
     );
   } catch {
     return Response.json(

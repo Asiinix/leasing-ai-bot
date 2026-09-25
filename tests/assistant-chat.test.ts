@@ -330,3 +330,77 @@ test("colloquial amounts and answers to clarifying questions are understood", as
   assert.equal(draft.values.modelId, 2637); // Chevrolet Cobalt from the first message
   assert.equal(draft.values.price, 200_000); // the answer fills the field that was asked about
 });
+
+test("choosing a car in the chat fills the catalog price as an unconfirmed estimate", async () => {
+  const withMarket = {
+    ...deps,
+    getMarketPrice: async () => ({ price: 26_000_000, source: "preset" as const, year: null }),
+  };
+  // Chosen from the chat card: the draft already has the model, the price is still the example.
+  const chosen = setFields(initialDraft(), { modelId: 2556 }, "form");
+  const result = await respond({
+    history: [],
+    message: "Выбираю BMW 330i, Общий каталог авто",
+    draft: chosen,
+    deps: withMarket,
+  });
+  // «330» in the model name is not an amount to clarify.
+  assert.doesNotMatch(result.reply, /единицы|Уточните единицы/u);
+  assert.equal(result.patch.price, 26_000_000);
+  assert.deepEqual(result.estimated, ["price"]);
+  assert.match(result.reply, /Ориентировочная цена BMW 330i — 26[\s ]000[\s ]000/u);
+
+  // With tariffs for the model the client sees the payment at once.
+  const cobalt = await respond({
+    history: [],
+    message: "Выбираю Chevrolet Cobalt",
+    // The calculator has already moved the example term to one Cobalt offers.
+    draft: setFields(
+      setFields(initialDraft(), { modelId: 2637 }, "form"),
+      { months: 37 },
+      "default",
+    ),
+    deps: {
+      ...deps,
+      getMarketPrice: async () => ({ price: 7_000_000, source: "kolesa" as const, year: 2025 }),
+    },
+  });
+  assert.equal(cobalt.patch.price, 7_000_000);
+  assert.match(cobalt.reply, /объявлениям kolesa\.kz, 2025 г\./u);
+  assert.match(cobalt.reply, /платеж около/u);
+  assert.ok(cobalt.cards.some((card) => card.type === "quote"));
+
+  // On the client the estimate stays unconfirmed: the application still asks for the price.
+  const applied = applyPatch(chosen, result.patch, result.baseRevs, "chat", result.estimated);
+  assert.equal(applied.state.sources.price, "default");
+  assert.ok(missingFields(applied.state).includes("price"));
+
+  // A price the client named is never replaced by the estimate.
+  const own = await respond({
+    history: [],
+    message: "BMW 330i за 30 млн",
+    draft: initialDraft(),
+    deps: withMarket,
+  });
+  assert.equal(own.patch.price, 30_000_000);
+  assert.deepEqual(own.estimated, []);
+});
+
+test("a model number without its letter picks the model and is not read as an amount", async () => {
+  const result = await respond({
+    history: [],
+    message: "хочу bmw 330",
+    draft: initialDraft(),
+    deps,
+  });
+  assert.doesNotMatch(result.reply, /единицы/u);
+  assert.equal(result.patch.modelId, 2556);
+  // Units after the number keep it an amount: «Tank 300 за 30 млн».
+  const tank = await respond({
+    history: [],
+    message: "Tank 300 за 30 млн",
+    draft: initialDraft(),
+    deps,
+  });
+  assert.equal(tank.patch.price, 30_000_000);
+});

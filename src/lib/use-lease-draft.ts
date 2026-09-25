@@ -82,8 +82,8 @@ export function useLeaseDraft() {
 
   /** Assistant patch: fields changed locally after the request keep the local value. */
   const applyAssistantPatch = useCallback(
-    (patch: DraftPatch, baseRevs: Record<DraftField, number>) => {
-      const result = applyPatch(latest.current, patch, baseRevs, "chat");
+    (patch: DraftPatch, baseRevs: Record<DraftField, number>, estimated: DraftField[] = []) => {
+      const result = applyPatch(latest.current, patch, baseRevs, "chat", estimated);
       latest.current = result.state;
       setState(result.state);
       return { applied: result.applied, skipped: result.skipped };

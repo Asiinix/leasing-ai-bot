@@ -40,6 +40,8 @@ export interface AssistantResponse {
   reply: string;
   /** Validated field changes; the client applies them only to fields unchanged since `baseRevs`. */
   patch: DraftPatch;
+  /** Поля патча с ориентировочными значениями (цена из каталога): клиент их не подтверждал. */
+  estimated?: DraftField[];
   baseRevs: DraftState["revs"];
   cards: AssistantCard[];
   mode: "llm" | "fallback";

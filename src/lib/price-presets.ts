@@ -245,6 +245,7 @@ export const MODEL_PRESETS: Record<string, number> = {
   "LEXUS|LX600": 75 * M,
   "LEXUS|LX": 75 * M,
   "BMW|320I": 26 * M,
+  "BMW|330I": 30 * M,
   "BMW|520I": 32 * M,
   "BMW|530I": 36 * M,
   "BMW|740I": 60 * M,

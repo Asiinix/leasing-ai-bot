@@ -133,6 +133,44 @@ function withClarification(message: string, history: ChatTurn[]): string | null 
   return field ? `${field} ${message.trim()}` : null;
 }
 
+/**
+ * Убирает из текста слова названий найденных моделей с цифрами («330i», «LC300») и числа,
+ * с которых такое название начинается («bmw 330»), если после них нет единиц суммы:
+ * «Tank 300 за 30 млн» сохранит «30 млн».
+ */
+function withoutVehicleNames(message: string, vehicles: Array<{ brand: string; name: string }>) {
+  const tokens = [
+    ...new Set(
+      vehicles
+        .slice(0, 80)
+        .flatMap((m) => m.name.toLowerCase().split(/\s+/))
+        .filter((word) => /\d/.test(word)),
+    ),
+  ];
+  if (!tokens.length) return message;
+  const parts = message.split(/(\s+|[,.;!?()«»"])/u);
+  const nextWord = (index: number) =>
+    parts
+      .slice(index + 1)
+      .find((part) => part.trim() && !/^[,.;!?()«»"]$/u.test(part))
+      ?.toLowerCase() ?? "";
+  return parts
+    .map((part, index) => {
+      const word = part.toLowerCase();
+      if (tokens.includes(word)) return " ";
+      const unit =
+        /^(?:млн|млрд|миллион|тыс|тысяч|тенге|тг|₸|к|кк|лям|лимон|%|процент|мес|год|лет)/u;
+      if (
+        /^\d+$/u.test(word) &&
+        tokens.some((token) => token.startsWith(word) && token !== word) &&
+        !unit.test(nextWord(index))
+      )
+        return " ";
+      return part;
+    })
+    .join("");
+}
+
 async function runFallback(
   session: ToolSession,
   message: string,
@@ -140,10 +178,13 @@ async function runFallback(
 ): Promise<string> {
   const text = message.toLowerCase().replace(/ё/g, "е");
   const parts: string[] = [];
-  let extraction = extractDraftFields(message);
+  const vehicles = await session.vehiclesInText(message);
+  // Цифры в названии модели («BMW 330i», «LC300», «ГАЗ 3302») — не суммы и не сроки.
+  const amounts = withoutVehicleNames(message, vehicles);
+  let extraction = extractDraftFields(amounts);
   const clarified = withClarification(message, history);
   if (clarified) {
-    const merged = extractDraftFields(clarified);
+    const merged = extractDraftFields(withoutVehicleNames(clarified, vehicles));
     if (Object.keys(merged.fields).length && merged.questions.length <= extraction.questions.length)
       extraction = merged;
   }
@@ -153,7 +194,6 @@ async function runFallback(
     return `Этот сервис рассчитывает только лизинг легковых автомобилей. По запросу «${extraction.unsupportedSubject}» обратитесь к менеджеру BCC Leasing.`;
 
   const f = extraction.fields;
-  const vehicles = await session.vehiclesInText(message);
   const vehicleId = vehicles.length === 1 ? vehicles[0].id : null;
   if (vehicles.length > 1)
     parts.push(
@@ -176,9 +216,21 @@ async function runFallback(
       contact_name: null,
       contact_phone: f.contactPhone ?? null,
     });
-    if (update.applied.length) parts.push(`Записал: ${update.applied.join(", ").toLowerCase()}.`);
+    const applied = update.applied.filter(
+      (field) => !(session.priceEstimate && field === "Стоимость"),
+    );
+    if (applied.length) parts.push(`Записал: ${applied.join(", ").toLowerCase()}.`);
     if (update.errors.length) parts.push(update.errors.join(" "));
   }
+  const estimate = session.priceEstimate;
+  if (estimate)
+    parts.push(
+      `Ориентировочная цена ${await session.vehicleLabel()} — ${money(estimate.priceKzt)} (${
+        estimate.source === "kolesa"
+          ? `средняя по свежим объявлениям kolesa.kz${estimate.year ? `, ${estimate.year} г.` : ""}`
+          : "типичная цена модели"
+      }). Подставил ее в расчет — уточните цену у продавца или напишите свою.`,
+    );
   if (extraction.questions.length) {
     parts.push(...extraction.questions.slice(0, 2));
     return parts.join(" ");
@@ -218,9 +270,13 @@ async function runFallback(
   }
 
   if (hasFields || QUICK.calculate.test(text)) {
-    const missing = missingFields(session.state).filter((f: DraftField) =>
-      ["price", "advancePercent", "months"].includes(f),
-    );
+    // С ориентировочной ценой сразу считаем на примерных авансе и сроке — клиент видит
+    // платеж и может поправить любой параметр.
+    const missing = estimate
+      ? []
+      : missingFields(session.state).filter((f: DraftField) =>
+          ["price", "advancePercent", "months"].includes(f),
+        );
     if (missing.length) {
       parts.push(
         `Для расчета укажите: ${missing.map((f) => FIELD_LABELS[f].toLowerCase()).join(", ")}.`,
@@ -236,7 +292,9 @@ async function runFallback(
         );
     } else
       parts.push(
-        `Предварительный платеж — ${money(quote.monthlyPaymentKzt)} в месяц на ${quote.months} мес. Это не оферта: комиссии и страхование не включены.`,
+        estimate
+          ? `При авансе ${percent(quote.advancePercent)}% на ${quote.months} мес. платеж около ${money(quote.monthlyPaymentKzt)} в месяц. Это не оферта: комиссии и страхование не включены.`
+          : `Предварительный платеж — ${money(quote.monthlyPaymentKzt)} в месяц на ${quote.months} мес. Это не оферта: комиссии и страхование не включены.`,
       );
     return parts.join(" ");
   }
@@ -284,6 +342,7 @@ export async function respond(input: EngineInput): Promise<AssistantResponse> {
     return {
       reply,
       patch: fallback.patch,
+      estimated: fallback.estimated,
       baseRevs: input.draft.revs,
       cards: fallback.cards,
       mode,
@@ -293,6 +352,7 @@ export async function respond(input: EngineInput): Promise<AssistantResponse> {
   return {
     reply,
     patch: session.patch,
+    estimated: session.estimated,
     baseRevs: input.draft.revs,
     cards: session.cards,
     mode,
