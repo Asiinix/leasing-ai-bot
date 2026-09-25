@@ -1,33 +1,44 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowRight,
-  ArrowUpRight,
-  CarFront,
-  Check,
-  CheckCheck,
-  ChevronDown,
-  ChevronRight,
-  CircleHelp,
-  FileText,
-  Info,
-  LoaderCircle,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-  Undo2,
-  X,
-} from "lucide-react";
+  Accordion,
+  Alert,
+  Breadcrumbs,
+  Button,
+  Card,
+  Chip,
+  Container,
+  Divider,
+  Flex,
+  Input,
+  Logotype,
+  Select,
+  Slider,
+  Skeleton,
+  Spinner,
+  StepperDesktop,
+  Tag,
+  Typography,
+} from "bcc-design";
+import ArrowDirectionRight from "bcc-design-icons/base/Arrows/ArrowDirectionRight";
+import Refresh from "bcc-design-icons/base/Arrows/Refresh";
+import CheckOutlinedBold from "bcc-design-icons/base/Basic/CheckOutlinedBold";
+import Chat from "bcc-design-icons/base/Communication/Chat";
+import Document from "bcc-design-icons/base/FilesDocuments/Document";
+import Shield from "bcc-design-icons/base/Security/Shield";
+import Moon from "bcc-design-icons/base/Weather/Moon";
+import Sun from "bcc-design-icons/base/Weather/Sun";
 import { calculateQuote, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, number, percent } from "@/lib/format";
 import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
+import { useColorMode } from "@/app/providers";
 import { AssistantPanel } from "./assistant-panel";
 import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
@@ -57,6 +68,40 @@ type Applied = {
 const formKey = (form: FormState) =>
   `${form.clientType}:${form.modelId}:${form.price}:${form.advancePercent}:${form.months}`;
 
+const clientOptions: { value: ClientType; label: string }[] = [
+  { value: "IP", label: "ИП" },
+  { value: "TOO", label: "ТОО" },
+];
+const breadcrumbs = [
+  { id: 1, title: "Лизинг", link: "/" },
+  { id: 2, title: "Калькулятор", link: "/" },
+];
+const steps = [
+  { title: "Укажите стоимость", description: "Из предложения вашего продавца" },
+  { title: "Подберите условия", description: "Самостоятельно или с помощником" },
+  { title: "Перейдите к заявке", description: "Когда будете готовы к оформлению" },
+];
+const questions = [
+  {
+    id: "price",
+    title: "Откуда взять стоимость автомобиля?",
+    detail:
+      "Укажите цену из предложения продавца или счета на оплату. Можно начать с ориентировочной суммы и уточнить ее позже. В этой версии сервис не определяет рыночную цену и не проверяет наличие автомобиля.",
+  },
+  {
+    id: "assistant",
+    title: "Что делает помощник?",
+    detail:
+      "Помощник учитывает вашу цену, желаемый платеж и доступный аванс. Он сравнивает разрешенные сочетания срока и взноса. Предложенные условия попадут в калькулятор только после нажатия «Применить условия».",
+  },
+  {
+    id: "payment",
+    title: "Что входит в предварительный платеж?",
+    detail:
+      "Основной долг и проценты по аннуитетной формуле. Страхование, комиссии и другие расходы не включены. Окончательные условия и график определяются при оформлении договора.",
+  },
+];
+
 function closestRate(rates: LeaseRate[], form: FormState) {
   return [...rates].sort(
     (a, b) =>
@@ -74,17 +119,39 @@ export function LeasingApp() {
   const [termsError, setTermsError] = useState("");
   const [retry, setRetry] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [continueOpen, setContinueOpen] = useState(false);
   const [sample, setSample] = useState(true);
   const [applied, setApplied] = useState<Applied | null>(null);
-  const [faq, setFaq] = useState<number | null>(null);
   const assistantAnchor = useRef<HTMLDivElement>(null);
-  const assistantButton = useRef<HTMLButtonElement>(null);
+  const colorMode = useColorMode();
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      // Полный эффект — после прокрутки на 240px.
+      header.style.setProperty("--header-progress", String(Math.min(window.scrollY / 240, 1)));
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
   const termsKey = `${form.modelId}:${form.clientType}:${retry}`;
   const terms = loadedTerms?.key === termsKey ? loadedTerms.data : null;
   const loading = !terms && termsError !== termsKey;
+  // Первая загрузка приложения: ждем каталог и первые тарифы. Пока идет — вместо
+  // полей и расчета показываем скелетон; при ошибке — сразу обычный экран с баннером.
+  const booting = !catalogError && termsError !== termsKey && (!catalog || loadedTerms === null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -151,6 +218,8 @@ export function LeasingApp() {
         : null,
     [activeRate, form.price, terms],
   );
+  // Шаг 1 — пока нет расчета, шаг 2 — расчет есть и можно подбирать условия.
+  const currentStep = quote ? 2 : 1;
   const advances = [...new Set(terms?.rates.map((rate) => rate.advancePercent))].sort(
     (a, b) => a - b,
   );
@@ -158,10 +227,6 @@ export function LeasingApp() {
   const isApplied = applied && applied.nextKey === formKey(form);
   const rangeMin = limit?.minPrice ?? 5000000;
   const rangeMax = limit?.maxPrice ?? 50000000;
-  const rangeProgress = Math.max(
-    0,
-    Math.min(100, ((form.price - rangeMin) / (rangeMax - rangeMin)) * 100),
-  );
   const costInvalid = Boolean(terms && activeRate && form.price > 0 && !quote);
   let validation = "";
   if (terms && !terms.rates.length)
@@ -177,7 +242,7 @@ export function LeasingApp() {
   function openAssistant() {
     setAssistantOpen(true);
     requestAnimationFrame(() => {
-      if (window.innerWidth < 900)
+      if (window.innerWidth < 992)
         assistantAnchor.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
@@ -199,7 +264,6 @@ export function LeasingApp() {
     setForm(next);
     setAssistantOpen(false);
     if (offer.price !== form.price) setSample(false);
-    requestAnimationFrame(() => assistantButton.current?.focus());
   }
   function setAdvance(advancePercent: number) {
     const allowed = terms?.rates.filter((rate) => rate.advancePercent === advancePercent) ?? [];
@@ -217,509 +281,655 @@ export function LeasingApp() {
     setAssistantOpen(false);
   }
 
-  const questions = [
-    {
-      title: "Откуда взять стоимость автомобиля?",
-      answer:
-        "Укажите цену из предложения продавца или счета на оплату. Можно начать с ориентировочной суммы и уточнить ее позже. В этой версии сервис не определяет рыночную цену и не проверяет наличие автомобиля.",
-    },
-    {
-      title: "Что делает помощник?",
-      answer:
-        "Помощник учитывает вашу цену, желаемый платеж и доступный аванс. Он сравнивает разрешенные сочетания срока и взноса. Предложенные условия попадут в калькулятор только после нажатия «Применить условия».",
-    },
-    {
-      title: "Что входит в предварительный платеж?",
-      answer:
-        "Основной долг и проценты по аннуитетной формуле. Страхование, комиссии и другие расходы не включены. Окончательные условия и график определяются при оформлении договора.",
-    },
-  ];
-
   return (
     <>
       <a className="skip-link" href="#calculator">
         Перейти к калькулятору
       </a>
-      <header className="site-header">
-        <div className="header-inner">
-          <Link href="/" className="brand" aria-label="BCC Leasing — главная">
-            <span className="brand-mark">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>
-              BCC <strong>Leasing</strong>
-            </span>
-          </Link>
-          <span className="header-divider" />
-          <span className="header-description">Лизинг для бизнеса</span>
-          <div className="header-right">
-            <span className="demo-badge">Демо</span>
-            <span className="language">Рус</span>
-          </div>
-        </div>
-      </header>
-      <main className="page-container" id="calculator">
-        <nav aria-label="Навигационная цепочка" className="breadcrumb">
-          <span>Лизинг</span>
-          <ChevronRight size={13} />
-          <span>Калькулятор</span>
-        </nav>
-        <div className="page-heading">
-          <div>
-            <h1>Калькулятор лизинга</h1>
-            <p>Рассчитайте платеж и выберите удобные условия</p>
-          </div>
-          <button
-            ref={assistantButton}
-            className={`assistant-launch ${assistantOpen ? "active" : ""}`}
-            onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
-            aria-expanded={assistantOpen}
-          >
-            <Sparkles size={21} />
-            {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
-          </button>
-        </div>
-        {isApplied && (
-          <div className="applied-banner" role="status">
-            <CheckCheck size={19} />
-            <span>
-              Условия применены: {form.months} месяцев, аванс {percent(form.advancePercent)}%
-            </span>
-            <button
-              onClick={() => {
+      {/* Шапка */}
+      {/* Шапка: липкий слой поверх баннера и страницы. Подложка плашки становится
+          плотнее и сильнее размывает фон по мере прокрутки (--header-progress 0…1,
+          пишется из обработчика scroll без перерисовки React). Шапка — часть баннера
+          по стилю, поэтому всегда в светлой теме. */}
+      <div ref={headerRef} className={`${s.headerSticky} bcc-root_theme_bcc-leasing-light`}>
+        <Container maxWidth={1280} gutters={24}>
+          {/* HeaderDesktop не подошел: он всегда резервирует справа пустой блок
+              пользователя и на мобиле обрезает левую часть. */}
+          <Flex as="header" alignItems="center" gap={16} className={s.headerBar}>
+            {/* Логотип выбирает вариант по теме из контекста, а шапка всегда светлая:
+                в темной теме инвертируем обратно в светлый вариант. */}
+            <Logotype.BccBusiness size="sm" invert={colorMode.mode === "dark"} />
+            <Divider orientation="vertical" noGap height={24} className={s.headerCaption} />
+            <Typography.Paragraph view="medium" color="secondary" className={s.headerCaption}>
+              Лизинг для бизнеса
+            </Typography.Paragraph>
+            <Tag color="info" variant="default" size="sm">
+              Демо
+            </Tag>
+            <Button
+              view="neutral"
+              size="m"
+              iconLeft={colorMode.mode === "dark" ? <Sun /> : <Moon />}
+              aria-label={
+                colorMode.mode === "dark" ? "Включить светлую тему" : "Включить темную тему"
+              }
+              onClick={colorMode.toggle}
+            />
+          </Flex>
+        </Container>
+      </div>
+      {/* Баннер во всю ширину окна, как на bccleasing.kz: текст выровнен по колонке
+          контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
+          теме: класс темы DS переопределяет токены только внутри него. */}
+      <div className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
+        <Container maxWidth={1280} gutters={24} className={s.heroInner}>
+          <Flex direction="column" gap={24} className={s.heroContent}>
+            <div className={s.breadcrumbs}>
+              <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
+            </div>
+            <Flex direction="column" gap={8}>
+              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
+              <Typography.Paragraph view="large" color="secondary">
+                Рассчитайте платеж и выберите удобные условия
+              </Typography.Paragraph>
+            </Flex>
+            <div>
+              <Button
+                view="accentPrimary"
+                size="l"
+                iconLeft={<Chat />}
+                aria-expanded={assistantOpen}
+                onClick={() => (assistantOpen ? setAssistantOpen(false) : openAssistant())}
+              >
+                {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
+              </Button>
+            </div>
+          </Flex>
+        </Container>
+      </div>
+      <main id="calculator" aria-busy={booting}>
+        <Container maxWidth={1280} gutters={24} className={s.page}>
+          {isApplied && (
+            <Alert
+              variant="success"
+              fullWidth
+              hasCloser
+              autoCloseDelay={null}
+              title={`Условия применены: ${form.months} месяцев, аванс ${percent(form.advancePercent)}%`}
+              actionButtonText="Отменить"
+              actionButtonHandler={() => {
                 setForm(applied.previous);
                 setSample(applied.previousSample);
                 setApplied(null);
               }}
-            >
-              <Undo2 size={15} />
-              Отменить
-            </button>
-            <button
-              className="banner-close"
-              aria-label="Скрыть уведомление"
-              onClick={() => setApplied(null)}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        {(catalogError || termsError === termsKey) && (
-          <div className="error-banner" role="alert">
-            <Info size={18} />
-            <span>Не удалось загрузить условия. Проверьте подключение и попробуйте снова.</span>
-            <button onClick={() => setRetry((value) => value + 1)}>
-              <RefreshCw size={15} />
-              Повторить
-            </button>
-          </div>
-        )}
-        <div className="calculator-grid">
-          <section className="form-panel panel" aria-labelledby="parameters-heading">
-            <div className="panel-heading">
-              <h2 id="parameters-heading">Параметры лизинга</h2>
-              <span className="form-step">01 / 02</span>
-            </div>
-            <div className="client-row">
-              <span className="field-label">Клиент</span>
-              <div className="segmented-control" role="group" aria-label="Тип клиента">
-                <button
-                  aria-pressed={form.clientType === "IP"}
-                  className={form.clientType === "IP" ? "selected" : ""}
-                  onClick={() => change({ clientType: "IP" })}
-                >
-                  ИП
-                </button>
-                <button
-                  aria-pressed={form.clientType === "TOO"}
-                  className={form.clientType === "TOO" ? "selected" : ""}
-                  onClick={() => change({ clientType: "TOO" })}
-                >
-                  ТОО
-                </button>
-              </div>
-            </div>
-            {form.clientType === "TOO" && (
-              <p className="too-note">
-                Обычный лизинг для ТОО со сроком деятельности более 1 года.
-              </p>
-            )}
-            <div className="field-group vehicle-group">
-              <label className="field-label" htmlFor="vehicle-button">
-                Автомобиль
-              </label>
-              <button
-                id="vehicle-button"
-                className="vehicle-button"
-                onClick={() => setModelPickerOpen(true)}
-                disabled={!catalog}
-              >
-                <CarFront size={22} />
-                <span>{catalog ? title : "Загружаем модели…"}</span>
-                <ChevronDown size={20} />
-              </button>
-              <p className="field-hint">{model?.partnerName ?? "Справочник моделей и продавцов"}</p>
-            </div>
-            <div className="field-group price-group">
-              <MoneyInput
-                label="Стоимость автомобиля"
-                value={form.price}
-                onChange={(price) => {
-                  change({ price });
-                  setSample(false);
-                }}
-                placeholder="Укажите стоимость"
-                invalid={costInvalid}
-              />
-              <div className="slider-wrap">
-                <input
-                  type="range"
-                  aria-label="Стоимость автомобиля — ползунок"
-                  min={rangeMin}
-                  max={rangeMax}
-                  step={50000}
-                  value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
-                  onChange={(event) => {
-                    change({ price: Number(event.target.value) });
-                    setSample(false);
-                  }}
-                  style={{ "--range-progress": `${rangeProgress}%` } as React.CSSProperties}
-                  disabled={!activeRate}
-                />
-              </div>
-              <div className="range-labels">
-                <span>{number(rangeMin)} ₸</span>
-                <span>{number(rangeMax)} ₸</span>
-              </div>
-              <p className="field-hint">
-                {sample ? (
-                  <>
-                    <span className="example-dot" /> Для примера указано 15 млн ₸. Введите цену от
-                    продавца.
-                  </>
-                ) : (
-                  "Укажите цену из предложения продавца или счета."
-                )}
-              </p>
-            </div>
-            <div className="field-group">
-              <label className="field-label" htmlFor="advance-select">
-                Первоначальный взнос
-              </label>
-              <div className="advance-row">
-                <div className="computed-field">
-                  <span>{money(Math.round((form.price * form.advancePercent) / 100))}</span>
-                </div>
-                <div className="select-wrap">
-                  <select
-                    id="advance-select"
-                    value={form.advancePercent}
-                    onChange={(event) => setAdvance(Number(event.target.value))}
-                    disabled={!terms?.rates.length}
+              onClose={() => setApplied(null)}
+            />
+          )}
+          {(catalogError || termsError === termsKey) && (
+            <Alert
+              variant="error"
+              fullWidth
+              autoCloseDelay={null}
+              title="Не удалось загрузить условия. Проверьте подключение и попробуйте снова."
+              actionButtonText="Повторить"
+              actionButtonHandler={() => setRetry((value) => value + 1)}
+            />
+          )}
+
+          <div className={s.grid}>
+            {/* Параметры лизинга */}
+            <Card size="m" type="primary" height="auto">
+              <section aria-labelledby="parameters-heading">
+                <Flex direction="column" gap={24}>
+                  <Typography.Title
+                    tag="div"
+                    view="block"
+                    role="heading"
+                    aria-level={2}
+                    id="parameters-heading"
                   >
-                    {(advances.length ? advances : [form.advancePercent]).map((advance) => (
-                      <option key={advance} value={advance}>
-                        {percent(advance)}%
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={18} />
-                </div>
-              </div>
-              <p className="field-hint">Сумма рассчитывается от стоимости автомобиля</p>
-            </div>
-            <div className="field-group term-group">
-              <span className="field-label" id="term-label">
-                Срок лизинга
-              </span>
-              <div className="term-options" role="group" aria-labelledby="term-label">
-                {(months.length ? months : [37, 48, 60]).map((month) => {
-                  const available = terms?.rates.some(
-                    (rate) => rate.months === month && rate.advancePercent === form.advancePercent,
-                  );
-                  return (
-                    <button
-                      key={month}
-                      aria-pressed={form.months === month}
-                      className={form.months === month ? "selected" : ""}
-                      disabled={!available}
-                      onClick={() => change({ months: month })}
-                    >
-                      {month} <span>мес.</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            {validation && (
-              <p className="validation-message" role="alert">
-                <Info size={17} />
-                {validation}
-              </p>
-            )}
-            <div className="form-bottom">
-              <span className={`source-status ${terms?.source === "snapshot" ? "snapshot" : ""}`}>
-                {loading ? (
-                  <LoaderCircle size={14} className="spin" />
-                ) : (
-                  <span className="status-dot" />
-                )}
-                {loading
-                  ? "Получаем условия"
-                  : terms
-                    ? terms.source === "live"
-                      ? "Условия обновлены"
-                      : `Тарифы от ${dateLabel(terms.checkedAt)}`
-                    : "Условия недоступны"}
-              </span>
-              <button className="text-button muted" onClick={resetExample}>
-                <RefreshCw size={13} />
-                Пример расчета
-              </button>
-            </div>
-          </section>
-          <div className="right-column" ref={assistantAnchor}>
-            {assistantOpen ? (
-              <AssistantPanel
-                key={`${form.modelId}:${form.clientType}`}
-                context={{ ...form, modelName: title }}
-                terms={terms}
-                onClose={() => {
-                  setAssistantOpen(false);
-                  assistantButton.current?.focus();
-                }}
-                onApply={applyOffer}
-              />
-            ) : (
-              <section className="summary-panel panel" aria-labelledby="summary-heading">
-                <div className="summary-topline">
-                  <h2 id="summary-heading">Ваш расчет</h2>
-                  <span className="summary-icon">
-                    <FileText size={20} />
-                  </span>
-                </div>
-                {loading ? (
-                  <div className="summary-loading" role="status">
-                    <div className="skeleton amount-skeleton" />
-                    <div className="skeleton short-skeleton" />
-                    <p>Рассчитываем платеж…</p>
-                  </div>
-                ) : quote ? (
-                  <>
-                    <div className="monthly-payment" aria-live="polite">
-                      <strong data-testid="monthly-payment">{money(quote.monthlyPayment)}</strong>
-                      <span>ежемесячный платеж</span>
+                    Параметры лизинга
+                  </Typography.Title>
+
+                  <Flex direction="column" gap={8}>
+                    <Typography.Paragraph view="small" color="secondary" id="client-label">
+                      Клиент
+                    </Typography.Paragraph>
+                    <ChoiceChips
+                      labelledBy="client-label"
+                      options={clientOptions}
+                      value={form.clientType}
+                      loading={booting}
+                      onChange={(clientType) => change({ clientType })}
+                    />
+                    {form.clientType === "TOO" && (
+                      <Typography.Caption view="large" color="secondary">
+                        Обычный лизинг для ТОО со сроком деятельности более 1 года.
+                      </Typography.Caption>
+                    )}
+                  </Flex>
+
+                  <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                    <ModelPicker
+                      models={catalog?.models ?? []}
+                      selected={form.modelId}
+                      loading={!catalog}
+                      onSelect={(selected) => {
+                        if (selected.id !== form.modelId) {
+                          change({ modelId: selected.id, price: 0 });
+                          setSample(false);
+                        }
+                        setApplied(null);
+                      }}
+                    />
+                  </Skeleton>
+
+                  <Flex direction="column" gap={12}>
+                    <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                      <MoneyInput
+                        label="Стоимость автомобиля"
+                        value={form.price}
+                        placeholder="Укажите стоимость"
+                        error={costInvalid}
+                        hint={
+                          sample
+                            ? "Для примера указано 15 млн ₸. Введите цену от продавца."
+                            : "Укажите цену из предложения продавца или счета."
+                        }
+                        onChange={(price) => {
+                          change({ price });
+                          setSample(false);
+                        }}
+                      />
+                    </Skeleton>
+                    <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                      <div className={s.priceSlider}>
+                        <Slider
+                          aria-label="Стоимость автомобиля, ползунок"
+                          min={rangeMin}
+                          max={rangeMax}
+                          step={50000}
+                          value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
+                          disabled={!activeRate}
+                          onUpdate={(value) => {
+                            if (typeof value !== "number") return;
+                            change({ price: value });
+                            setSample(false);
+                          }}
+                        />
+                      </div>
+                      <Flex justifyContent="space-between">
+                        <Typography.Caption view="large" color="secondary" monospaceNumbers>
+                          {number(rangeMin)} ₸
+                        </Typography.Caption>
+                        <Typography.Caption
+                          className={s.end}
+                          view="large"
+                          color="secondary"
+                          monospaceNumbers
+                        >
+                          {number(rangeMax)} ₸
+                        </Typography.Caption>
+                      </Flex>
+                    </Skeleton>
+                  </Flex>
+
+                  <Skeleton visible={booting} br="var(--b-border-radius-cof-6)">
+                    <div className={s.advanceRow}>
+                      <Flex direction="column">
+                        <Input
+                          fullWidth
+                          size="lg"
+                          readOnly
+                          label="Первоначальный взнос"
+                          value={money(Math.round((form.price * form.advancePercent) / 100))}
+                          hint="Сумма рассчитывается от стоимости автомобиля"
+                        />
+                      </Flex>
+                      <div>
+                        <Select
+                          fullWidth
+                          size="lg"
+                          label="Аванс"
+                          mobileTitle="Первоначальный взнос"
+                          options={(advances.length ? advances : [form.advancePercent]).map(
+                            (advance) => ({ value: advance, label: `${percent(advance)}%` }),
+                          )}
+                          value={form.advancePercent}
+                          disabled={!terms?.rates.length}
+                          onChange={({ value }) => {
+                            if (typeof value === "number") setAdvance(value);
+                          }}
+                        />
+                      </div>
                     </div>
-                    {isApplied && quote.monthlyPayment <= applied.maxMonthly && (
-                      <span className="budget-badge">
-                        <Check size={14} />В бюджете до {money(applied.maxMonthly)}
-                      </span>
-                    )}
-                    <div className="summary-rule" />
-                    <dl className="summary-details">
-                      <div>
-                        <dt>Стоимость автомобиля</dt>
-                        <dd>{money(form.price)}</dd>
-                      </div>
-                      <div>
-                        <dt>
-                          Первоначальный взнос <span>· {percent(form.advancePercent)}%</span>
-                        </dt>
-                        <dd>{money(quote.advanceAmount)}</dd>
-                      </div>
-                      <div className="financing-row">
-                        <dt>Сумма финансирования</dt>
-                        <dd>{money(quote.principal)}</dd>
-                      </div>
-                      <div>
-                        <dt>Срок лизинга</dt>
-                        <dd>{form.months} месяцев</dd>
-                      </div>
-                      <div>
-                        <dt>Годовая ставка</dt>
-                        <dd>{percent(quote.rate.annualRate)}%</dd>
-                      </div>
-                    </dl>
-                    {isApplied && applied.previousQuote && (
-                      <div className="comparison">
-                        <CheckCheck size={17} />
-                        <div>
-                          Было {money(applied.previousQuote.monthlyPayment)} при сроке{" "}
-                          {applied.previous.months} мес.
-                          <span>
-                            {form.months > applied.previous.months
-                              ? `${quote.monthlyPayment < applied.previousQuote.monthlyPayment ? "Платеж ниже" : quote.monthlyPayment > applied.previousQuote.monthlyPayment ? "Платеж выше" : "Платеж прежний"}, срок больше на ${form.months - applied.previous.months} мес.`
-                              : "Условия обновлены по вашему бюджету"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    <button className="schedule-link" onClick={() => setScheduleOpen(true)}>
-                      <FileText size={17} />
-                      Показать график платежей
-                      <ArrowUpRight size={17} />
-                    </button>
-                    <button
-                      className="primary-button continue-button"
-                      onClick={() => setContinueOpen(true)}
+                  </Skeleton>
+
+                  <Flex direction="column" gap={8}>
+                    <Typography.Paragraph view="small" color="secondary" id="term-label">
+                      Срок лизинга
+                    </Typography.Paragraph>
+                    <ChoiceChips
+                      labelledBy="term-label"
+                      options={(months.length ? months : [37, 48, 60]).map((month) => ({
+                        value: month,
+                        label: `${month} мес.`,
+                        disabled: !terms?.rates.some(
+                          (rate) =>
+                            rate.months === month && rate.advancePercent === form.advancePercent,
+                        ),
+                      }))}
+                      value={form.months}
+                      loading={booting}
+                      onChange={(months) => change({ months })}
+                    />
+                  </Flex>
+
+                  {validation && (
+                    <Alert variant="warning" fullWidth autoCloseDelay={null} title={validation} />
+                  )}
+
+                  <Divider noGap />
+                  <Flex justifyContent="space-between" alignItems="center" gap={16} wrap>
+                    <Tag
+                      size="sm"
+                      color={
+                        loading
+                          ? "neutral"
+                          : !terms
+                            ? "error"
+                            : terms.source === "snapshot"
+                              ? "warning"
+                              : "success"
+                      }
+                      leftIcon={loading ? <Spinner size="xs" /> : undefined}
                     >
-                      Продолжить оформление
-                      <ArrowRight size={19} />
-                    </button>
-                    <p className="summary-disclaimer">
-                      Предварительный расчет. Без страхования и дополнительных расходов. Не является
-                      офертой.
-                    </p>
-                  </>
-                ) : (
-                  <div className="summary-empty">
-                    <span>
-                      <FileText size={29} />
-                    </span>
-                    <h3>{form.price ? "Проверьте параметры" : "Начните со стоимости"}</h3>
-                    <p>
-                      {form.price
-                        ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
-                        : "Укажите цену автомобиля от продавца — здесь появится ваш платеж."}
-                    </p>
-                  </div>
-                )}
-                <div className="summary-trust">
-                  <ShieldCheck size={16} />
-                  <span>Расчет без заявки и персональных данных</span>
-                </div>
+                      {loading
+                        ? "Получаем условия"
+                        : terms
+                          ? terms.source === "live"
+                            ? "Условия обновлены"
+                            : `Тарифы от ${dateLabel(terms.checkedAt)}`
+                          : "Условия недоступны"}
+                    </Tag>
+                    <Button view="link" size="s" iconLeft={<Refresh />} onClick={resetExample}>
+                      Пример расчета
+                    </Button>
+                  </Flex>
+                </Flex>
               </section>
-            )}
-            {!assistantOpen && (
-              <button className="assistant-teaser" onClick={openAssistant}>
-                <span className="teaser-icon">
-                  <Sparkles size={22} />
-                </span>
-                <span>
-                  <strong>Есть комфортный платеж?</strong>
-                  <small>Помощник подберет срок и аванс</small>
-                </span>
-                <ArrowUpRight size={19} />
-              </button>
-            )}
+            </Card>
+
+            {/* Ваш расчет или помощник */}
+            <div className={s.side} ref={assistantAnchor}>
+              {assistantOpen ? (
+                <AssistantPanel
+                  key={`${form.modelId}:${form.clientType}`}
+                  context={{ ...form, modelName: title }}
+                  terms={terms}
+                  onClose={() => setAssistantOpen(false)}
+                  onApply={applyOffer}
+                />
+              ) : (
+                <>
+                  <Card size="m" type="primary" height="auto">
+                    <section aria-labelledby="summary-heading">
+                      <Flex direction="column" gap={24}>
+                        <Flex justifyContent="space-between" alignItems="center" gap={16}>
+                          <Typography.Title
+                            tag="div"
+                            view="block"
+                            role="heading"
+                            aria-level={2}
+                            id="summary-heading"
+                          >
+                            Ваш расчет
+                          </Typography.Title>
+                          <Document className={s.mutedIcon} />
+                        </Flex>
+                        {booting ? (
+                          <SummarySkeleton />
+                        ) : loading ? (
+                          <Flex direction="column" gap={8} role="status">
+                            <Typography.Title tag="div" view="page" showSkeleton>
+                              392 218 ₸
+                            </Typography.Title>
+                            <Typography.Paragraph view="small" color="secondary">
+                              Рассчитываем платеж…
+                            </Typography.Paragraph>
+                          </Flex>
+                        ) : quote ? (
+                          <>
+                            <Flex direction="column" gap={8} aria-live="polite">
+                              <Typography.Title tag="div" view="page" data-testid="monthly-payment">
+                                {money(quote.monthlyPayment)}
+                              </Typography.Title>
+                              <Typography.Paragraph view="medium" color="secondary">
+                                ежемесячный платеж
+                              </Typography.Paragraph>
+                              {isApplied && quote.monthlyPayment <= applied.maxMonthly && (
+                                <div>
+                                  <Tag
+                                    color="success"
+                                    size="sm"
+                                    leftIcon={<CheckOutlinedBold width={14} height={14} />}
+                                  >
+                                    В бюджете до {money(applied.maxMonthly)}
+                                  </Tag>
+                                </div>
+                              )}
+                            </Flex>
+                            <Divider noGap />
+                            <dl className={s.details}>
+                              <Detail label="Стоимость автомобиля" value={money(form.price)} />
+                              <Detail
+                                label={`Первоначальный взнос (${percent(form.advancePercent)}%)`}
+                                value={money(quote.advanceAmount)}
+                              />
+                              <Detail
+                                label="Сумма финансирования"
+                                value={money(quote.principal)}
+                                strong
+                              />
+                              <Detail label="Срок лизинга" value={`${form.months} месяцев`} />
+                              <Detail
+                                label="Годовая ставка"
+                                value={`${percent(quote.rate.annualRate)}%`}
+                              />
+                            </dl>
+                            {isApplied && applied.previousQuote && (
+                              <Card size="s" type="secondary">
+                                <Flex direction="column" gap={4}>
+                                  <Typography.Paragraph view="small" weight="medium">
+                                    Было {money(applied.previousQuote.monthlyPayment)} при сроке{" "}
+                                    {applied.previous.months} мес.
+                                  </Typography.Paragraph>
+                                  <Typography.Caption view="large" color="secondary">
+                                    {form.months > applied.previous.months
+                                      ? `${quote.monthlyPayment < applied.previousQuote.monthlyPayment ? "Платеж ниже" : quote.monthlyPayment > applied.previousQuote.monthlyPayment ? "Платеж выше" : "Платеж прежний"}, срок больше на ${form.months - applied.previous.months} мес.`
+                                      : "Условия обновлены по вашему бюджету"}
+                                  </Typography.Caption>
+                                </Flex>
+                              </Card>
+                            )}
+                            <Flex direction="column" gap={16}>
+                              <div>
+                                <Button
+                                  view="link"
+                                  size="m"
+                                  iconLeft={<Document />}
+                                  onClick={() => setScheduleOpen(true)}
+                                >
+                                  Показать график платежей
+                                </Button>
+                              </div>
+                              <Button
+                                view="accentPrimary"
+                                size="l"
+                                fullWidth
+                                iconRight={<ArrowDirectionRight />}
+                                onClick={() => setContinueOpen(true)}
+                              >
+                                Продолжить оформление
+                              </Button>
+                              <Typography.Caption view="large" color="secondary">
+                                Предварительный расчет. Без страхования и дополнительных расходов.
+                                Не является офертой.
+                              </Typography.Caption>
+                            </Flex>
+                          </>
+                        ) : (
+                          <Flex direction="column" gap={8}>
+                            <Typography.Title
+                              tag="div"
+                              view="paragraph"
+                              role="heading"
+                              aria-level={3}
+                            >
+                              {form.price ? "Проверьте параметры" : "Начните со стоимости"}
+                            </Typography.Title>
+                            <Typography.Paragraph view="small" color="secondary">
+                              {form.price
+                                ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
+                                : "Укажите цену автомобиля от продавца, и здесь появится ваш платеж."}
+                            </Typography.Paragraph>
+                          </Flex>
+                        )}
+                        <Divider noGap />
+                        <Flex gap={8} alignItems="center">
+                          <Shield width={16} height={16} className={s.successIcon} />
+                          <Typography.Caption view="large" color="secondary">
+                            Расчет без заявки и персональных данных
+                          </Typography.Caption>
+                        </Flex>
+                      </Flex>
+                    </section>
+                  </Card>
+                  <Card size="m" type="secondary">
+                    <Flex gap={16} alignItems="center" justifyContent="space-between" wrap>
+                      <Flex direction="column" gap={4}>
+                        <Typography.Paragraph view="medium" weight="semibold">
+                          Есть комфортный платеж?
+                        </Typography.Paragraph>
+                        <Typography.Paragraph view="small" color="secondary">
+                          Помощник подберет срок и аванс
+                        </Typography.Paragraph>
+                      </Flex>
+                      <Button
+                        view="accentSecondary"
+                        size="m"
+                        iconLeft={<Chat />}
+                        onClick={openAssistant}
+                      >
+                        Подобрать
+                      </Button>
+                    </Flex>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        <section className="how-it-works" aria-label="Как это работает">
-          <div>
-            <span>1</span>
-            <p>
-              <strong>Укажите стоимость</strong>
-              <small>Из предложения вашего продавца</small>
-            </p>
-          </div>
-          <ChevronRight className="step-chevron" size={17} />
-          <div>
-            <span>2</span>
-            <p>
-              <strong>Подберите условия</strong>
-              <small>Самостоятельно или с помощником</small>
-            </p>
-          </div>
-          <ChevronRight className="step-chevron" size={17} />
-          <div>
-            <span>3</span>
-            <p>
-              <strong>Перейдите к заявке</strong>
-              <small>Когда будете готовы к оформлению</small>
-            </p>
-          </div>
-        </section>
-        <section className="faq-section">
-          <div className="faq-title">
-            <CircleHelp size={20} />
-            <h2>Полезно знать</h2>
-          </div>
-          <div className="faq-list">
-            {questions.map((question, index) => (
-              <div className="faq-item" key={question.title}>
-                <button
-                  onClick={() => setFaq(faq === index ? null : index)}
-                  aria-expanded={faq === index}
-                  aria-controls={`faq-${index}`}
-                >
-                  {question.title}
-                  <ChevronDown size={17} className={faq === index ? "rotated" : ""} />
-                </button>
-                <div id={`faq-${index}`} hidden={faq !== index}>
-                  <p>{question.answer}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-        <footer className="page-footer">
-          <span>© {new Date().getFullYear()} BCC Leasing</span>
-          <span>Демонстрационная версия · Обычный автолизинг</span>
-        </footer>
+
+          {/* Как это работает */}
+          {/* Ориентация StepperDesktop задается только пропом, а адаптивные пропы DS
+              на SSR дают рассинхрон. Поэтому рендерим обе ориентации и показываем
+              нужную CSS-медиазапросом. */}
+          <section aria-label="Как это работает">
+            <StepperDesktop className={s.stepsHorizontal} steps={steps} currentStep={currentStep} />
+            <StepperDesktop
+              className={s.stepsVertical}
+              orientation="vertical"
+              steps={steps}
+              currentStep={currentStep}
+            />
+          </section>
+
+          {/* Полезно знать */}
+          <section aria-labelledby="faq-heading">
+            <Flex direction="column" gap={16}>
+              <Typography.Title
+                tag="div"
+                view="block"
+                role="heading"
+                aria-level={2}
+                id="faq-heading"
+              >
+                Полезно знать
+              </Typography.Title>
+              <Accordion items={questions} closeOthersOnClick disableImages />
+            </Flex>
+          </section>
+
+          <footer>
+            <Divider noGap />
+            <div className={s.footer}>
+              <Typography.Caption view="large" color="secondary">
+                © {new Date().getFullYear()} BCC Leasing
+              </Typography.Caption>
+              <Typography.Caption className={s.footerEnd} view="large" color="secondary">
+                Демонстрационная версия. Обычный автолизинг
+              </Typography.Caption>
+            </div>
+          </footer>
+        </Container>
       </main>
-      {modelPickerOpen && catalog && (
-        <ModelPicker
-          models={catalog.models}
-          selected={form.modelId}
-          onClose={() => setModelPickerOpen(false)}
-          onSelect={(selected) => {
-            if (selected.id !== form.modelId) {
-              change({ modelId: selected.id, price: 0 });
-              setSample(false);
-            }
-            setModelPickerOpen(false);
-            setApplied(null);
-          }}
-        />
-      )}
+
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
       )}
       {continueOpen && quote && (
-        <Dialog title="Ваш расчет готов" onClose={() => setContinueOpen(false)}>
-          <div className="handoff-icon">
-            <Check size={27} />
-          </div>
-          <p className="dialog-intro">
-            {title} · {money(form.price)}
-          </p>
-          <div className="handoff-payment">
-            <strong>{money(quote.monthlyPayment)}</strong>
-            <span>в месяц на {form.months} мес.</span>
-          </div>
-          <dl className="summary-details">
-            <div>
-              <dt>Первоначальный взнос</dt>
-              <dd>{money(quote.advanceAmount)}</dd>
-            </div>
-            <div>
-              <dt>Тип клиента</dt>
-              <dd>{form.clientType === "IP" ? "ИП" : "ТОО"}</dd>
-            </div>
-          </dl>
-          <div className="handoff-note">
-            <Info size={18} />
-            <p>
+        <Dialog
+          title="Ваш расчет готов"
+          description={`${title}, ${money(form.price)}`}
+          onClose={() => setContinueOpen(false)}
+          footer={
+            <Flex direction="column" gap={8}>
+              <Button
+                view="accentPrimary"
+                size="l"
+                fullWidth
+                href="https://business.bcc.kz/online-leasing/"
+                target="_blank"
+                rel="noreferrer"
+                iconRight={<ArrowDirectionRight />}
+              >
+                Открыть заявку BCC
+              </Button>
+              <Button view="neutral" size="l" fullWidth onClick={() => setContinueOpen(false)}>
+                Вернуться к расчету
+              </Button>
+            </Flex>
+          }
+        >
+          <Flex direction="column" gap={24}>
+            <Flex direction="column" gap={4}>
+              <Typography.Title tag="div" view="page">
+                {money(quote.monthlyPayment)}
+              </Typography.Title>
+              <Typography.Paragraph view="medium" color="secondary">
+                в месяц на {form.months} мес.
+              </Typography.Paragraph>
+            </Flex>
+            <dl className={s.details}>
+              <Detail label="Первоначальный взнос" value={money(quote.advanceAmount)} />
+              <Detail label="Тип клиента" value={form.clientType === "IP" ? "ИП" : "ТОО"} />
+            </dl>
+            <Alert variant="info" fullWidth disableTruncate autoCloseDelay={null}>
               Оформление продолжится в сервисе BCC Leasing. Автоматический перенос расчета пока не
-              подключен — параметры потребуется указать повторно.
-            </p>
-          </div>
-          <a
-            className="primary-button"
-            href="https://business.bcc.kz/online-leasing/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Открыть заявку BCC
-            <ArrowUpRight size={18} />
-          </a>
-          <button className="text-button handoff-back" onClick={() => setContinueOpen(false)}>
-            Вернуться к расчету
-          </button>
+              подключен, параметры потребуется указать повторно.
+            </Alert>
+          </Flex>
         </Dialog>
       )}
+    </>
+  );
+}
+
+function Detail({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className={s.detail}>
+      <dt>
+        <Typography.Paragraph view="small" color="secondary">
+          {label}
+        </Typography.Paragraph>
+      </dt>
+      <dd>
+        <Typography.Paragraph view="small" weight={strong ? "semibold" : "medium"} monospaceNumbers>
+          {value}
+        </Typography.Paragraph>
+      </dd>
+    </div>
+  );
+}
+
+function ChoiceChips<T extends string | number>({
+  labelledBy,
+  options,
+  value,
+  loading = false,
+  onChange,
+}: {
+  labelledBy: string;
+  options: { value: T; label: string; disabled?: boolean }[];
+  value: T;
+  loading?: boolean;
+  onChange: (value: T) => void;
+}) {
+  // Отступы между чипами дает сам Chip (margin-right 8, margin-bottom 4), gap не нужен.
+  return (
+    <Flex wrap role="group" aria-labelledby={labelledBy}>
+      {options.map((option) => (
+        <Skeleton
+          key={option.value}
+          visible={loading}
+          br="var(--b-border-radius-cof-10)"
+          className={s.chipSkeleton}
+        >
+          <Chip
+            clickable
+            variant={option.value === value ? "active" : "inactive"}
+            aria-pressed={option.value === value}
+            disabled={option.disabled}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </Chip>
+        </Skeleton>
+      ))}
+    </Flex>
+  );
+}
+
+// Заглушка карточки расчета на время первой загрузки: те же блоки, что у готового
+// расчета, чтобы при появлении данных карточка не прыгала по высоте.
+function SummarySkeleton() {
+  const rows = [
+    "Стоимость автомобиля",
+    "Первоначальный взнос (20%)",
+    "Сумма финансирования",
+    "Срок лизинга",
+    "Годовая ставка",
+  ];
+  return (
+    <>
+      <Flex direction="column" gap={8} role="status" aria-label="Загружаем условия">
+        <Typography.Title tag="div" view="page" showSkeleton>
+          000 000 ₸
+        </Typography.Title>
+        <Typography.Paragraph view="medium" color="secondary" showSkeleton>
+          ежемесячный платеж
+        </Typography.Paragraph>
+      </Flex>
+      <Divider noGap />
+      <dl className={s.details} aria-hidden>
+        {rows.map((label) => (
+          <div className={s.detail} key={label}>
+            <dt>
+              <Skeleton visible br="var(--b-border-radius-cof-4)">
+                <Typography.Paragraph view="small">{label}</Typography.Paragraph>
+              </Skeleton>
+            </dt>
+            <dd>
+              <Skeleton visible br="var(--b-border-radius-cof-4)">
+                <Typography.Paragraph view="small">00 000 000 ₸</Typography.Paragraph>
+              </Skeleton>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <Skeleton visible br="var(--b-border-radius-cof-6)">
+        <Button view="accentPrimary" size="l" fullWidth disabled>
+          Продолжить оформление
+        </Button>
+      </Skeleton>
     </>
   );
 }

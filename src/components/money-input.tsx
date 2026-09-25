@@ -1,45 +1,40 @@
 "use client";
 
-import { useId } from "react";
+import { Input } from "bcc-design";
 import { number, readMoney } from "@/lib/format";
 
 export function MoneyInput({
   label,
   value,
   onChange,
-  placeholder = "0",
-  suffix = "₸",
-  className = "",
-  invalid = false,
+  placeholder,
+  hint,
+  error,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
   placeholder?: string;
-  suffix?: string;
-  className?: string;
-  invalid?: boolean;
+  hint?: React.ReactNode;
+  error?: React.ReactNode | boolean;
 }) {
-  const id = useId();
   return (
-    <div className={`money-control ${className}`}>
-      <label htmlFor={id}>{label}</label>
-      <div className={`input-surface ${invalid ? "input-invalid" : ""}`}>
-        <input
-          id={id}
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          aria-invalid={invalid || undefined}
-          value={value ? number(value) : ""}
-          onChange={(event) => {
-            const next = readMoney(event.target.value);
-            if (Number.isSafeInteger(next) && next <= 999999999) onChange(next);
-          }}
-          placeholder={placeholder}
-        />
-        <span>{suffix}</span>
-      </div>
-    </div>
+    <Input
+      fullWidth
+      size="lg"
+      label={label}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder={placeholder}
+      value={value ? number(value) : ""}
+      rightAddon="₸"
+      hint={hint}
+      error={error}
+      onChange={(_, payload) => {
+        const next = readMoney(payload.value);
+        if (Number.isSafeInteger(next) && next <= 999999999) onChange(next);
+      }}
+    />
   );
 }

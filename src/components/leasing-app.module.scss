@@ -1,0 +1,316 @@
+// Раскладка экрана калькулятора. Только то, чего нет в Container / Flex / Grid:
+// двухколоночная сетка с «липкой» правой колонкой и CSS-брейкпоинтом без JS
+// (адаптивные пропы Flex/Grid вычисляются в JS и на SSR дают прыжок раскладки).
+
+// Container DS по умолчанию height: 100% — страница растет по контенту.
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-8);
+  height: auto;
+  padding-block: var(--g-spacing-8) var(--g-spacing-10);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: var(--g-spacing-6);
+  align-items: start;
+
+  @media (max-width: 991px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-4);
+  scroll-margin-top: var(--g-spacing-6);
+
+  @media (min-width: 992px) {
+    position: sticky;
+    top: var(--g-spacing-6);
+  }
+}
+
+// Сумма взноса и селект процента в строку; на узком экране — столбиком,
+// иначе подпись поля суммы обрезается.
+.advanceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--g-spacing-12) * 3);
+  gap: var(--g-spacing-3);
+  align-items: start;
+
+  @media (max-width: 575px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// На узком экране в шапке остается только логотип и метка «Демо».
+.headerCaption {
+  @media (max-width: 575px) {
+    display: none;
+  }
+}
+
+// Список «подпись — значение». В DS нет компонента описания-списка:
+// InfoField рисует подпись над значением, а не в строку.
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-3);
+  margin: 0;
+}
+
+.detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--g-spacing-4);
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dd {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.mutedIcon {
+  color: var(--b-color-icon-neutral-weak-500);
+}
+
+.successIcon {
+  flex: none;
+  color: var(--b-color-icon-success-strong-500);
+}
+
+// Горизонтальный степпер на широком экране, вертикальный — на узком.
+.stepsHorizontal {
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+.stepsVertical {
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+// Две подписи футера: в строку на широком экране, столбиком на узком.
+// Caption DS занимает width: 100%, поэтому Flex с wrap переносил бы вторую всегда.
+.footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--g-spacing-2);
+  padding-top: var(--g-spacing-4);
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Обход пробела DS: Slider всегда подписывает min/max сырыми числами без
+// форматирования (6250000), и подписи выходят за край карточки. Скрываем их
+// и выводим свои, отформатированные, под ползунком.
+.priceSlider :global(.rc-slider-mark) {
+  display: none;
+}
+
+// Slider держит padding-bottom 24px под свои подписи, которые скрыты выше, —
+// подтягиваем наши подписи в это место, чтобы не было двойного зазора.
+.priceSlider {
+  margin-bottom: calc(var(--g-spacing-6) * -1);
+}
+
+// Typography.Caption растягивается на всю ширину (width: 100%), поэтому
+// в строке «слева — справа» правую подпись выравниваем по краю.
+.end {
+  text-align: right;
+}
+
+.footerEnd {
+  @media (min-width: 768px) {
+    text-align: right;
+  }
+}
+
+// Скелетон чипа — по ширине чипа, а не на всю строку (Skeleton DS — блочный div).
+// Внешний отступ чипа переносим на обертку, иначе он попадает внутрь заливки.
+.chipSkeleton {
+  display: inline-block;
+  margin: 0 var(--g-spacing-2) var(--g-spacing-1) 0;
+
+  > * {
+    margin: 0;
+  }
+}
+
+// Правка по запросу дизайна: у Breadcrumbs DS между пунктами по 16px с каждой
+// стороны разделителя (паддинг ссылки 8 + margin разделителя 8), а первый пункт
+// сдвинут паддингом на 8px от края заголовка. Поджимаем до 4px и выравниваем по краю.
+.breadcrumbs {
+  :global(.bcc-breadcrumbs__link) {
+    padding-inline: var(--g-spacing-1);
+  }
+
+  :global(.bcc-breadcrumbs__separator) {
+    margin-inline: 0;
+  }
+
+  :global(.bcc-breadcrumbs) {
+    margin-left: calc(var(--g-spacing-1) * -1);
+  }
+}
+
+// Баннер во всю ширину окна. Картинка 1440×667 (фургон справа, слева пусто под
+// текст) вписана по высоте баннера целиком, без обрезки, и прижата вправо;
+// нижние углы баннера скруглены, как на сайте.
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  // Фон — цвет, запеченный в саму картинку (#f5f4f7): токена DS с таким значением нет,
+  // а с ближайшим (gray-50, #f4f5fa) по краю картинки видна полоса.
+  background-color: #f5f4f7;
+  color: var(--b-color-text-neutral-strong-900);
+  border-radius: 0 0 var(--b-border-radius-cof-16) var(--b-border-radius-cof-16);
+
+  // Картинка — отдельным слоем точно своего размера: левый край плавно растворяется
+  // в фоне маской (не видно стыка и скругленных углов картинки), при загрузке
+  // картинка плавно проявляется.
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    height: 100%;
+    aspect-ratio: 1440 / 667;
+    background: url("./assets/gazel-banner.webp") center / 100% 100% no-repeat;
+    // Края картинки плавно растворяются в фоне (в маске важна только прозрачность):
+    // слева — стык с пустой частью баннера, по остальным сторонам — места, где
+    // синий контур упирается в обрез баннера.
+    mask-image:
+      linear-gradient(to right, transparent, black 30%),
+      linear-gradient(to top, transparent, black 18%),
+      linear-gradient(to left, transparent, black 10%),
+      linear-gradient(to bottom, transparent, black 12%);
+    mask-composite: intersect;
+    animation: hero-image-in 0.8s ease-out both;
+  }
+
+  // На средних экранах картинка по высоте баннера заехала бы под текст:
+  // уменьшаем ее и прижимаем к правому нижнему углу.
+  @media (min-width: 768px) and (max-width: 1199px) {
+    &::before {
+      top: auto;
+      bottom: 0;
+      height: 75%;
+    }
+  }
+
+  // На узком экране фургон под текстом: слой картинки прижат вниз, под него
+  // оставлено место паддингом.
+  @media (max-width: 767px) {
+    padding-bottom: 80%;
+
+    &::before {
+      top: auto;
+      right: 0;
+      bottom: 0;
+      width: 170%;
+      height: auto;
+      // Левая часть картинки здесь за краем экрана, растворяем только обрезы.
+      mask-image:
+        linear-gradient(to top, transparent, black 15%),
+        linear-gradient(to left, transparent, black 12%),
+        linear-gradient(to bottom, transparent, black 12%);
+    }
+  }
+}
+
+@keyframes hero-image-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--g-spacing-6));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero::before {
+    animation: none;
+  }
+}
+
+// Container DS по умолчанию height: 100% — баннер растет по контенту.
+.heroInner {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: calc(var(--g-spacing-12) * 12);
+  // Сверху место под плавающую шапку: отступ 24 + плашка 80.
+  padding-block: calc(var(--g-spacing-6) + var(--g-spacing-4) * 5) var(--g-spacing-12);
+
+  @media (max-width: 767px) {
+    min-height: 0;
+    padding-block: calc(var(--g-spacing-4) + var(--g-spacing-4) * 5) var(--g-spacing-4);
+  }
+}
+
+// Липкий слой шапки нулевой высоты: плашка висит поверх баннера и не сдвигает его,
+// а при прокрутке остается у верха окна.
+.headerSticky {
+  position: sticky;
+  // Легкий отступ от края окна — и в начале страницы, и при прокрутке.
+  top: var(--g-spacing-6);
+  z-index: 20;
+  height: 0;
+
+  @media (max-width: 767px) {
+    top: var(--g-spacing-4);
+  }
+}
+
+// Плашка шапки. --header-progress (0…1) растет с прокруткой: подложка плотнее,
+// размытие сильнее, появляется тень.
+.headerBar {
+  min-height: calc(var(--g-spacing-4) * 5);
+  padding: var(--g-spacing-3) var(--g-spacing-6);
+  border-radius: var(--b-border-radius-cof-10);
+  background: color-mix(
+    in srgb,
+    var(--b-color-object-bg-neutral-weak-0) calc(60% + 30% * var(--header-progress, 0)),
+    transparent
+  );
+  backdrop-filter: blur(calc(var(--g-spacing-1) + var(--g-spacing-5) * var(--header-progress, 0)));
+  box-shadow: 0 var(--g-spacing-1) var(--g-spacing-6)
+    color-mix(
+      in srgb,
+      var(--b-color-object-bg-overlay-strong-800) calc(12% * var(--header-progress, 0)),
+      transparent
+    );
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+
+  @media (max-width: 767px) {
+    padding-inline: var(--g-spacing-4);
+  }
+}
+
+.heroContent {
+  max-width: 45%;
+  margin-block: auto;
+  padding-top: var(--g-spacing-10);
+
+  @media (max-width: 767px) {
+    max-width: none;
+    padding-top: var(--g-spacing-8);
+  }
+}

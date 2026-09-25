@@ -1,21 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowUp,
-  Check,
-  ChevronDown,
-  Mic,
-  SlidersHorizontal,
-  Sparkles,
-  Square,
-  X,
-} from "lucide-react";
+import { Button, Card, Chip, Flex, Spinner, Tag, Textarea, Typography } from "bcc-design";
+import ArrowLineDirectionUp from "bcc-design-icons/base/Arrows/ArrowLineDirectionUp";
+import ChevronDirectionDown from "bcc-design-icons/base/Arrows/ChevronDirectionDown";
+import ChevronDirectionUp from "bcc-design-icons/base/Arrows/ChevronDirectionUp";
+import CheckOutlinedBold from "bcc-design-icons/base/Basic/CheckOutlinedBold";
+import Pause from "bcc-design-icons/base/Basic/Pause";
+import Chat from "bcc-design-icons/base/Communication/Chat";
+import Close from "bcc-design-icons/base/Navigation/Close";
+import Filter from "bcc-design-icons/base/Navigation/Filter";
+import Microphone from "bcc-design-icons/base/Tech/Microphone";
 import { parseMessage, type ParsedIntent } from "@/lib/assistant";
 import { calculateQuote, estimateMaxPrice, findOffers, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, percent } from "@/lib/format";
 import type { ClientType, Quote, TermsData } from "@/lib/types";
 import { MoneyInput } from "./money-input";
+import s from "./assistant-panel.module.scss";
 
 type Context = {
   modelId: number;
@@ -268,7 +269,7 @@ export function AssistantPanel({
       if (distinct.length) {
         push({
           role: "assistant",
-          text: `Для ${context.modelName} за ${money(next.price)} ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж — до ${money(maxMonthly)}, аванс — до ${money(maxAdvance)}.${sourceNote}`,
+          text: `Для ${context.modelName} за ${money(next.price)} ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж до ${money(maxMonthly)}, аванс до ${money(maxAdvance)}.${sourceNote}`,
           offers: distinct,
           contextKey,
           budget: next,
@@ -298,7 +299,7 @@ export function AssistantPanel({
               ? "Снизить платеж при этих ограничениях не получается."
               : `При цене ${money(next.price)} уложиться в эти ограничения не получается.`;
         if (withinAdvance[0])
-          explanation += ` Минимальный расчетный платеж с вашим авансом — ${money(withinAdvance[0].monthlyPayment)} на ${withinAdvance[0].rate.months} мес.`;
+          explanation += ` Минимальный расчетный платеж с вашим авансом: ${money(withinAdvance[0].monthlyPayment)} на ${withinAdvance[0].rate.months} мес.`;
         if (maximumPrice && maximumPrice < next.price)
           explanation += ` Можно рассмотреть стоимость до ${money(Math.floor(maximumPrice))}. Это ориентир бюджета, а не предложение автомобиля.`;
         else explanation += " Попробуйте увеличить доступный аванс или изменить срок.";
@@ -369,199 +370,282 @@ export function AssistantPanel({
   }
 
   return (
-    <section className="assistant-panel panel" aria-label="ИИ-помощник">
-      <div className="assistant-header">
-        <div className="assistant-title">
-          <span className="sparkle-tile">
-            <Sparkles size={23} />
-          </span>
-          <div>
-            <h2>ИИ-помощник</h2>
-            <span>Подберем условия под ваш бюджет</span>
-          </div>
-        </div>
-        <button className="icon-button" onClick={onClose} aria-label="Закрыть помощника">
-          <X size={21} />
-        </button>
-      </div>
-      <div className="assistant-context">
-        <span>{context.modelName}</span>
-        <span>{context.price ? money(context.price) : "Стоимость не указана"}</span>
-      </div>
-      <div ref={scrollRef} className="conversation" aria-live="polite" aria-relevant="additions">
-        {!messages.length && (
-          <div className="assistant-welcome">
-            <span className="welcome-icon">
-              <Sparkles size={25} />
+    <Card size="m" type="primary" height="auto">
+      <section aria-label="ИИ-помощник" className={s.body}>
+        {/* Заголовок помощника */}
+        <Flex justifyContent="space-between" alignItems="flex-start" gap={16}>
+          <Flex gap={12} alignItems="center">
+            <span className={s.tile}>
+              <Chat />
             </span>
-            <h3>Какой платеж вам удобен?</h3>
-            <p>
-              Расскажите о вашем бюджете. Подберу срок и первоначальный взнос для выбранного
-              автомобиля.
-            </p>
-            <div className="prompt-list">
-              <button onClick={() => send("Хочу платить до 350 тысяч в месяц, на аванс до 3 млн")}>
-                <span>До 350 000 ₸ в месяц</span>
-                <ArrowUp size={16} />
-              </button>
-              <button onClick={() => send("Снизить первоначальный взнос")}>
-                <span>Хочу снизить аванс</span>
-                <ArrowUp size={16} />
-              </button>
-              <button onClick={() => send("Как считается платеж?")}>
-                <span>Как считается платеж?</span>
-                <ArrowUp size={16} />
-              </button>
-            </div>
-          </div>
-        )}
-        {messages.map((message) => (
-          <div key={message.id} className={`message message-${message.role}`}>
-            <p>{message.text}</p>
-            {message.offers?.map((offer, index) => (
-              <div className="offer-card" key={`${offer.rate.rateId}:${index}`}>
-                <span className="offer-eyebrow">
-                  <Check size={14} />
-                  {index === 0 ? "В вашем бюджете" : "Еще один вариант"}
-                </span>
-                <div className="offer-amount">
-                  {money(offer.monthlyPayment)}
-                  <span>в месяц</span>
-                </div>
-                <dl className="offer-details">
-                  <div>
-                    <dt>Срок</dt>
-                    <dd>{offer.rate.months} месяцев</dd>
-                  </div>
-                  <div>
-                    <dt>Аванс</dt>
-                    <dd>
-                      {money(offer.advanceAmount)} · {percent(offer.rate.advancePercent)}%
-                    </dd>
-                  </div>
-                </dl>
-                <p className="offer-note">
-                  {offer.rate.months > context.months
-                    ? `Срок больше на ${offer.rate.months - context.months} мес. — общая сумма процентов может вырасти.`
-                    : `Ставка ${percent(offer.rate.annualRate)}% годовых.`}
-                </p>
-                <button
-                  className="primary-button"
-                  disabled={!proposalCurrent(message) || busy}
-                  onClick={() =>
-                    onApply(offer, message.budget!.maxMonthly!, message.budget!.clientType)
-                  }
-                >
-                  {proposalCurrent(message)
-                    ? "Применить условия"
-                    : "Параметры изменились — повторите подбор"}
-                </button>
-              </div>
-            ))}
-          </div>
-        ))}
-        {busy && (
-          <div className="thinking">
-            <span />
-            <span />
-            <span />
-            <p>Подбираю условия</p>
-          </div>
-        )}
-      </div>
-      <div className="assistant-bottom">
-        <button
-          className="budget-toggle"
-          onClick={() => setShowBudget(!showBudget)}
-          aria-expanded={showBudget}
+            <Flex direction="column" gap={2}>
+              <Typography.Title tag="div" view="block" role="heading" aria-level={2}>
+                ИИ-помощник
+              </Typography.Title>
+              <Typography.Caption view="large" color="secondary">
+                Подберем условия под ваш бюджет
+              </Typography.Caption>
+            </Flex>
+          </Flex>
+          <Button
+            view="neutral"
+            size="m"
+            iconLeft={<Close />}
+            aria-label="Закрыть помощника"
+            onClick={onClose}
+          />
+        </Flex>
+        <Flex gap={8} wrap>
+          <Tag color="neutral" size="sm">
+            {context.modelName}
+          </Tag>
+          <Tag color="neutral" size="sm">
+            {context.price ? money(context.price) : "Стоимость не указана"}
+          </Tag>
+        </Flex>
+
+        {/* Диалог */}
+        <div
+          ref={scrollRef}
+          className={s.conversation}
+          aria-live="polite"
+          aria-relevant="additions"
         >
-          <SlidersHorizontal size={15} /> Настроить бюджет
-          <ChevronDown size={15} className={showBudget ? "rotated" : ""} />
-        </button>
-        {showBudget && (
+          {!messages.length && (
+            <Flex direction="column" gap={12} className={s.welcome}>
+              <Typography.Title tag="div" view="paragraph" role="heading" aria-level={3}>
+                Какой платеж вам удобен?
+              </Typography.Title>
+              <Typography.Paragraph view="small" color="secondary">
+                Расскажите о вашем бюджете. Подберу срок и первоначальный взнос для выбранного
+                автомобиля.
+              </Typography.Paragraph>
+              <Flex wrap>
+                <Chip
+                  clickable
+                  variant="inactive"
+                  onClick={() => send("Хочу платить до 350 тысяч в месяц, на аванс до 3 млн")}
+                >
+                  До 350 000 ₸ в месяц
+                </Chip>
+                <Chip
+                  clickable
+                  variant="inactive"
+                  onClick={() => send("Снизить первоначальный взнос")}
+                >
+                  Хочу снизить аванс
+                </Chip>
+                <Chip clickable variant="inactive" onClick={() => send("Как считается платеж?")}>
+                  Как считается платеж?
+                </Chip>
+              </Flex>
+            </Flex>
+          )}
+          {messages.map((message) => (
+            <Flex
+              key={message.id}
+              direction="column"
+              gap={8}
+              className={message.role === "user" ? s.userMessage : s.assistantMessage}
+            >
+              <Typography.Paragraph view="small" className={s.bubble}>
+                {message.text}
+              </Typography.Paragraph>
+              {message.offers?.map((offer, index) => (
+                <Card size="s" type="secondary" key={`${offer.rate.rateId}:${index}`}>
+                  <Flex direction="column" gap={12}>
+                    <div>
+                      <Tag
+                        color="success"
+                        size="sm"
+                        leftIcon={<CheckOutlinedBold width={14} height={14} />}
+                      >
+                        {index === 0 ? "В вашем бюджете" : "Еще один вариант"}
+                      </Tag>
+                    </div>
+                    <Flex alignItems="baseline" gap={8}>
+                      <Typography.Paragraph view="xlarge" weight="bold" monospaceNumbers>
+                        {money(offer.monthlyPayment)}
+                      </Typography.Paragraph>
+                      <Typography.Caption view="large" color="secondary">
+                        в месяц
+                      </Typography.Caption>
+                    </Flex>
+                    <dl className={s.offerDetails}>
+                      <div>
+                        <dt>
+                          <Typography.Caption view="large" color="secondary">
+                            Срок
+                          </Typography.Caption>
+                        </dt>
+                        <dd>
+                          <Typography.Paragraph view="small" weight="medium">
+                            {offer.rate.months} месяцев
+                          </Typography.Paragraph>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <Typography.Caption view="large" color="secondary">
+                            Аванс
+                          </Typography.Caption>
+                        </dt>
+                        <dd>
+                          <Typography.Paragraph view="small" weight="medium" monospaceNumbers>
+                            {money(offer.advanceAmount)} ({percent(offer.rate.advancePercent)}%)
+                          </Typography.Paragraph>
+                        </dd>
+                      </div>
+                    </dl>
+                    <Typography.Caption view="large" color="secondary">
+                      {offer.rate.months > context.months
+                        ? `Срок больше на ${offer.rate.months - context.months} мес., общая сумма процентов может вырасти.`
+                        : `Ставка ${percent(offer.rate.annualRate)}% годовых.`}
+                    </Typography.Caption>
+                    <Button
+                      view="accentPrimary"
+                      size="m"
+                      fullWidth
+                      disabled={!proposalCurrent(message) || busy}
+                      onClick={() =>
+                        onApply(offer, message.budget!.maxMonthly!, message.budget!.clientType)
+                      }
+                    >
+                      {proposalCurrent(message)
+                        ? "Применить условия"
+                        : "Параметры изменились, повторите подбор"}
+                    </Button>
+                  </Flex>
+                </Card>
+              ))}
+            </Flex>
+          ))}
+          {busy && (
+            <Flex gap={8} alignItems="center" role="status">
+              <Spinner size="sm" />
+              <Typography.Caption view="large" color="secondary">
+                Подбираю условия
+              </Typography.Caption>
+            </Flex>
+          )}
+        </div>
+
+        {/* Бюджет и ввод сообщения */}
+        <Flex direction="column" gap={12}>
+          <div>
+            <Button
+              view="link"
+              size="s"
+              iconLeft={<Filter />}
+              iconRight={showBudget ? <ChevronDirectionUp /> : <ChevronDirectionDown />}
+              aria-expanded={showBudget}
+              onClick={() => setShowBudget(!showBudget)}
+            >
+              Настроить бюджет
+            </Button>
+          </div>
+          {showBudget && (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void send(
+                  `До ${budget.maxMonthly} тенге в месяц, на аванс до ${budget.maxAdvance} тенге`,
+                );
+                setShowBudget(false);
+              }}
+            >
+              <Flex direction="column" gap={12}>
+                <Flex gap={12} direction={{ xxs: "column", xs: "row" }}>
+                  <Flex grow basis={0} direction="column">
+                    <MoneyInput
+                      label="Платеж до"
+                      value={budget.maxMonthly ?? 0}
+                      onChange={(value) =>
+                        setMemory({ key: contextKey, budget: { ...budget, maxMonthly: value } })
+                      }
+                    />
+                  </Flex>
+                  <Flex grow basis={0} direction="column">
+                    <MoneyInput
+                      label="Аванс до"
+                      value={budget.maxAdvance ?? 0}
+                      onChange={(value) =>
+                        setMemory({ key: contextKey, budget: { ...budget, maxAdvance: value } })
+                      }
+                    />
+                  </Flex>
+                </Flex>
+                <Button
+                  view="accentSecondary"
+                  size="m"
+                  htmlType="submit"
+                  fullWidth
+                  disabled={busy || !budget.maxMonthly || budget.maxAdvance === undefined}
+                >
+                  Подобрать условия
+                </Button>
+              </Flex>
+            </form>
+          )}
           <form
-            className="budget-form"
             onSubmit={(event) => {
               event.preventDefault();
-              void send(
-                `До ${budget.maxMonthly} тенге в месяц, на аванс до ${budget.maxAdvance} тенге`,
-              );
-              setShowBudget(false);
+              void send();
             }}
           >
-            <MoneyInput
-              label="Платеж до"
-              value={budget.maxMonthly ?? 0}
-              onChange={(value) =>
-                setMemory({ key: contextKey, budget: { ...budget, maxMonthly: value } })
-              }
-            />
-            <MoneyInput
-              label="Аванс до"
-              value={budget.maxAdvance ?? 0}
-              onChange={(value) =>
-                setMemory({ key: contextKey, budget: { ...budget, maxAdvance: value } })
-              }
-            />
-            <button
-              className="secondary-button"
-              disabled={busy || !budget.maxMonthly || budget.maxAdvance === undefined}
-            >
-              Подобрать условия
-            </button>
+            <Flex direction="column" gap={8}>
+              <Textarea
+                ref={inputRef}
+                fullWidth
+                aria-label="Сообщение помощнику"
+                rows={2}
+                maxLength={1000}
+                placeholder={listening ? "Слушаю вас…" : "Напишите или скажите…"}
+                value={draft}
+                onChange={(_, payload) => setDraft(payload.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    void send();
+                  }
+                }}
+              />
+              <Flex justifyContent="space-between" alignItems="center" gap={8}>
+                <Typography.Caption view="large" color="secondary">
+                  {listening ? "Идет запись" : "Enter, чтобы отправить"}
+                </Typography.Caption>
+                <Flex gap={8}>
+                  <Button
+                    view={listening ? "destructiveSecondary" : "neutral"}
+                    size="m"
+                    iconLeft={listening ? <Pause /> : <Microphone />}
+                    aria-label={listening ? "Остановить запись" : "Голосовой ввод"}
+                    aria-pressed={listening}
+                    disabled={busy}
+                    onClick={toggleVoice}
+                  />
+                  <Button
+                    view="accentPrimary"
+                    size="m"
+                    htmlType="submit"
+                    iconLeft={<ArrowLineDirectionUp />}
+                    aria-label="Отправить сообщение"
+                    disabled={!draft.trim() || busy}
+                  />
+                </Flex>
+              </Flex>
+            </Flex>
           </form>
-        )}
-        <form
-          className={`composer ${listening ? "is-listening" : ""}`}
-          onSubmit={(event) => {
-            event.preventDefault();
-            void send();
-          }}
-        >
-          <textarea
-            ref={inputRef}
-            aria-label="Сообщение помощнику"
-            rows={2}
-            maxLength={1000}
-            placeholder={listening ? "Слушаю вас…" : "Напишите или скажите…"}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-                event.preventDefault();
-                void send();
-              }
-            }}
-          />
-          <div className="composer-actions">
-            <span>{listening ? "Идет запись" : "Enter — отправить"}</span>
-            <button
-              type="button"
-              className={`icon-button ${listening ? "recording" : ""}`}
-              aria-label={listening ? "Остановить запись" : "Голосовой ввод"}
-              aria-pressed={listening}
-              onClick={toggleVoice}
-              disabled={busy}
-            >
-              {listening ? <Square size={17} /> : <Mic size={20} />}
-            </button>
-            <button
-              type="submit"
-              className="send-button"
-              aria-label="Отправить сообщение"
-              disabled={!draft.trim() || busy}
-            >
-              <ArrowUp size={22} />
-            </button>
-          </div>
-        </form>
-        {voiceNotice && (
-          <p className="voice-notice" role="status">
-            {voiceNotice}
-          </p>
-        )}
-        <p className="assistant-disclaimer">Демо-режим · Предварительный расчет</p>
-      </div>
-    </section>
+          {voiceNotice && (
+            <Typography.Caption view="large" color="secondary" role="status">
+              {voiceNotice}
+            </Typography.Caption>
+          )}
+          <Typography.Caption view="medium" color="secondary">
+            Демо-режим. Предварительный расчет
+          </Typography.Caption>
+        </Flex>
+      </section>
+    </Card>
   );
 }

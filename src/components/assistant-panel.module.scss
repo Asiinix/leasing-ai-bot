@@ -1,0 +1,79 @@
+// Чат помощника. В DS нет компонентов переписки (ленты сообщений, пузырей),
+// поэтому лента и пузыри — свои, остальное — компоненты DS.
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-4);
+}
+
+// Плитка с иконкой помощника рядом с заголовком.
+.tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--g-size-l-height);
+  height: var(--g-size-l-height);
+  border-radius: var(--b-border-radius-cof-6);
+  background: var(--b-color-object-bg-brand-weak-50);
+  color: var(--b-color-icon-brand-strong-500);
+}
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-4);
+  min-height: calc(var(--g-spacing-12) * 5);
+  max-height: 52vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--g-spacing-4);
+  border-radius: var(--b-border-radius-cof-8);
+  background: var(--b-color-object-bg-neutral-weak-50);
+}
+
+.welcome {
+  margin-block: auto;
+}
+
+.userMessage,
+.assistantMessage {
+  max-width: 92%;
+}
+
+.userMessage {
+  align-self: flex-end;
+
+  .bubble {
+    background: var(--b-color-object-bg-brand-strong-500);
+    color: var(--b-color-text-inverse-strong-0);
+    border-bottom-right-radius: var(--b-border-radius-cof-2);
+  }
+}
+
+.assistantMessage {
+  align-self: flex-start;
+
+  .bubble {
+    background: var(--b-color-object-bg-neutral-weak-0);
+    border-bottom-left-radius: var(--b-border-radius-cof-2);
+  }
+}
+
+.bubble {
+  padding: var(--g-spacing-3) var(--g-spacing-4);
+  border-radius: var(--b-border-radius-cof-8);
+  white-space: pre-wrap;
+}
+
+.offerDetails {
+  display: flex;
+  gap: var(--g-spacing-6);
+  margin: 0;
+
+  dt,
+  dd {
+    margin: 0;
+  }
+}

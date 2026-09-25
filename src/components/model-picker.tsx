@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CarFront, Check, Search } from "lucide-react";
-import { Dialog } from "./dialog";
+import { Select } from "bcc-design";
 import type { LeaseModel } from "@/lib/types";
 
 export function modelLabel(model?: LeaseModel) {
@@ -15,71 +14,64 @@ export function modelLabel(model?: LeaseModel) {
 export function ModelPicker({
   models,
   selected,
+  loading,
   onSelect,
-  onClose,
 }: {
   models: LeaseModel[];
   selected: number;
+  loading: boolean;
   onSelect: (model: LeaseModel) => void;
-  onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const filtered = useMemo(() => {
+  const options = useMemo(() => {
+    // Встроенный фильтр Select ищет только по подписи одной подстрокой. Ищем по словам
+    // в марке, модели и продавце, как раньше, поэтому фильтрация своя.
     const words = query.toLocaleLowerCase().trim().split(/\s+/);
-    return models
-      .filter((model) =>
-        words.every((word) =>
-          `${model.brand} ${model.name} ${model.partnerName}`.toLocaleLowerCase().includes(word),
-        ),
-      )
-      .sort((a, b) => Number(b.id === selected) - Number(a.id === selected));
+    return (
+      models
+        .filter(
+          (model) =>
+            model.id === selected ||
+            words.every((word) =>
+              `${model.brand} ${model.name} ${model.partnerName}`
+                .toLocaleLowerCase()
+                .includes(word),
+            ),
+        )
+        // Выбранная модель — первой: scrollToSelected у виртуализированного списка
+        // из 1000+ опций не докручивает и сыплет предупреждениями в консоль.
+        .sort((a, b) => Number(b.id === selected) - Number(a.id === selected))
+        .map((model) => ({ value: model.id, label: modelLabel(model), hint: model.partnerName }))
+    );
   }, [models, query, selected]);
   return (
-    <Dialog title="Выберите автомобиль" onClose={onClose}>
-      <p className="dialog-intro">
-        Модель и продавец определяют доступные условия. Стоимость вы укажете отдельно.
-      </p>
-      <div className="search-field">
-        <Search size={19} />
-        <input
-          autoFocus
-          aria-label="Поиск автомобиля"
-          placeholder="Марка, модель или продавец"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </div>
-      <div className="model-list">
-        {filtered.slice(0, 100).map((model) => (
-          <button
-            key={model.id}
-            className={`model-option ${model.id === selected ? "selected" : ""}`}
-            onClick={() => onSelect(model)}
-          >
-            <span className="car-icon">
-              <CarFront size={22} />
-            </span>
-            <span>
-              <strong>{modelLabel(model)}</strong>
-              <small>{model.partnerName}</small>
-            </span>
-            {model.id === selected && <Check size={19} className="green" />}
-          </button>
-        ))}
-        {!filtered.length && (
-          <div className="empty-search">
-            По этому запросу ничего не нашли.
-            <br />
-            Попробуйте название марки латиницей.
-          </div>
-        )}
-      </div>
-      <p className="hint">
-        {filtered.length > 100
-          ? `Показаны первые 100 из ${filtered.length}. Уточните поиск.`
-          : `Найдено: ${filtered.length}`}{" "}
-        · Без цен и проверки наличия
-      </p>
-    </Dialog>
+    <Select
+      fullWidth
+      size="lg"
+      label="Автомобиль"
+      placeholder="Марка, модель или продавец"
+      mobileTitle="Выберите автомобиль"
+      searchPlaceholder="Марка, модель или продавец"
+      hint={
+        models.find((model) => model.id === selected)?.partnerName ??
+        "Справочник моделей и продавцов"
+      }
+      noDataText="Ничего не нашли. Попробуйте название марки латиницей."
+      loading={loading}
+      disabled={loading}
+      allowSearch
+      filterOptions={false}
+      virtualize
+      options={options}
+      value={selected}
+      onSearch={setQuery}
+      onClose={() => setQuery("")}
+      onChange={({ value }) => {
+        // Повторный клик по выбранной опции снимает выбор (value = null) — модель
+        // в калькуляторе обязательна, поэтому такой клик игнорируем.
+        const model = models.find((item) => item.id === value);
+        if (model) onSelect(model);
+      }}
+    />
   );
 }
