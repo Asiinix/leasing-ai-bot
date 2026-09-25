@@ -1,0 +1,108 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}toggle-control';
+
+#{$block} {
+  font-family: var(--g-text-body-font-family);
+  box-sizing: border-box;
+  cursor: pointer;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: var(--g-spacing-4);
+
+  padding: var(--g-spacing-2) var(--g-spacing-4) var(--g-spacing-3) var(--g-spacing-4);
+  max-width: 360px;
+  width: 100%;
+  height: fit-content;
+  user-select: none;
+
+  &__inputWrapper {
+    font-family: inherit;
+    transition: max-height 0.3s ease;
+    max-height: 100px;
+
+    &_start {
+      align-self: flex-start;
+    }
+
+    &_center {
+      align-self: center;
+    }
+
+    &_end {
+      align-self: flex-end;
+    }
+  }
+
+  &__text {
+    font-family: inherit;
+    &_start {
+      margin-right: auto;
+    }
+
+    &_center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    &_end {
+      margin-left: auto;
+    }
+  }
+
+  &__title {
+    font-family: inherit;
+    @include text-body-1();
+    display: block;
+    color: var(--b-color-content-default-primary);
+  }
+
+  &__hint {
+    font-family: inherit;
+    @include text-caption-1();
+    display: block;
+    color: var(--b-color-content-default-tertiary);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  &__error {
+    font-family: inherit;
+    @include text-caption-1();
+    display: block;
+    color: var(--b-color-status-error-default);
+    transition: max-height 0.2s ease;
+    @include optimizedWordWrap;
+
+    max-height: 0;
+
+    &_active {
+      max-height: 48px;
+    }
+  }
+
+  &_reversed {
+    flex-direction: row-reverse;
+  }
+
+  &_fullWidth {
+    max-width: 100%;
+  }
+
+  &_disabled {
+    cursor: not-allowed;
+  }
+
+  input[type='checkbox'], input[type='radio'] {
+    appearance: none;
+    opacity: 0;
+    position: absolute;
+    margin: 0;
+    left: 0;
+  }
+}

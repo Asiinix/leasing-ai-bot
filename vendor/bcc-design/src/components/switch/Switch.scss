@@ -1,0 +1,116 @@
+@use '../../variables.scss';
+@import '../../styles/mixins.scss';
+
+$block: '.#{variables.$ns}switch';
+$control: '.#{variables.$ns}toggle-control';
+
+
+#{$block} {
+  font-family: var(--g-text-body-font-family);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  box-sizing: border-box;
+
+  &__box {
+    display: flex;
+    align-items: flex-start;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+
+    // SWITCH
+    position: relative;
+    border-radius: var(--b-border-radius-cof-8);
+    border: 2px solid transparent;
+    background-color: var(--b-color-content-invert-tertiary);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+    &:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      box-sizing: border-box;
+      transition: transform 0.2s ease;
+      border-radius: var(--b-border-radius-circle);
+      background-color: var(--b-color-ultimate-primary);
+    }
+
+    &_sm {
+      width: 35px;
+      height: 20px;
+
+      &:before {
+        width: 15px;
+        height: 15px;
+        margin: 0.5px;
+      }
+    }
+
+    &_md {
+      width: 52px;
+      height: 32px;
+
+      &:before {
+        width: 24px;
+        height: 24px;
+        margin: 2px;
+      }
+    }
+
+
+    &_focused {
+      outline: 2px solid var(--b-color-status-process-default);
+      outline-offset: 1px;
+    }
+
+    &_checked {
+      background-color: var(--b-color-brand-500);
+    }
+
+    &_disabled {
+      cursor: not-allowed;
+      background-color: var(--b-color-content-disabled-primary);
+
+      &:before {
+        background-color: var(--b-color-content-disabled-secondary);
+      }
+    }
+
+    &_error {
+      border: 2px solid var(--b-color-status-error-default);
+    }
+  }
+}
+
+// size (sm) + checked
+#{$block}__box#{$block}__box_checked#{$block}__box_sm {
+  &:before {
+    transform: translateX(15px);
+  }
+}
+
+// size (md) + checked
+#{$block}__box#{$block}__box_checked#{$block}__box_md {
+  &:before {
+    transform: translateX(20px);
+  }
+}
+
+#{$control} {
+  padding-left: 0;
+  &_input:hover {
+    #{$block}__box#{$block}__box_checked:not(#{$block}__box_disabled) {
+      background-color: var(--b-color-brand-600);
+    }
+
+    #{$block}__box:not(#{$block}__box_checked):not(#{$block}__box_disabled):not(#{$block}__box_error) {
+      background-color: var(--b-color-content-default-tertiary);
+    }
+  }
+}

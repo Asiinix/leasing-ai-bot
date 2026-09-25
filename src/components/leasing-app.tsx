@@ -28,11 +28,37 @@ import {
 import { calculateQuote, isPriceAllowed } from "@/lib/finance";
 import { dateLabel, money, number, percent } from "@/lib/format";
 import { appPath } from "@/lib/app-path";
-import type { CatalogData, ClientType, LeaseRate, Quote, TermsData } from "@/lib/types";
+import { proposalQuery, type ProposalSnapshot } from "@/features/proposal/snapshot";
+import { matchesProposalForm, proposalForm, restoredTerms } from "@/features/proposal/restoration";
+import { OsrnsPanel } from "@/features/osrns/osrns-panel";
+import { calculateOsrns, type OsrnsInput } from "@/features/osrns/calculate";
+import type { CatalogData, ClientType, Quote, TermsData } from "@/lib/types";
 import { AssistantPanel } from "./assistant-panel";
 import { Dialog } from "./dialog";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
+import { InsurancePanel } from "./insurance-panel";
+import { calculateInsurance } from "@/features/insurance/calculate";
+import { classifyVehicle, type VehicleCategory } from "@/features/insurance/categories";
+import { features } from "@/features/config";
+import { buildVehicleCatalog } from "@/features/fixed-price-catalog/catalog";
+import { fitVehicleToTerms } from "@/features/fixed-price-catalog/demo-pricing";
+import type { VehicleCatalogItem } from "@/features/fixed-price-catalog/types";
+import { VehicleImage } from "@/features/fixed-price-catalog/vehicle-image";
+import type { VehicleOffer } from "@/features/chat-vehicle-cards/search";
+import {
+  modelPriceRange,
+  programPriceRange,
+  selectVehicleRate,
+} from "@/features/fixed-price-catalog/eligibility";
+
+const VehicleCatalogDialog = dynamic(
+  () =>
+    import("@/features/fixed-price-catalog/catalog-dialog").then(
+      (module) => module.VehicleCatalogDialog,
+    ),
+  { ssr: false },
+);
 
 const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
@@ -44,6 +70,7 @@ type FormState = {
   price: number;
   advancePercent: number;
   months: number;
+  catalogPrice: boolean;
 };
 const initialForm: FormState = {
   clientType: "IP",
@@ -51,10 +78,12 @@ const initialForm: FormState = {
   price: 15000000,
   advancePercent: 20,
   months: 48,
+  catalogPrice: false,
 };
 type Applied = {
   previous: FormState;
   previousSample: boolean;
+  previousVehicle: VehicleCatalogItem | null;
   previousQuote: Quote | null;
   nextKey: string;
   maxMonthly: number;
@@ -62,17 +91,17 @@ type Applied = {
 const formKey = (form: FormState) =>
   `${form.clientType}:${form.modelId}:${form.price}:${form.advancePercent}:${form.months}`;
 
-function closestRate(rates: LeaseRate[], form: FormState) {
-  return [...rates].sort(
-    (a, b) =>
-      Math.abs(a.advancePercent - form.advancePercent) -
-        Math.abs(b.advancePercent - form.advancePercent) ||
-      Math.abs(a.months - form.months) - Math.abs(b.months - form.months),
-  )[0];
-}
-
-export function LeasingApp() {
-  const [form, setForm] = useState<FormState>(initialForm);
+export function LeasingApp({
+  initialProposal = null,
+  invalidResume = false,
+}: {
+  initialProposal?: ProposalSnapshot | null;
+  invalidResume?: boolean;
+}) {
+  const [formInput, setForm] = useState<FormState>(() =>
+    initialProposal ? proposalForm(initialProposal) : initialForm,
+  );
+  const [restoreDismissed, setRestoreDismissed] = useState(false);
   const [catalog, setCatalog] = useState<CatalogData | null>(null);
   const [catalogError, setCatalogError] = useState(false);
   const [loadedTerms, setLoadedTerms] = useState<{ key: string; data: TermsData } | null>(null);
@@ -82,14 +111,70 @@ export function LeasingApp() {
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [continueOpen, setContinueOpen] = useState(false);
-  const [sample, setSample] = useState(true);
+  const [sample, setSample] = useState(
+    initialProposal ? initialProposal.priceSource === "example" : true,
+  );
+  const [insuranceEnabled, setInsuranceEnabled] = useState(
+    initialProposal?.insurance.enabled ?? false,
+  );
+  const [osrnsInput, setOsrnsInput] = useState<OsrnsInput>(
+    initialProposal?.osrns ?? { oked: "", annualPayroll: 0 },
+  );
+  const [insuranceOverride, setInsuranceOverride] = useState<{
+    key: string;
+    category: VehicleCategory;
+  } | null>(
+    initialProposal
+      ? {
+          key: `${initialProposal.model.id}:${initialProposal.model.partnerId}`,
+          category: initialProposal.insurance.category,
+        }
+      : null,
+  );
+  const [catalogVehicle, setSelectedVehicle] = useState<VehicleCatalogItem | null>(null);
+  const baseVehicles = useMemo(
+    () => (features.fixedPriceCatalog && catalog ? buildVehicleCatalog(catalog.models) : []),
+    [catalog],
+  );
   const [applied, setApplied] = useState<Applied | null>(null);
   const [faq, setFaq] = useState<number | null>(null);
   const assistantAnchor = useRef<HTMLDivElement>(null);
   const assistantButton = useRef<HTMLButtonElement>(null);
-  const termsKey = `${form.modelId}:${form.clientType}:${retry}`;
-  const terms = loadedTerms?.key === termsKey ? loadedTerms.data : null;
+  const termsKey = `${formInput.modelId}:${formInput.clientType}:${retry}`;
+  const currentTerms = loadedTerms?.key === termsKey ? loadedTerms.data : null;
+  const restoredProposal =
+    initialProposal && !restoreDismissed && matchesProposalForm(initialProposal, formInput)
+      ? initialProposal
+      : null;
+  const terms = restoredProposal ? restoredTerms(restoredProposal, currentTerms) : currentTerms;
   const loading = !terms && termsError !== termsKey;
+  const selectedVehicle = useMemo(
+    () =>
+      terms && catalogVehicle?.modelId === formInput.modelId
+        ? fitVehicleToTerms(catalogVehicle, terms)
+        : catalogVehicle,
+    [terms, catalogVehicle, formInput.modelId],
+  );
+  // Resolve the automatic catalog amount in the same render as the terms.
+  // Manually entered prices remain untouched and keep ordinary validation.
+  const form: FormState = (() => {
+    if (
+      !formInput.catalogPrice ||
+      !selectedVehicle?.priceKzt ||
+      selectedVehicle.modelId !== formInput.modelId
+    )
+      return formInput;
+    const next = { ...formInput, price: selectedVehicle.priceKzt };
+    const rate = terms ? selectVehicleRate(terms, next) : undefined;
+    return rate ? { ...next, months: rate.months, advancePercent: rate.advancePercent } : next;
+  })();
+  const vehicles = useMemo(
+    () =>
+      baseVehicles.map((vehicle) =>
+        vehicle.id === selectedVehicle?.id ? selectedVehicle : vehicle,
+      ),
+    [baseVehicles, selectedVehicle],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -122,16 +207,16 @@ export function LeasingApp() {
         setLoadedTerms({ key: termsKey, data });
         setTermsError("");
         setForm((current) => {
+          if (current.modelId !== form.modelId || current.clientType !== form.clientType)
+            return current;
+          if (initialProposal && !restoreDismissed && matchesProposalForm(initialProposal, current))
+            return current;
+          const selected = selectVehicleRate(data, current);
           if (
-            current.modelId !== form.modelId ||
-            current.clientType !== form.clientType ||
-            data.rates.some(
-              (rate) =>
-                rate.months === current.months && rate.advancePercent === current.advancePercent,
-            )
+            selected?.months === current.months &&
+            selected.advancePercent === current.advancePercent
           )
             return current;
-          const selected = closestRate(data.rates, current);
           return selected
             ? { ...current, months: selected.months, advancePercent: selected.advancePercent }
             : current;
@@ -141,9 +226,21 @@ export function LeasingApp() {
         if (error.name !== "AbortError") setTermsError(termsKey);
       });
     return () => controller.abort();
-  }, [form.modelId, form.clientType, retry, termsKey]);
+  }, [form.modelId, form.clientType, retry, termsKey, initialProposal, restoreDismissed]);
 
-  const model = catalog?.models.find((item) => item.id === form.modelId);
+  const model =
+    catalog?.models.find((item) => item.id === form.modelId) ??
+    (initialProposal?.model.id === form.modelId ? initialProposal.model : undefined);
+  const classification = model ? classifyVehicle(model) : null;
+  const insuranceKey = model ? `${model.id}:${model.partnerId}` : "";
+  const insuranceCategory =
+    insuranceOverride?.key === insuranceKey
+      ? insuranceOverride.category
+      : (classification?.category ?? null);
+  const insurance =
+    insuranceEnabled && insuranceCategory
+      ? calculateInsurance(form.price, insuranceCategory)
+      : null;
   const title = modelLabel(model);
   const activeRate = terms?.rates.find(
     (rate) => rate.months === form.months && rate.advancePercent === form.advancePercent,
@@ -151,10 +248,13 @@ export function LeasingApp() {
   const limit = terms?.limits.find((item) => item.advancePercent === form.advancePercent);
   const quote = useMemo(
     () =>
-      activeRate && form.price > 0 && terms && isPriceAllowed(form.price, activeRate, terms.limits)
+      activeRate &&
+      form.price > 0 &&
+      terms &&
+      (restoredProposal || isPriceAllowed(form.price, activeRate, terms.limits))
         ? calculateQuote(form.price, activeRate)
         : null,
-    [activeRate, form.price, terms],
+    [activeRate, form.price, terms, restoredProposal],
   );
   const advances = [...new Set(terms?.rates.map((rate) => rate.advancePercent))].sort(
     (a, b) => a - b,
@@ -163,9 +263,62 @@ export function LeasingApp() {
   const isApplied = applied && applied.nextKey === formKey(form);
   const rangeMin = limit?.minPrice ?? 5000000;
   const rangeMax = limit?.maxPrice ?? 50000000;
-  const costInvalid = Boolean(terms && activeRate && form.price > 0 && !quote);
+  const priceOutsideConditions = Boolean(terms && activeRate && form.price > 0 && !quote);
+  const catalogPriceUnchanged =
+    selectedVehicle?.modelId === form.modelId && selectedVehicle.priceKzt === form.price;
+  function showProposal() {
+    if (!quote || !model || !terms || !insuranceCategory) return;
+    const query = proposalQuery({
+      version: 1,
+      createdAt: new Date().toISOString(),
+      clientType: form.clientType,
+      model: restoredProposal?.model ?? model,
+      price: quote.price,
+      rate: quote.rate,
+      termsSource: terms.source,
+      termsCheckedAt: terms.checkedAt,
+      priceSource: restoredProposal
+        ? restoredProposal.priceSource
+        : catalogPriceUnchanged
+          ? selectedVehicle!.priceKind
+          : sample
+            ? "example"
+            : "manual",
+      ...(catalogPriceUnchanged && selectedVehicle?.trim ? { trim: selectedVehicle.trim } : {}),
+      ...(catalogPriceUnchanged && selectedVehicle?.modelYear
+        ? { modelYear: selectedVehicle.modelYear }
+        : {}),
+      ...(restoredProposal?.trim ? { trim: restoredProposal.trim } : {}),
+      ...(restoredProposal?.modelYear ? { modelYear: restoredProposal.modelYear } : {}),
+      insurance: { enabled: insuranceEnabled, category: insuranceCategory },
+      ...(calculateOsrns(osrnsInput) ? { osrns: osrnsInput } : {}),
+    });
+    window.open(`${appPath("/proposal")}${query}`, "_blank", "noopener,noreferrer");
+  }
+  const catalogConditionProblem = Boolean(
+    catalogPriceUnchanged &&
+    terms &&
+    !terms.rates.some(
+      (rate) => rate.modelId === form.modelId && isPriceAllowed(form.price, rate, terms.limits),
+    ),
+  );
+  const supportedRange = terms ? modelPriceRange(form.modelId, terms) : null;
+  const catalogLimits = terms ? programPriceRange(terms.limits) : null;
+  const costInvalid = priceOutsideConditions && !catalogConditionProblem;
+  const showPriceSlider = Boolean(activeRate && limit && !catalogConditionProblem);
   let validation = "";
-  if (terms && !terms.rates.length)
+  if (catalogConditionProblem) {
+    if (!supportedRange)
+      validation =
+        "Цена из каталога сохранена. Для этой модели пока нет подтверждённых условий лизинга. Можно выбрать другой автомобиль.";
+    else if (form.price < supportedRange.min)
+      validation = `Цена автомобиля ${money(form.price)} ниже минимальной для лизинга этой модели — ${money(supportedRange.min)}. Выберите другой автомобиль или уточните стоимость у продавца.`;
+    else if (form.price > supportedRange.max)
+      validation = `Цена автомобиля ${money(form.price)} выше максимальной для лизинга этой модели — ${money(supportedRange.max)}. Выберите другой автомобиль или уточните стоимость у продавца.`;
+    else
+      validation =
+        "Для этой стоимости пока нет подходящих условий лизинга. Выберите другой автомобиль или уточните стоимость у продавца.";
+  } else if (terms && !terms.rates.length)
     validation = "Для этой модели пока нет доступных условий. Выберите другую модель или продавца.";
   else if (costInvalid)
     validation = limit
@@ -173,7 +326,8 @@ export function LeasingApp() {
       : "Для этого аванса не удалось подтвердить допустимую стоимость.";
 
   function change(patch: Partial<FormState>) {
-    setForm((current) => ({ ...current, ...patch }));
+    setRestoreDismissed(true);
+    setForm({ ...form, ...patch });
   }
   function openAssistant() {
     setAssistantOpen(true);
@@ -183,9 +337,11 @@ export function LeasingApp() {
     });
   }
   function applyOffer(offer: Quote, maxMonthly: number, clientType: ClientType) {
+    setRestoreDismissed(true);
     const next = {
       ...form,
       price: offer.price,
+      catalogPrice: form.catalogPrice && offer.price === form.price,
       clientType,
       advancePercent: offer.rate.advancePercent,
       months: offer.rate.months,
@@ -193,6 +349,7 @@ export function LeasingApp() {
     setApplied({
       previous: form,
       previousSample: sample,
+      previousVehicle: selectedVehicle,
       previousQuote: quote,
       nextKey: formKey(next),
       maxMonthly,
@@ -202,6 +359,40 @@ export function LeasingApp() {
     if (offer.price !== form.price) setSample(false);
     requestAnimationFrame(() => assistantButton.current?.focus());
   }
+  function chooseVehicle(vehicle: VehicleCatalogItem) {
+    setSelectedVehicle(vehicle);
+    change({ modelId: vehicle.modelId, price: vehicle.priceKzt ?? 0, catalogPrice: true });
+    setSample(false);
+    setApplied(null);
+    setModelPickerOpen(false);
+    setAssistantOpen(false);
+  }
+  function applyVehicleOffer(offer: VehicleOffer, maxMonthly: number, clientType: ClientType) {
+    setRestoreDismissed(true);
+    const next = {
+      ...form,
+      modelId: offer.vehicle.modelId,
+      price: offer.quote.price,
+      catalogPrice: true,
+      clientType,
+      advancePercent: offer.quote.rate.advancePercent,
+      months: offer.quote.rate.months,
+    };
+    setApplied({
+      previous: form,
+      previousSample: sample,
+      previousVehicle: selectedVehicle,
+      previousQuote: quote,
+      nextKey: formKey(next),
+      maxMonthly,
+    });
+    setSelectedVehicle(offer.vehicle);
+    setLoadedTerms({ key: `${next.modelId}:${clientType}:${retry}`, data: offer.terms });
+    setForm(next);
+    setSample(false);
+    setAssistantOpen(false);
+    requestAnimationFrame(() => assistantButton.current?.focus());
+  }
   function setAdvance(advancePercent: number) {
     const allowed = terms?.rates.filter((rate) => rate.advancePercent === advancePercent) ?? [];
     const chosen =
@@ -209,20 +400,34 @@ export function LeasingApp() {
       [...allowed].sort(
         (a, b) => Math.abs(a.months - form.months) - Math.abs(b.months - form.months),
       )[0];
-    change({ advancePercent, ...(chosen && { months: chosen.months }) });
+    const vehicle =
+      form.catalogPrice && selectedVehicle && terms
+        ? fitVehicleToTerms(selectedVehicle, { ...terms, rates: allowed })
+        : null;
+    if (vehicle) setSelectedVehicle(vehicle);
+    change({
+      advancePercent,
+      ...(chosen && { months: chosen.months }),
+      ...(vehicle?.priceKzt && { price: vehicle.priceKzt }),
+    });
   }
   function resetExample() {
+    setRestoreDismissed(true);
     setForm(initialForm);
     setSample(true);
+    setSelectedVehicle(null);
     setApplied(null);
     setAssistantOpen(false);
+    setInsuranceEnabled(false);
+    setInsuranceOverride(null);
   }
 
   const questions = [
     {
       title: "Откуда взять стоимость автомобиля?",
-      answer:
-        "Укажите цену из предложения продавца или счета на оплату. Можно начать с ориентировочной суммы и уточнить ее позже. В этой версии сервис не определяет рыночную цену и не проверяет наличие автомобиля.",
+      answer: features.fixedPriceCatalog
+        ? "Выберите автомобиль в демо-каталоге: фиксированная цена автоматически попадёт в расчёт. У каждого авто есть цена; ориентировочные демо-оценки отмечены отдельно от цен из прайсов. Стоимость можно заменить предложением вашего продавца."
+        : "Укажите цену из предложения продавца или счета на оплату. Можно начать с ориентировочной суммы и уточнить ее позже. В этой версии сервис не определяет рыночную цену и не проверяет наличие автомобиля.",
     },
     {
       title: "Что делает помощник?",
@@ -286,6 +491,28 @@ export function LeasingApp() {
             {assistantOpen ? "Помощник открыт" : "Подобрать с ИИ"}
           </Button>
         </div>
+        {(restoredProposal || invalidResume) && (
+          <div className="resume-banner" role="status">
+            <Info size={19} />
+            <div>
+              <strong>
+                {restoredProposal
+                  ? "Параметры из КП восстановлены"
+                  : "Не удалось восстановить расчёт"}
+              </strong>
+              <p>
+                {restoredProposal
+                  ? `Платёж сохранён по условиям от ${dateLabel(restoredProposal.termsCheckedAt)}. При изменении параметров расчёт обновится по доступным тарифам.`
+                  : "Ссылка неполная или повреждена. Можно заполнить калькулятор заново."}
+              </p>
+            </div>
+            {restoredProposal && (
+              <Button view="ghost" onClick={() => setRestoreDismissed(true)}>
+                Обновить условия
+              </Button>
+            )}
+          </div>
+        )}
         {isApplied && (
           <div className="applied-banner" role="status">
             <CheckCheck size={19} />
@@ -296,6 +523,7 @@ export function LeasingApp() {
               onClick={() => {
                 setForm(applied.previous);
                 setSample(applied.previousSample);
+                setSelectedVehicle(applied.previousVehicle);
                 setApplied(null);
               }}
             >
@@ -350,7 +578,7 @@ export function LeasingApp() {
               )}
               <div className="field-group vehicle-group">
                 <label className="field-label" htmlFor="vehicle-button">
-                  Автомобиль
+                  {features.fixedPriceCatalog ? "Автомобиль из каталога" : "Автомобиль"}
                 </label>
                 <Button
                   id="vehicle-button"
@@ -365,41 +593,88 @@ export function LeasingApp() {
                 <p className="field-hint">
                   {model?.partnerName ?? "Справочник моделей и продавцов"}
                 </p>
+                {selectedVehicle && selectedVehicle.modelId === form.modelId && (
+                  <div className="vehicle-selected-note">
+                    <VehicleImage vehicle={selectedVehicle} />
+                    <div>
+                      <strong>
+                        {selectedVehicle.trim ?? "Комплектация уточняется"}
+                        {selectedVehicle.modelYear ? ` · ${selectedVehicle.modelYear}` : ""}
+                      </strong>
+                      <p>
+                        {selectedVehicle.priceKzt === form.price
+                          ? selectedVehicle.priceKind === "estimate"
+                            ? "Ориентировочная демо-цена"
+                            : "Цена подставлена из прайса"
+                          : "Стоимость указана вручную"}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="field-group price-group">
                 <MoneyInput
                   label="Стоимость автомобиля"
                   value={form.price}
                   onChange={(price) => {
-                    change({ price });
+                    change({ price, catalogPrice: false });
                     setSample(false);
                   }}
                   placeholder="Укажите стоимость"
                   invalid={costInvalid}
                 >
-                  <div className="slider-wrap">
-                    <Slider
-                      aria-label="Стоимость автомобиля — ползунок"
-                      min={rangeMin}
-                      max={rangeMax}
-                      step={50000}
-                      value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
-                      onUpdate={(price) => {
-                        if (typeof price === "number") {
-                          change({ price });
-                          setSample(false);
-                        }
-                      }}
-                      disabled={!activeRate}
-                    />
-                  </div>
+                  {showPriceSlider && (
+                    <div className="slider-wrap">
+                      <Slider
+                        aria-label="Стоимость автомобиля — ползунок"
+                        min={rangeMin}
+                        max={rangeMax}
+                        step={50000}
+                        value={Math.max(rangeMin, Math.min(rangeMax, form.price || rangeMin))}
+                        onUpdate={(price) => {
+                          if (typeof price === "number") {
+                            change({ price, catalogPrice: false });
+                            setSample(false);
+                          }
+                        }}
+                        disabled={!activeRate}
+                      />
+                    </div>
+                  )}
                 </MoneyInput>
-                <div className="range-labels">
-                  <span>{number(rangeMin)} ₸</span>
-                  <span>{number(rangeMax)} ₸</span>
-                </div>
+                {showPriceSlider && (
+                  <div className="range-labels">
+                    <span>{number(rangeMin)} ₸</span>
+                    <span>{number(rangeMax)} ₸</span>
+                  </div>
+                )}
+                {catalogConditionProblem && (
+                  <div className="vehicle-eligibility-notice" role="status">
+                    <p>
+                      <Info size={18} />
+                      {validation}
+                    </p>
+                    <Button view="accentSecondary" onClick={() => setModelPickerOpen(true)}>
+                      Выбрать другой автомобиль
+                    </Button>
+                  </div>
+                )}
                 <p className="field-hint">
-                  {sample ? (
+                  {selectedVehicle?.priceKzt === form.price &&
+                  selectedVehicle.priceKind === "reference" &&
+                  selectedVehicle.priceSourceUrl ? (
+                    <a
+                      className="vehicle-price-source"
+                      href={selectedVehicle.priceSourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Цена из демо-каталога от {dateLabel(selectedVehicle.priceCheckedAt!)} ↗
+                    </a>
+                  ) : selectedVehicle?.priceKzt === form.price &&
+                    selectedVehicle.priceKind === "estimate" ? (
+                    <span>Ориентировочная демо-цена. Можно заменить ценой от продавца.</span>
+                  ) : sample ? (
                     <>
                       <span className="example-dot" /> Для примера указано 15 млн ₸. Введите цену от
                       продавца.
@@ -462,7 +737,16 @@ export function LeasingApp() {
                   }))}
                 />
               </div>
-              {validation && (
+              <InsurancePanel
+                enabled={insuranceEnabled}
+                onEnabledChange={setInsuranceEnabled}
+                category={insuranceCategory}
+                onCategoryChange={(category) =>
+                  setInsuranceOverride({ key: insuranceKey, category })
+                }
+                price={form.price}
+              />
+              {validation && !catalogConditionProblem && (
                 <p className="validation-message" role="alert">
                   <Info size={17} />
                   {validation}
@@ -493,9 +777,11 @@ export function LeasingApp() {
           <div className="right-column" ref={assistantAnchor}>
             {assistantOpen ? (
               <AssistantPanel
+                vehicles={vehicles}
+                onApplyVehicle={applyVehicleOffer}
                 key={`${form.modelId}:${form.clientType}`}
                 context={{ ...form, modelName: title }}
-                terms={terms}
+                terms={currentTerms}
                 onClose={() => {
                   setAssistantOpen(false);
                   assistantButton.current?.focus();
@@ -554,6 +840,12 @@ export function LeasingApp() {
                           <dt>Годовая ставка</dt>
                           <dd>{percent(quote.rate.annualRate)}%</dd>
                         </div>
+                        {insurance && (
+                          <div>
+                            <dt>КАСКО за год · отдельно</dt>
+                            <dd>{money(insurance.annual)}</dd>
+                          </div>
+                        )}
                       </dl>
                       {isApplied && applied.previousQuote && (
                         <div className="comparison">
@@ -584,9 +876,23 @@ export function LeasingApp() {
                         Продолжить оформление
                         <ArrowRight size={19} />
                       </Button>
+                      <Button
+                        view="accentSecondary"
+                        size="l"
+                        fullWidth
+                        className="proposal-button"
+                        onClick={showProposal}
+                        aria-label="Показать КП — откроется в новой вкладке"
+                        disabled={!model || !terms || !insuranceCategory}
+                      >
+                        <FileText size={18} />
+                        Показать КП
+                        <ArrowUpRight size={18} />
+                      </Button>
                       <p className="summary-disclaimer">
-                        Предварительный расчет. Без страхования и дополнительных расходов. Не
-                        является офертой.
+                        {insurance
+                          ? "Предварительный расчет. КАСКО показано отдельно от платежа по лизингу. Без дополнительных расходов. Не является офертой."
+                          : "Предварительный расчет. Без страхования и дополнительных расходов. Не является офертой."}
                       </p>
                     </>
                   ) : (
@@ -594,7 +900,13 @@ export function LeasingApp() {
                       <span>
                         <FileText size={29} />
                       </span>
-                      <h3>{form.price ? "Проверьте параметры" : "Начните со стоимости"}</h3>
+                      <h3>
+                        {catalogConditionProblem
+                          ? "Лизинг пока недоступен"
+                          : form.price
+                            ? "Проверьте параметры"
+                            : "Начните со стоимости"}
+                      </h3>
                       <p>
                         {form.price
                           ? validation || "Загрузите доступные условия, чтобы увидеть расчет."
@@ -623,6 +935,7 @@ export function LeasingApp() {
             )}
           </div>
         </div>
+        <OsrnsPanel value={osrnsInput} onChange={setOsrnsInput} />
         <section className="how-it-works" aria-label="Как это работает">
           <div>
             <span>1</span>
@@ -673,24 +986,36 @@ export function LeasingApp() {
         </section>
         <footer className="page-footer">
           <span>© {new Date().getFullYear()} BCC Leasing</span>
+          {features.fixedPriceCatalog && <Link href="/photo-credits">Источники фотографий</Link>}
           <span>Демонстрационная версия · Обычный автолизинг</span>
         </footer>
       </main>
-      {modelPickerOpen && catalog && (
-        <ModelPicker
-          models={catalog.models}
-          selected={form.modelId}
-          onClose={() => setModelPickerOpen(false)}
-          onSelect={(selected) => {
-            if (selected.id !== form.modelId) {
-              change({ modelId: selected.id, price: 0 });
-              setSample(false);
-            }
-            setModelPickerOpen(false);
-            setApplied(null);
-          }}
-        />
-      )}
+      {modelPickerOpen &&
+        catalog &&
+        (features.fixedPriceCatalog ? (
+          <VehicleCatalogDialog
+            vehicles={vehicles}
+            priceRange={catalogLimits}
+            selectedId={selectedVehicle?.id}
+            onClose={() => setModelPickerOpen(false)}
+            onSelect={chooseVehicle}
+          />
+        ) : (
+          <ModelPicker
+            models={catalog.models}
+            selected={form.modelId}
+            onClose={() => setModelPickerOpen(false)}
+            onSelect={(selected) => {
+              if (selected.id !== form.modelId) {
+                change({ modelId: selected.id, price: 0, catalogPrice: false });
+                setSample(false);
+              }
+              setModelPickerOpen(false);
+              setApplied(null);
+              setSelectedVehicle(null);
+            }}
+          />
+        ))}
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
       )}

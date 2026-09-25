@@ -166,6 +166,7 @@ export const BaseButton = React.forwardRef<HTMLAnchorElement | HTMLButtonElement
       <Component
         {...(props as unknown as any)}
         {...componentProps}
+        href={href && !disabled && !loading ? href : undefined}
         type={htmlType}
         id={id}
         style={style}

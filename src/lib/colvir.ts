@@ -7,6 +7,11 @@ import type {
   PriceLimit,
   TermsData,
 } from "./types";
+import {
+  MAX_CATALOG_TERM_MODELS,
+  MAX_LIVE_TERM_MODELS,
+  type VehicleTermsBatch,
+} from "../features/chat-vehicle-cards/terms-batch";
 
 const BASE = "https://business.bcc.kz/v1/dbp/bcc-online-leasing/api/v1/colvir/";
 const ENDPOINTS = {
@@ -342,4 +347,101 @@ export async function getTerms(modelId: number, clientType: ClientType): Promise
       return snapshotTerms(modelId, clientType);
     }
   });
+}
+
+const batchInFlight = new Map<string, Promise<Record<string, TermsData>>>();
+
+/** One bounded upstream rate request and one limits request, shared by concurrent callers. */
+async function loadLiveTermsBatch(modelIds: number[], clientType: ClientType) {
+  const result: Record<string, TermsData> = {};
+  const missing = modelIds.filter((modelId) => {
+    const cached = cache.get(`terms:${clientType}:${modelId}`);
+    if (cached && cached.expiresAt > Date.now() && "rates" in cached.value) {
+      result[modelId] = cached.value;
+      return false;
+    }
+    return true;
+  });
+  if (!missing.length) return result;
+  const key = `${clientType}:${[...missing].sort((a, b) => a - b).join(",")}`;
+  let pending = batchInFlight.get(key);
+  if (!pending) {
+    pending = (async () => {
+      const loaded: Record<string, TermsData> = {};
+      try {
+        const [rateBody, limitBody] = await Promise.all([
+          fetchReference("rates", { p_id_models: missing, p_cli_type: clientType }),
+          fetchReference("limits", { cli_type: clientType }),
+        ]);
+        const limits = normalizeLimits(limitBody);
+        const checkedAt = new Date().toISOString();
+        for (const modelId of missing) {
+          const rates = normalizeRates(rateBody, modelId).filter((rate) =>
+            limits.some((limit) => limit.advancePercent === rate.advancePercent),
+          );
+          loaded[modelId] = { rates, limits, source: "live", checkedAt };
+        }
+      } catch {
+        // A failed request can only fall back to that exact model's captured matrix.
+        for (const modelId of missing) loaded[modelId] = snapshotTerms(modelId, clientType);
+      }
+      for (const [modelId, data] of Object.entries(loaded)) {
+        const cacheKey = `terms:${clientType}:${modelId}`;
+        if (cache.size >= MAX_CACHE_ENTRIES && !cache.has(cacheKey))
+          cache.delete(cache.keys().next().value!);
+        cache.set(cacheKey, {
+          value: data,
+          expiresAt: Date.now() + (data.source === "snapshot" ? FALLBACK_TTL : TERMS_TTL),
+        });
+      }
+      return loaded;
+    })().finally(() => batchInFlight.delete(key));
+    batchInFlight.set(key, pending);
+  }
+  return { ...result, ...(await pending) };
+}
+
+/**
+ * Catalog search never walks 1,000 remote tariff endpoints. Snapshot mode exposes
+ * only captured matrices. Live mode refreshes up to twelve actual models, putting
+ * previously captured models first, then preserving the caller's price priority.
+ * Additional exact snapshots are cheap and remain explicitly dated snapshots.
+ */
+export async function getVehicleTermsBatch(
+  modelIds: number[],
+  clientType: ClientType,
+): Promise<VehicleTermsBatch> {
+  if (
+    !Array.isArray(modelIds) ||
+    modelIds.length > MAX_CATALOG_TERM_MODELS ||
+    modelIds.some((id) => !Number.isSafeInteger(id) || id <= 0) ||
+    (clientType !== "IP" && clientType !== "TOO")
+  )
+    throw new ColvirInputError("Некорректные параметры каталожного подбора");
+  const unique = [...new Set(modelIds)];
+  const catalog = await getCatalog();
+  const available = new Set(catalog.models.map((model) => model.id));
+  if (unique.some((id) => !available.has(id))) throw new ColvirInputError("Модель не найдена", 404);
+  const captured = unique.filter((id) => Object.hasOwn(snapshot.rates[clientType], String(id)));
+  const termsByModel: Record<string, TermsData> = {};
+  for (const id of captured) termsByModel[id] = snapshotTerms(id, clientType);
+  if (process.env.COLVIR_MODE === "snapshot") {
+    return {
+      termsByModel,
+      mode: "snapshot",
+      requestedModelCount: unique.length,
+      attemptedModelIds: captured,
+    };
+  }
+  const liveIds = [...captured, ...unique.filter((id) => !captured.includes(id))].slice(
+    0,
+    MAX_LIVE_TERM_MODELS,
+  );
+  Object.assign(termsByModel, await loadLiveTermsBatch(liveIds, clientType));
+  return {
+    termsByModel,
+    mode: "live",
+    requestedModelCount: unique.length,
+    attemptedModelIds: [...new Set([...captured, ...liveIds])],
+  };
 }

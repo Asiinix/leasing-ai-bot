@@ -136,6 +136,93 @@ svg {
 .bcc-form-control__inputRoot {
   min-width: 0;
 }
+.insurance-panel {
+  border-top: 1px solid var(--line);
+  padding-top: var(--g-spacing-5);
+  margin-top: var(--g-spacing-5);
+}
+.proposal-button {
+  margin-top: var(--g-spacing-3);
+}
+.insurance-title {
+  display: flex;
+  align-items: center;
+  gap: var(--g-spacing-1);
+}
+.insurance-title .insurance-help {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--secondary);
+}
+.insurance-panel .insurance-switch {
+  padding: 0;
+  gap: var(--g-spacing-4);
+  min-height: 44px;
+}
+.insurance-switch .bcc-toggle-control__inputWrapper {
+  position: relative;
+}
+.insurance-switch input[type="checkbox"] {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: pointer;
+}
+.insurance-switch .bcc-toggle-control__text {
+  margin-right: auto;
+  min-width: 0;
+}
+.insurance-switch .bcc-toggle-control__error {
+  display: none;
+}
+.insurance-switch input:focus-visible {
+  outline: none;
+}
+.insurance-switch:focus-within .bcc-switch__box {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.insurance-details {
+  display: grid;
+  gap: var(--g-spacing-3);
+  padding-top: var(--g-spacing-4);
+}
+.insurance-category {
+  display: grid;
+  gap: var(--g-spacing-2);
+  min-width: 0;
+}
+.insurance-cost {
+  padding: var(--g-spacing-4);
+  border-radius: var(--b-border-radius-cof-3);
+  background: var(--field);
+  display: grid;
+  gap: var(--g-spacing-2);
+}
+.insurance-annual {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--g-spacing-3);
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.insurance-annual strong {
+  font-size: 20px;
+  line-height: 28px;
+}
+.insurance-formula {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+}
+.vehicle-category-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+}
 .bcc-form-control__inputContainer:not(.bcc-form-control__inputContainer_disabled):not(
     .bcc-form-control__inputContainer_error
   ):focus-within {
@@ -1772,4 +1859,59 @@ svg {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Standalone employee insurance tile, matching the calculator's BCC Card. */
+.osrns-panel { margin-top: var(--g-spacing-6); }
+.osrns-panel > .bcc-card__wrapper {
+  padding: var(--panel-padding);
+  box-shadow: none;
+  border: 1px solid var(--line);
+  border-radius: var(--b-border-radius-cof-10);
+}
+.osrns-heading { align-items: flex-start; }
+.osrns-heading p { margin-top: var(--g-spacing-2); color: var(--secondary); font-size: 14px; line-height: 21px; }
+.osrns-heading .summary-icon { flex-shrink: 0; }
+.osrns-layout { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); gap: var(--g-spacing-6); align-items: stretch; }
+.osrns-fields { display: grid; gap: var(--g-spacing-5); min-width: 0; }
+.osrns-field { display: grid; gap: var(--g-spacing-2); min-width: 0; }
+.osrns-field-label { display: flex; align-items: center; gap: var(--g-spacing-1); }
+.osrns-field-label .field-label { margin: 0; }
+.osrns-field-label .osrns-help { width: 28px; min-width: 28px; height: 28px; padding: 0; color: var(--secondary); }
+.osrns-selected { display: grid; gap: var(--g-spacing-1); font-size: 12px; line-height: 18px; color: var(--secondary); overflow-wrap: anywhere; }
+.osrns-selected span { color: var(--accent-dark); }
+.osrns-result { display: flex; flex-direction: column; justify-content: center; background: var(--field); border-radius: var(--b-border-radius-cof-5); padding: var(--g-spacing-6); min-width: 0; }
+.osrns-result.is-calculated { background: var(--tint); }
+.osrns-result-label { color: var(--secondary); font-size: 14px; line-height: 21px; }
+.osrns-result > strong { display: block; color: var(--accent-dark); font-size: 32px; line-height: 40px; margin: var(--g-spacing-3) 0; letter-spacing: -.5px; overflow-wrap: anywhere; }
+.osrns-result .osrns-empty-amount { font-size: 26px; line-height: 34px; }
+.osrns-formula, .osrns-minimum { font-size: 13px; line-height: 21px; color: var(--secondary); }
+.osrns-minimum { margin-top: var(--g-spacing-2); color: var(--accent-dark); }
+.osrns-result-note { display: flex; align-items: center; gap: var(--g-spacing-2); color: var(--accent-dark); font-size: 12px; line-height: 18px; margin-top: var(--g-spacing-5); }
+.osrns-result-note svg { flex-shrink: 0; }
+.osrns-separate { color: var(--secondary); font-size: 12px; line-height: 18px; margin-top: var(--g-spacing-4); }
+@media (max-width: 700px) {
+  .osrns-panel { --panel-padding: var(--g-spacing-4); }
+  .osrns-layout { grid-template-columns: minmax(0, 1fr); }
+  .osrns-result { padding: var(--g-spacing-5); }
+}
+.resume-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--g-spacing-3);
+  padding: var(--g-spacing-4) var(--g-spacing-5);
+  margin-bottom: var(--g-spacing-6);
+  border-radius: var(--b-border-radius-cof-6);
+  color: var(--accent-dark);
+  background: var(--tint);
+  font-size: 14px;
+  line-height: 22px;
+}
+.resume-banner > svg { flex-shrink: 0; margin-top: 2px; }
+.resume-banner > div { flex: 1; min-width: 0; }
+.resume-banner strong { font-weight: 600; }
+.resume-banner p { margin-top: var(--g-spacing-1); }
+@media (max-width: 700px) {
+  .resume-banner { flex-wrap: wrap; }
+  .resume-banner > .bcc-button { margin-left: 31px; }
 }

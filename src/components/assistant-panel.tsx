@@ -5,7 +5,7 @@ import { appPath } from "@/lib/app-path";
 import { Textarea } from "bcc-design";
 import { Button } from "./ui";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowUp,
   Check,
@@ -22,6 +22,14 @@ import { dateLabel, money, percent } from "@/lib/format";
 import type { ClientType, Quote, TermsData } from "@/lib/types";
 import { MoneyInput } from "./money-input";
 import { AssistantMessage } from "./assistant-message";
+import { features } from "@/features/config";
+import type { VehicleCatalogItem } from "@/features/fixed-price-catalog/types";
+import { searchVehicleOffers, type VehicleOffer } from "@/features/chat-vehicle-cards/search";
+import { VehicleOfferCard } from "@/features/chat-vehicle-cards/vehicle-offer-card";
+import {
+  getVehicleOfferPage,
+  isMoreVehiclesRequest,
+} from "@/features/chat-vehicle-cards/recommendations";
 
 type Context = {
   modelId: number;
@@ -43,9 +51,18 @@ type Message = {
   role: "user" | "assistant";
   text: string;
   offers?: Quote[];
+  vehicleOffers?: VehicleOffer[];
   contextKey?: string;
   budget?: Budget;
   generation?: number;
+  nextVehicleOffset?: number;
+};
+type VehicleRecommendations = {
+  contextKey: string;
+  budget: Budget;
+  generation: number;
+  offers: VehicleOffer[];
+  offset: number;
 };
 type Recognition = {
   lang: string;
@@ -81,13 +98,47 @@ export function AssistantPanel({
   terms,
   onClose,
   onApply,
+  vehicles = [],
+  onApplyVehicle,
 }: {
   context: Context;
+  vehicles?: VehicleCatalogItem[];
+  onApplyVehicle?: (offer: VehicleOffer, maxMonthly: number, clientType: ClientType) => void;
   terms: TermsData | null;
   onClose: () => void;
   onApply: (quote: Quote, maxMonthly: number, clientType: ClientType) => void;
 }) {
-  const contextKey = `${context.modelId}:${context.clientType}:${context.price}:${context.advancePercent}:${context.months}:${terms?.checkedAt ?? ""}`;
+  // A single conversation handles the selected car and optional catalog suggestions.
+  const catalogSignature = useMemo(
+    () =>
+      JSON.stringify(
+        vehicles
+          .map((vehicle) =>
+            JSON.stringify([
+              vehicle.id,
+              vehicle.modelId,
+              vehicle.partnerId,
+              vehicle.partnerName,
+              vehicle.brand,
+              vehicle.model,
+              vehicle.trim,
+              vehicle.modelYear,
+              vehicle.priceKzt,
+              vehicle.priceSourceUrl,
+              vehicle.priceCheckedAt,
+              vehicle.priceKind,
+              vehicle.priceBasis,
+            ]),
+          )
+          .sort(),
+      ),
+    [vehicles],
+  );
+  // A background tariff response may normalize form term/advance. The conversation's
+  // explicit budget stays valid; its search already obtains the required model tariffs.
+  const contextKey = features.chatVehicleCards
+    ? `${context.modelId}:${context.clientType}:${context.price}:${catalogSignature}`
+    : `${context.modelId}:${context.clientType}:${context.price}:${context.advancePercent}:${context.months}:${terms?.checkedAt ?? ""}`;
   const defaultBudget: Budget = {
     maxAdvance: context.price
       ? Number(((context.price * context.advancePercent) / 100).toFixed(2))
@@ -101,6 +152,7 @@ export function AssistantPanel({
   });
   const budget = memory.key === contextKey ? memory.budget : defaultBudget;
   const [messages, setMessages] = useState<Message[]>([]);
+  const [recommendations, setRecommendations] = useState<VehicleRecommendations | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [showBudget, setShowBudget] = useState(false);
@@ -118,15 +170,30 @@ export function AssistantPanel({
   const sequence = useRef(0);
   const alive = useRef(true);
   const busyRef = useRef(false);
+  const requestController = useRef<AbortController | null>(null);
+  useEffect(() => () => requestController.current?.abort(), [contextKey]);
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
       recognitionRef.current?.abort();
+      requestController.current?.abort();
     };
   }, []);
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    const pane = scrollRef.current;
+    if (!pane) return;
+    const latest = messages.at(-1);
+    const response = latest?.vehicleOffers?.length
+      ? pane.querySelector<HTMLElement>(`[data-message-id="${latest.id}"]`)
+      : null;
+    const top = response
+      ? response.getBoundingClientRect().top -
+        pane.getBoundingClientRect().top +
+        pane.scrollTop -
+        16
+      : pane.scrollHeight;
+    pane.scrollTo({ top, behavior: "smooth" });
   }, [messages, busy]);
   const push = (message: Omit<Message, "id">) =>
     setMessages((previous) => [...previous, { ...message, id: ++sequence.current }]);
@@ -137,6 +204,39 @@ export function AssistantPanel({
     setDraft("");
     push({ role: "user", text: text.trim() });
     let intent = parseMessage(text);
+    const hasNewConstraints = ["maxMonthly", "maxAdvance", "price", "months", "clientType"].some(
+      (key) => Object.prototype.hasOwnProperty.call(intent, key),
+    );
+    if (
+      features.chatVehicleCards &&
+      !hasNewConstraints &&
+      !intent.clarification &&
+      isMoreVehiclesRequest(text)
+    ) {
+      if (
+        recommendations &&
+        recommendations.contextKey === contextKey &&
+        recommendations.generation === generation &&
+        JSON.stringify(recommendations.budget) === JSON.stringify(budget)
+      ) {
+        const page = getVehicleOfferPage(recommendations.offers, recommendations.offset);
+        setRecommendations({ ...recommendations, offset: page.nextOffset });
+        push({
+          role: "assistant",
+          text: page.offers.length
+            ? `**Ещё варианты под ваш бюджет**: платёж **до ${money(budget.maxMonthly!)}**, аванс **до ${money(budget.maxAdvance!)}**.${page.hasMore ? " Могу показать ещё автомобили." : " Это все подходящие автомобили с проверенными условиями в текущем подборе."}`
+            : "Все подходящие автомобили с проверенными условиями уже показаны. Можно **изменить платёж, аванс или срок**, чтобы расширить подбор.",
+          vehicleOffers: page.offers,
+          contextKey,
+          budget,
+          generation,
+          nextVehicleOffset: page.nextOffset,
+        });
+        return;
+      }
+      // A changed context requires a fresh search instead of replaying old offers.
+      intent = { ...intent, action: "calculate" };
+    }
     const expected = memory.key === contextKey || pending?.key === contextKey ? awaitedSlot : null;
     const previousBudget = pending?.key === contextKey ? pending.budget : budget;
     if (expected && intent.action === "unknown") {
@@ -165,7 +265,9 @@ export function AssistantPanel({
     if (intent.action === "unknown") {
       push({
         role: "assistant",
-        text: "Помогу подобрать платеж, срок и аванс для выбранного автомобиля. Напишите, например: «До 350 тысяч в месяц, на аванс до 3 млн». Модель и продавца можно изменить в калькуляторе.",
+        text: features.chatVehicleCards
+          ? "Рассчитаю условия выбранного автомобиля и предложу другие варианты. Напишите платёж и сумму на аванс, например: «До 300 тысяч в месяц, аванс до 2 млн»."
+          : "Помогу подобрать платеж, срок и аванс для выбранного автомобиля. Напишите, например: «До 350 тысяч в месяц, на аванс до 3 млн». Модель и продавца можно изменить в калькуляторе.",
       });
       return;
     }
@@ -190,7 +292,23 @@ export function AssistantPanel({
       intent,
     );
     setMemory({ key: contextKey, budget: next });
-    if (!next.price) {
+    if (
+      features.chatVehicleCards &&
+      ((intent.action === "lower_advance" && intent.maxAdvance === undefined) ||
+        (intent.action === "lower_payment" && intent.maxMonthly === undefined))
+    ) {
+      const slot = intent.action === "lower_advance" ? "maxAdvance" : "maxMonthly";
+      setAwaitedSlot(slot);
+      push({
+        role: "assistant",
+        text:
+          slot === "maxAdvance"
+            ? "До какой суммы хотите снизить **первоначальный взнос**? Укажите новый лимит, например: «1 млн». Остальные ограничения сохраню."
+            : "До какой суммы хотите снизить **ежемесячный платёж**? Укажите новый лимит, например: «250 тысяч». Остальные ограничения сохраню.",
+      });
+      return;
+    }
+    if (!features.chatVehicleCards && !next.price) {
       setAwaitedSlot("price");
       push({
         role: "assistant",
@@ -225,101 +343,181 @@ export function AssistantPanel({
     const maxAdvance = next.maxAdvance;
     busyRef.current = true;
     setBusy(true);
+    const controller = new AbortController();
+    requestController.current?.abort();
+    requestController.current = controller;
     try {
-      let data = terms;
-      if (!data || next.clientType !== context.clientType) {
-        const response = await fetch(
-          appPath(`/api/terms?modelId=${context.modelId}&clientType=${next.clientType}`),
-        );
-        if (!response.ok) throw new Error("terms");
-        data = (await response.json()) as TermsData;
-      }
-      if (!alive.current) return;
-      if (!data.rates.length) {
-        push({
-          role: "assistant",
-          text: "Для этой модели пока нет доступных условий расчета. **Выберите другого продавца или модель** в калькуляторе.",
+      async function respondForSelectedVehicle() {
+        if (!next.price) {
+          push({
+            role: "assistant",
+            text: "Для расчёта выбранного автомобиля нужна его стоимость. Пока покажу другие автомобили под ваш бюджет.",
+          });
+          return;
+        }
+        let data = terms;
+        if (!data || next.clientType !== context.clientType) {
+          const response = await fetch(
+            appPath(`/api/terms?modelId=${context.modelId}&clientType=${next.clientType}`),
+            { signal: controller.signal },
+          );
+          if (!response.ok) throw new Error("terms");
+          data = (await response.json()) as TermsData;
+        }
+        if (!alive.current || controller.signal.aborted) return;
+        if (!data.rates.length) {
+          push({
+            role: "assistant",
+            text: features.chatVehicleCards
+              ? "Для выбранного автомобиля пока нет доступных тарифов. Проверю другие автомобили под ваш бюджет."
+              : "Для этой модели пока нет доступных условий расчета. **Выберите другого продавца или модель** в калькуляторе.",
+          });
+          return;
+        }
+        let offers = findOffers({
+          price: next.price,
+          rates: data.rates,
+          limits: data.limits,
+          maxMonthly,
+          maxAdvance,
+          lockedMonths: next.lockedMonths,
         });
-        return;
+        if (intent.action === "lower_payment")
+          offers = offers
+            .filter((offer) => !baseline || offer.monthlyPayment < baseline.monthlyPayment)
+            .sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+        if (intent.action === "lower_advance")
+          offers = offers
+            .filter((offer) => !baseline || offer.advanceAmount < baseline.advanceAmount)
+            .sort(
+              (a, b) => a.advanceAmount - b.advanceAmount || a.monthlyPayment - b.monthlyPayment,
+            );
+        const distinct = offers
+          .filter(
+            (offer, index, all) =>
+              all.findIndex(
+                (other) =>
+                  other.rate.months === offer.rate.months &&
+                  other.rate.advancePercent === offer.rate.advancePercent,
+              ) === index,
+          )
+          .slice(0, features.chatVehicleCards ? 1 : 3);
+        const sourceNote =
+          data.source === "snapshot"
+            ? ` Расчет по **сохраненным тарифам от ${dateLabel(data.checkedAt)}**.`
+            : "";
+        if (distinct.length) {
+          push({
+            role: "assistant",
+            text: `Для ${context.modelName} за **${money(next.price)}** ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж — **до ${money(maxMonthly)}**, аванс — **до ${money(maxAdvance)}**.${sourceNote}`,
+            offers: distinct,
+            contextKey,
+            budget: next,
+            generation: requestGeneration,
+          });
+        } else {
+          const withinAdvance = data.rates
+            .filter(
+              (rate) =>
+                (!next.lockedMonths || rate.months === next.lockedMonths) &&
+                isPriceAllowed(next.price, rate, data.limits),
+            )
+            .map((rate) => calculateQuote(next.price, rate))
+            .filter((quote) => quote.advanceAmount <= maxAdvance)
+            .sort((a, b) => a.monthlyPayment - b.monthlyPayment);
+          const maximumPrice = estimateMaxPrice({
+            rates: data.rates,
+            limits: data.limits,
+            maxMonthly,
+            maxAdvance,
+            lockedMonths: next.lockedMonths,
+          });
+          let explanation =
+            intent.action === "lower_advance"
+              ? "Снизить аванс при этих ограничениях не получается."
+              : intent.action === "lower_payment"
+                ? "Снизить платеж при этих ограничениях не получается."
+                : `При цене **${money(next.price)}** уложиться в эти ограничения не получается.`;
+          if (withinAdvance[0])
+            explanation += ` Минимальный расчетный платеж с вашим авансом — **${money(withinAdvance[0].monthlyPayment)}** на **${withinAdvance[0].rate.months} мес.**`;
+          if (maximumPrice && maximumPrice < next.price)
+            explanation += ` Можно рассмотреть **стоимость до ${money(Math.floor(maximumPrice))}**. Это ориентир бюджета, а не предложение автомобиля.`;
+          else explanation += " Попробуйте **увеличить доступный аванс** или **изменить срок**.";
+          push({ role: "assistant", text: explanation + sourceNote });
+        }
       }
-      let offers = findOffers({
-        price: next.price,
-        rates: data.rates,
-        limits: data.limits,
-        maxMonthly: next.maxMonthly,
-        maxAdvance: next.maxAdvance,
-        lockedMonths: next.lockedMonths,
-      });
-      if (intent.action === "lower_payment")
-        offers = offers
-          .filter((offer) => !baseline || offer.monthlyPayment < baseline.monthlyPayment)
-          .sort((a, b) => a.monthlyPayment - b.monthlyPayment);
-      if (intent.action === "lower_advance")
-        offers = offers
-          .filter((offer) => !baseline || offer.advanceAmount < baseline.advanceAmount)
-          .sort((a, b) => a.advanceAmount - b.advanceAmount || a.monthlyPayment - b.monthlyPayment);
-      const distinct = offers
-        .filter(
-          (offer, index, all) =>
-            all.findIndex(
-              (other) =>
-                other.rate.months === offer.rate.months &&
-                other.rate.advancePercent === offer.rate.advancePercent,
-            ) === index,
-        )
-        .slice(0, 3);
-      const sourceNote =
-        data.source === "snapshot"
-          ? ` Расчет по **сохраненным тарифам от ${dateLabel(data.checkedAt)}**.`
-          : "";
-      if (distinct.length) {
+      try {
+        await respondForSelectedVehicle();
+      } catch (error) {
+        if (!features.chatVehicleCards || controller.signal.aborted) throw error;
+        if (!alive.current) return;
         push({
           role: "assistant",
-          text: `Для ${context.modelName} за **${money(next.price)}** ${distinct.length === 1 ? "подходит такой вариант" : "подобрал варианты"}. Платеж — **до ${money(maxMonthly)}**, аванс — **до ${money(maxAdvance)}**.${sourceNote}`,
-          offers: distinct,
+          text: "Не удалось получить тариф выбранного автомобиля. Проверю другие варианты под ваш бюджет.",
+        });
+      }
+      if (!alive.current || controller.signal.aborted) return;
+      if (features.chatVehicleCards) {
+        const result = await searchVehicleOffers({
+          vehicles: vehicles.filter((vehicle) => vehicle.modelId !== context.modelId),
+          budget: {
+            maxMonthly,
+            maxAdvance,
+            lockedMonths: next.lockedMonths,
+            clientType: next.clientType,
+          },
+          signal: controller.signal,
+          loadTermsBatch: async (modelIds, clientType, signal) => {
+            const response = await fetch(appPath("/api/vehicle-terms"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ modelIds, clientType }),
+              signal,
+            });
+            if (!response.ok) throw new Error("terms");
+            return response.json();
+          },
+        });
+        if (!alive.current || controller.signal.aborted) return;
+        const page = getVehicleOfferPage(result.offers, 0);
+        const shown = page.offers;
+        setRecommendations({
+          contextKey,
+          budget: next,
+          generation: requestGeneration,
+          offers: result.offers,
+          offset: page.nextOffset,
+        });
+        const status =
+          result.coverage === "partial"
+            ? ` Тарифы проверены для ${result.checkedCount} из ${result.pricedCount} авто. У остальных условия пока не подтверждены.`
+            : "";
+        push({
+          role: "assistant",
+          text: shown.length
+            ? `**Ещё варианты под ваш бюджет**: платёж **до ${money(maxMonthly)}**, аванс **до ${money(maxAdvance)}**. ${page.hasMore ? "Могу показать ещё автомобили. " : ""}Ориентировочные демо-цены отмечены на карточках.${status}`
+            : result.checkedCount === 0
+              ? `Не удалось подтвердить условия для автомобилей с фиксированной ценой. **Повторите подбор** или выберите автомобиль в калькуляторе.${status}`
+              : `Среди **${result.checkedCount} других проверенных автомобилей** нет варианта с платежом **до ${money(maxMonthly)}** и авансом **до ${money(maxAdvance)}**. Попробуйте **увеличить аванс или платёж**, либо убрать ограничение срока.${status}`,
+          vehicleOffers: shown,
+          nextVehicleOffset: page.nextOffset,
           contextKey,
           budget: next,
           generation: requestGeneration,
         });
-      } else {
-        const withinAdvance = data.rates
-          .filter(
-            (rate) =>
-              (!next.lockedMonths || rate.months === next.lockedMonths) &&
-              isPriceAllowed(next.price, rate, data.limits),
-          )
-          .map((rate) => calculateQuote(next.price, rate))
-          .filter((quote) => quote.advanceAmount <= maxAdvance)
-          .sort((a, b) => a.monthlyPayment - b.monthlyPayment);
-        const maximumPrice = estimateMaxPrice({
-          rates: data.rates,
-          limits: data.limits,
-          maxMonthly: next.maxMonthly,
-          maxAdvance: next.maxAdvance,
-          lockedMonths: next.lockedMonths,
-        });
-        let explanation =
-          intent.action === "lower_advance"
-            ? "Снизить аванс при этих ограничениях не получается."
-            : intent.action === "lower_payment"
-              ? "Снизить платеж при этих ограничениях не получается."
-              : `При цене **${money(next.price)}** уложиться в эти ограничения не получается.`;
-        if (withinAdvance[0])
-          explanation += ` Минимальный расчетный платеж с вашим авансом — **${money(withinAdvance[0].monthlyPayment)}** на **${withinAdvance[0].rate.months} мес.**`;
-        if (maximumPrice && maximumPrice < next.price)
-          explanation += ` Можно рассмотреть **стоимость до ${money(Math.floor(maximumPrice))}**. Это ориентир бюджета, а не предложение автомобиля.`;
-        else explanation += " Попробуйте **увеличить доступный аванс** или **изменить срок**.";
-        push({ role: "assistant", text: explanation + sourceNote });
+        return;
       }
     } catch {
-      if (alive.current)
+      if (alive.current && !controller.signal.aborted)
         push({
           role: "assistant",
           text: "Не удалось получить условия. Попробуйте еще раз или продолжите расчет в калькуляторе.",
         });
     } finally {
-      busyRef.current = false;
-      if (alive.current) setBusy(false);
+      if (requestController.current === controller) {
+        busyRef.current = false;
+        if (alive.current) setBusy(false);
+      }
     }
   }
 
@@ -376,7 +574,10 @@ export function AssistantPanel({
   }
 
   return (
-    <section className="assistant-panel panel" aria-label="ИИ-помощник">
+    <section
+      className={`assistant-panel panel${features.chatVehicleCards ? " assistant-catalog" : ""}`}
+      aria-label="ИИ-помощник"
+    >
       <div className="assistant-header">
         <div className="assistant-title">
           <span className="sparkle-tile">
@@ -403,12 +604,25 @@ export function AssistantPanel({
             </span>
             <h3>Какой платеж вам удобен?</h3>
             <p>
-              Расскажите о вашем бюджете. Подберу срок и первоначальный взнос для выбранного
-              автомобиля.
+              {features.chatVehicleCards
+                ? "Укажите платёж и доступный аванс. Рассчитаю условия выбранного авто и предложу другие автомобили под ваш бюджет."
+                : "Расскажите о вашем бюджете. Подберу срок и первоначальный взнос для выбранного автомобиля."}
             </p>
             <div className="prompt-list">
-              <Button onClick={() => send("Хочу платить до 350 тысяч в месяц, на аванс до 3 млн")}>
-                <span>До 350 000 ₸ в месяц</span>
+              <Button
+                onClick={() =>
+                  send(
+                    features.chatVehicleCards
+                      ? "До 300 тысяч в месяц, аванс до 2 млн"
+                      : "Хочу платить до 350 тысяч в месяц, на аванс до 3 млн",
+                  )
+                }
+              >
+                <span>
+                  {features.chatVehicleCards
+                    ? "До 300 000 ₸ · аванс до 2 млн"
+                    : "До 350 000 ₸ в месяц"}
+                </span>
                 <ArrowUp size={16} />
               </Button>
               <Button onClick={() => send("Снизить первоначальный взнос")}>
@@ -423,12 +637,47 @@ export function AssistantPanel({
           </div>
         )}
         {messages.map((message) => (
-          <div key={message.id} className={`message message-${message.role}`}>
+          <div
+            key={message.id}
+            data-message-id={message.id}
+            className={`message message-${message.role}`}
+          >
             {message.role === "assistant" ? (
               <AssistantMessage text={message.text} />
             ) : (
               <p>{message.text}</p>
             )}
+            {message.vehicleOffers && message.vehicleOffers.length > 0 && (
+              <div className="vehicle-chat-offers">
+                {message.vehicleOffers.map((offer) => (
+                  <VehicleOfferCard
+                    key={offer.vehicle.id}
+                    offer={offer}
+                    disabled={!proposalCurrent(message) || busy || !onApplyVehicle}
+                    onChoose={() =>
+                      onApplyVehicle?.(
+                        offer,
+                        message.budget!.maxMonthly!,
+                        message.budget!.clientType,
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            )}
+            {message.nextVehicleOffset !== undefined &&
+              recommendations &&
+              message.nextVehicleOffset === recommendations.offset &&
+              recommendations.offset < recommendations.offers.length &&
+              proposalCurrent(message) && (
+                <Button
+                  className="vehicle-more-button"
+                  disabled={busy}
+                  onClick={() => void send("Покажи ещё варианты под мой бюджет")}
+                >
+                  Ещё варианты под мой бюджет
+                </Button>
+              )}
             {message.offers?.map((offer, index) => (
               <div className="offer-card" key={`${offer.rate.rateId}:${index}`}>
                 <span className="offer-eyebrow">

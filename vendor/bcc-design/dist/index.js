@@ -251,6 +251,7 @@ var BaseButton = React2.forwardRef(
       {
         ...props,
         ...componentProps,
+        href: href && !disabled && !loading ? href : void 0,
         type: htmlType,
         id,
         style,
@@ -2390,6 +2391,7 @@ var Select = memo9(
     ...restInputProps
   }) => {
     const inputRef = useRef7(null);
+    const [portalContainer, setPortalContainer] = useState10(void 0);
     const listId = useId2();
     const [activeIndex, setActiveIndex] = useState10(-1);
     const [focused] = useFocus(inputRef);
@@ -2471,6 +2473,7 @@ var Select = memo9(
     }, [open, focusedIndex, listId]);
     const openMenu = () => {
       if (restInputProps.disabled) return;
+      setPortalContainer(inputRef.current?.closest("dialog") ?? void 0);
       setActiveIndex(-1);
       setOpen();
     };
@@ -2512,6 +2515,7 @@ var Select = memo9(
     return /* @__PURE__ */ jsx32(
       Dropdown,
       {
+        portalContainer,
         isOpen: open,
         onClickOutside: setClose,
         matchAnchorWidth: true,
@@ -2618,6 +2622,339 @@ var SegmentControl = forwardRef10(
   }
 );
 
+// src/components/switch/Switch.tsx
+import { forwardRef as forwardRef12, useRef as useRef9 } from "react";
+
+// src/components/toggle-control/ToggleControl.tsx
+import { forwardRef as forwardRef11 } from "react";
+import { jsx as jsx34, jsxs as jsxs14 } from "react/jsx-runtime";
+var b26 = block("toggle-control");
+var ToggleControl = forwardRef11(
+  ({
+    label,
+    hint,
+    align = "center",
+    justify = "start",
+    reversed,
+    error,
+    disabled,
+    fullWidth,
+    dataTestId,
+    Control,
+    labelProps,
+    className
+  }, ref) => {
+    return /* @__PURE__ */ jsxs14(
+      "label",
+      {
+        ...labelProps,
+        "data-test-id": dataTestId,
+        ref,
+        className: b26({ reversed, fullWidth, disabled, input: true }, className),
+        children: [
+          /* @__PURE__ */ jsx34("div", { className: b26("inputWrapper", { [align]: true }), children: Control }),
+          /* @__PURE__ */ jsxs14("div", { className: b26("text", { [justify]: true }), children: [
+            /* @__PURE__ */ jsx34("div", { className: b26("title"), children: label }),
+            /* @__PURE__ */ jsx34("div", { className: b26("hint"), children: hint }),
+            /* @__PURE__ */ jsxs14("div", { className: b26("error", { active: Boolean(error) }), children: [
+              error,
+              "\xA0"
+            ] })
+          ] })
+        ]
+      }
+    );
+  }
+);
+
+// src/components/switch/Switch.tsx
+import { Fragment as Fragment3, jsx as jsx35, jsxs as jsxs15 } from "react/jsx-runtime";
+var b27 = block("switch");
+var Switch = forwardRef12(
+  ({
+    // input props
+    checked,
+    onChange,
+    disabled,
+    size = "md",
+    // ToggleControl props
+    label,
+    hint,
+    align,
+    justify,
+    reversed,
+    error,
+    labelProps,
+    fullWidth,
+    dataTestId,
+    // rest of input props
+    name,
+    style,
+    className,
+    ...rest
+  }, ref) => {
+    const labelRef = useRef9(null);
+    const [focused] = useFocus(labelRef, "keyboard");
+    const handleChange = (e) => {
+      onChange?.(e, { checked: e.target.checked, name: e.target.name });
+    };
+    return /* @__PURE__ */ jsx35(
+      ToggleControl,
+      {
+        labelProps: { style, ...labelProps },
+        ref: labelRef,
+        label,
+        hint,
+        align,
+        justify,
+        reversed,
+        error,
+        fullWidth,
+        disabled,
+        dataTestId,
+        className,
+        Control: /* @__PURE__ */ jsxs15(Fragment3, { children: [
+          /* @__PURE__ */ jsx35(
+            "input",
+            {
+              ...rest,
+              ref,
+              name,
+              type: "checkbox",
+              onChange: handleChange,
+              checked,
+              disabled,
+              "aria-disabled": disabled
+            }
+          ),
+          /* @__PURE__ */ jsx35(
+            "span",
+            {
+              className: b27("box", {
+                checked,
+                disabled,
+                focused,
+                error: Boolean(error),
+                [size]: true
+              })
+            }
+          )
+        ] })
+      }
+    );
+  }
+);
+
+// src/components/tooltip/Tooltip.tsx
+import { forwardRef as forwardRef13, useEffect as useEffect12, useId as useId3, useImperativeHandle, useRef as useRef11, useState as useState12 } from "react";
+import { createPortal as createPortal2 } from "react-dom";
+
+// src/components/tooltip/lib.ts
+var updateCoords = (childRef, shift, position, setCoords) => {
+  const rect = childRef.current?.getBoundingClientRect();
+  if (rect) {
+    let top = 0, left = 0;
+    switch (position) {
+      case "top-start":
+        top = rect.top - shift;
+        left = rect.left;
+        break;
+      case "top":
+        top = rect.top - shift;
+        left = rect.left + rect.width / 2;
+        break;
+      case "top-end":
+        top = rect.top - shift;
+        left = rect.left + rect.width;
+        break;
+      case "bottom-start":
+        top = rect.bottom + shift;
+        left = rect.left;
+        break;
+      case "bottom":
+        top = rect.bottom + shift;
+        left = rect.left + rect.width / 2;
+        break;
+      case "bottom-end":
+        top = rect.bottom + shift;
+        left = rect.left + rect.width;
+        break;
+      case "left":
+        top = rect.top + rect.height / 2;
+        left = rect.left - shift;
+        break;
+      case "right":
+        top = rect.top + rect.height / 2;
+        left = rect.right + shift;
+        break;
+      default:
+        break;
+    }
+    if (position === "top" || position === "bottom") {
+      const halfWidth = Math.min(296, window.innerWidth - 32) / 2;
+      left = Math.max(16 + halfWidth, Math.min(window.innerWidth - 16 - halfWidth, left));
+    }
+    setCoords({
+      top: top + window.scrollY,
+      left: left + window.scrollX
+    });
+  }
+};
+
+// src/components/tooltip/Tooltip.type.ts
+var TooltipPositions = /* @__PURE__ */ ((TooltipPositions2) => {
+  TooltipPositions2["TopStart"] = "top-start";
+  TooltipPositions2["Top"] = "top";
+  TooltipPositions2["TopEnd"] = "top-end";
+  TooltipPositions2["BottomStart"] = "bottom-start";
+  TooltipPositions2["Bottom"] = "bottom";
+  TooltipPositions2["BottomEnd"] = "bottom-end";
+  TooltipPositions2["Left"] = "left";
+  TooltipPositions2["Right"] = "right";
+  return TooltipPositions2;
+})(TooltipPositions || {});
+var TooltipTriggers = /* @__PURE__ */ ((TooltipTriggers2) => {
+  TooltipTriggers2["Hover"] = "hover";
+  TooltipTriggers2["Click"] = "click";
+  return TooltipTriggers2;
+})(TooltipTriggers || {});
+
+// src/components/tooltip/useTooltip.ts
+import { useEffect as useEffect11, useRef as useRef10, useState as useState11 } from "react";
+var useTooltip = (_trigger) => {
+  const [visible, setVisible] = useState11(false);
+  const [coords, setCoords] = useState11({ top: 0, left: 0 });
+  const tooltipRef = useRef10(null);
+  const childRef = useRef10(null);
+  const showTooltip = () => setVisible(true);
+  const hideTooltip = () => setVisible(false);
+  useEffect11(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target) && childRef.current && !childRef.current.contains(event.target)) {
+        hideTooltip();
+      }
+    };
+    const handleKeyDown2 = (event) => {
+      if (event.key === "Escape") hideTooltip();
+    };
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown2);
+    window.addEventListener("resize", hideTooltip);
+    window.addEventListener("scroll", hideTooltip, true);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown2);
+      window.removeEventListener("resize", hideTooltip);
+      window.removeEventListener("scroll", hideTooltip, true);
+    };
+  }, []);
+  return { childRef, tooltipRef, coords, setCoords, visible, hideTooltip, showTooltip };
+};
+
+// src/components/tooltip/Tooltip.tsx
+import { Fragment as Fragment4, jsx as jsx36, jsxs as jsxs16 } from "react/jsx-runtime";
+var b28 = block("tooltip");
+var Tooltip = forwardRef13(
+  ({
+    children,
+    id,
+    content,
+    position = "top" /* Top */,
+    trigger = "hover" /* Hover */,
+    iconAndCounter,
+    titleAndDescription,
+    buttons,
+    disabled = false
+  }, ref) => {
+    const { childRef, tooltipRef, coords, setCoords, visible, hideTooltip, showTooltip } = useTooltip(trigger);
+    const [animationClass, setAnimationClass] = useState12("");
+    const closeTimer = useRef11(void 0);
+    useEffect12(() => () => clearTimeout(closeTimer.current), []);
+    const generatedId = useId3();
+    const tooltipId = id ?? `tooltip-${generatedId}`;
+    const open = () => {
+      clearTimeout(closeTimer.current);
+      if (disabled) return;
+      showTooltip();
+      setAnimationClass("enter");
+      updateCoords(childRef, 12, position, setCoords);
+    };
+    const close = () => {
+      clearTimeout(closeTimer.current);
+      hideTooltip();
+    };
+    useImperativeHandle(ref, () => ({ showTooltip: open, hideTooltip: close }));
+    const handleMouseEnter = () => {
+      if (trigger === "hover" /* Hover */) open();
+    };
+    const handleMouseLeave = () => {
+      if (trigger === "hover" /* Hover */) {
+        clearTimeout(closeTimer.current);
+        closeTimer.current = setTimeout(close, 150);
+      }
+    };
+    const handleClick = () => {
+      if (trigger === "click" /* Click */ && visible) close();
+      else open();
+    };
+    return /* @__PURE__ */ jsxs16("div", { className: b28({}), ref: childRef, children: [
+      /* @__PURE__ */ jsx36(
+        "div",
+        {
+          onMouseEnter: handleMouseEnter,
+          onMouseLeave: handleMouseLeave,
+          onClick: handleClick,
+          onFocus: handleMouseEnter,
+          onBlur: close,
+          children
+        }
+      ),
+      visible && !disabled && createPortal2(
+        /* @__PURE__ */ jsx36(Stack, { value: stackingOrder.MODAL, children: (computedZIndex) => /* @__PURE__ */ jsxs16(
+          "div",
+          {
+            className: `${b28(`tooltip-${position}`)} ${animationClass}`,
+            ref: tooltipRef,
+            style: { top: `${coords.top}px`, left: `${coords.left}px`, zIndex: computedZIndex },
+            onMouseEnter: handleMouseEnter,
+            onMouseLeave: handleMouseLeave,
+            role: "tooltip",
+            id: tooltipId,
+            children: [
+              iconAndCounter && /* @__PURE__ */ jsxs16(
+                "div",
+                {
+                  className: b28({
+                    ["tooltip-icon-counter"]: Boolean(iconAndCounter),
+                    ["tooltip-icon-justify"]: Boolean(iconAndCounter.icon) && !Boolean(iconAndCounter.counter),
+                    ["tooltip-counter-justify"]: Boolean(iconAndCounter.counter) && !Boolean(iconAndCounter.icon),
+                    ["tooltip-icon-counter-justify"]: Boolean(iconAndCounter.counter) && Boolean(iconAndCounter.icon)
+                  }),
+                  children: [
+                    iconAndCounter.icon && /* @__PURE__ */ jsx36(Fragment4, { children: iconAndCounter.icon }),
+                    iconAndCounter.counter && /* @__PURE__ */ jsx36("div", { children: iconAndCounter.counter })
+                  ]
+                }
+              ),
+              titleAndDescription && titleAndDescription.title && titleAndDescription.description && /* @__PURE__ */ jsxs16("div", { className: b28("tooltip-title-description"), children: [
+                /* @__PURE__ */ jsx36("h2", { className: b28("title"), children: titleAndDescription.title }),
+                /* @__PURE__ */ jsx36("div", { className: b28("description"), children: titleAndDescription.description })
+              ] }),
+              content && /* @__PURE__ */ jsx36("div", { className: b28("tooltip-content"), children: content }),
+              buttons && /* @__PURE__ */ jsxs16("div", { className: b28("tooltip-buttons"), children: [
+                buttons.primary && /* @__PURE__ */ jsx36(Button, { view: "invertPrimary" /* InvertPrimary */, onClick: buttons.primary.handler, size: "s", children: buttons.primary.title }),
+                buttons.secondary && /* @__PURE__ */ jsx36(Button, { view: "invertTertiary" /* InvertTertiary */, onClick: buttons.secondary.handler, size: "s", children: buttons.secondary.title })
+              ] }),
+              /* @__PURE__ */ jsx36("div", { className: b28(`tooltip-arrow-${position}`) })
+            ]
+          }
+        ) }),
+        document.body
+      )
+    ] });
+  }
+);
+
 // src/theme/providers/ThemeProvider.tsx
 import React26 from "react";
 
@@ -2676,9 +3013,9 @@ function useSystemTheme() {
 // src/theme/utils/getBodyClassName.ts
 var ROOT_CLASS_NAME = "root";
 var bNew = blockNew(ROOT_CLASS_NAME);
-var b26 = block(ROOT_CLASS_NAME);
+var b29 = block(ROOT_CLASS_NAME);
 function getDeprecatedRootClassName(modifier) {
-  return b26(modifier);
+  return b29(modifier);
 }
 function getRootClassName(modifier, addition) {
   return bNew(modifier, addition);
@@ -2738,7 +3075,7 @@ var ThemeSettingsContext = React25.createContext(void 0);
 ThemeSettingsContext.displayName = "ThemeSettingsContext";
 
 // src/theme/providers/ThemeProvider.tsx
-import { jsx as jsx34 } from "react/jsx-runtime";
+import { jsx as jsx37 } from "react/jsx-runtime";
 function ThemeProvider({
   theme = DEFAULT_THEME,
   systemLightTheme = DEFAULT_LIGHT_THEME,
@@ -2774,7 +3111,7 @@ function ThemeProvider({
     () => ({ systemLightTheme, systemDarkTheme }),
     [systemLightTheme, systemDarkTheme]
   );
-  return /* @__PURE__ */ jsx34(ThemeContext.Provider, { value: contextValue, children: /* @__PURE__ */ jsx34(ThemeSettingsContext.Provider, { value: themeSettingsContext, children: /* @__PURE__ */ jsx34(LayoutProvider, { initialMediaQuery, children: scoped ? /* @__PURE__ */ jsx34(
+  return /* @__PURE__ */ jsx37(ThemeContext.Provider, { value: contextValue, children: /* @__PURE__ */ jsx37(ThemeSettingsContext.Provider, { value: themeSettingsContext, children: /* @__PURE__ */ jsx37(LayoutProvider, { initialMediaQuery, children: scoped ? /* @__PURE__ */ jsx37(
     "div",
     {
       className: getRootClassName({ theme: themeValue, "native-scrollbar": nativeScrollbar }, [
@@ -2798,8 +3135,12 @@ export {
   SegmentControl,
   Select,
   Slider2 as Slider,
+  Switch,
   Textarea,
   ThemeProvider,
+  Tooltip,
+  TooltipPositions,
+  TooltipTriggers,
   Typography,
   prepareSliderInnerState
 };

@@ -3,6 +3,7 @@ import "@fontsource-variable/inter";
 import "bcc-design/styles.css";
 import { DesignProvider } from "@/components/design-provider";
 import "./globals.css";
+import "@/features/features.css";
 
 export const metadata: Metadata = {
   title: "Калькулятор лизинга · BCC Leasing",

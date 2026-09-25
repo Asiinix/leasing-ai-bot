@@ -1,0 +1,68 @@
+{
+  "CHEVROLET|COBALT": {
+    "brand": "CHEVROLET",
+    "model": "COBALT",
+    "localPath": "/vehicles/models/chevrolet-cobalt.webp",
+    "sourcePageUrl": "https://chevrolet-auto.kz/models/cobalt",
+    "imageUrl": "https://cdn.chevrolet-auto.kz/cars/complects/6aaa5b02cd324.webp",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  },
+  "HYUNDAI|ELANTRA": {
+    "brand": "HYUNDAI",
+    "model": "ELANTRA",
+    "localPath": "/vehicles/models/hyundai-elantra.png",
+    "sourcePageUrl": "https://hyundai.kz/ru/find-a-car/cars/elantra-2023/highlights/",
+    "imageUrl": "https://hyundai.kz/userdata/rubrics/rubrics_407/icon_s.png?1696507917",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  },
+  "HYUNDAI|SONATA": {
+    "brand": "HYUNDAI",
+    "model": "SONATA",
+    "localPath": "/vehicles/models/hyundai-sonata.png",
+    "sourcePageUrl": "https://hyundai.kz/ru/find-a-car/cars/sonata-2023/highlights/",
+    "imageUrl": "https://hyundai.kz/userdata/rubrics/rubrics_415/icon_s.png?1697524835",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  },
+  "HYUNDAI|TUCSON": {
+    "brand": "HYUNDAI",
+    "model": "TUCSON",
+    "localPath": "/vehicles/models/hyundai-tucson.png",
+    "sourcePageUrl": "https://hyundai.kz/ru/find-a-car/crossovers/tucson-2024/highlights/",
+    "imageUrl": "https://hyundai.kz/userdata/rubrics/rubrics_472/icon_s.png?1780572631",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  },
+  "KIA|SELTOS": {
+    "brand": "KIA",
+    "model": "SELTOS",
+    "localPath": "/vehicles/models/kia-seltos.webp",
+    "sourcePageUrl": "https://kia.com.kz/models/seltos/",
+    "imageUrl": "https://api.kia.com.kz/images/cars/693bebe2ec3e4.webp",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  },
+  "KIA|SPORTAGE": {
+    "brand": "KIA",
+    "model": "SPORTAGE",
+    "localPath": "/vehicles/models/kia-sportage.webp",
+    "sourcePageUrl": "https://kia.com.kz/models/new_sportage/",
+    "imageUrl": "https://api.kia.com.kz/images/cars/696a78b0ef78d2.75038020_07f33373e8fd7400.webp",
+    "kind": "model",
+    "caption": "Изображение модели. Комплектация и цвет могут отличаться.",
+    "checkedAt": "2026-09-25",
+    "rights": "Official manufacturer/distributor promotional image; no separate redistribution license verified."
+  }
+}

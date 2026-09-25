@@ -54,6 +54,7 @@ export const Select = memo(
   }: SelectProps) => {
     /** values */
     const inputRef = useRef<HTMLInputElement>(null);
+    const [portalContainer, setPortalContainer] = useState<Element | undefined>(undefined);
     const listId = useId();
     const [activeIndex, setActiveIndex] = useState(-1);
     const [focused] = useFocus(inputRef);
@@ -153,6 +154,8 @@ export const Select = memo(
 
     const openMenu = () => {
       if (restInputProps.disabled) return;
+      // A native modal makes body portals inert; keep its options in the same top layer.
+      setPortalContainer(inputRef.current?.closest('dialog') ?? undefined);
       setActiveIndex(-1);
       setOpen();
     };
@@ -187,6 +190,7 @@ export const Select = memo(
 
     return (
       <Dropdown
+        portalContainer={portalContainer}
         isOpen={open}
         onClickOutside={setClose}
         matchAnchorWidth

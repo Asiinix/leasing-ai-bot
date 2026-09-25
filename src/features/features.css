@@ -1,0 +1,371 @@
+/* Layout extensions use the installed BCC Design spacing, surface and type tokens. */
+.vehicle-catalog-toolbar {
+  display: grid;
+  gap: var(--g-spacing-3);
+  margin-block: var(--g-spacing-6);
+}
+.vehicle-catalog-toolbar .hint {
+  margin: 0;
+}
+.vehicle-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--g-spacing-4);
+}
+.vehicle-catalog-card,
+.vehicle-offer-card {
+  min-width: 0;
+}
+.vehicle-catalog-card > .bcc-card__wrapper,
+.vehicle-offer-card > .bcc-card__wrapper {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+.vehicle-catalog-card > .bcc-card__wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.vehicle-media {
+  margin: 0;
+  background: var(--b-color-base-gray-100);
+  position: relative;
+}
+.vehicle-media img,
+.vehicle-media-placeholder {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  height: auto;
+  object-fit: contain;
+  padding: var(--g-spacing-3);
+}
+.vehicle-media-placeholder {
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--g-spacing-2);
+  color: var(--secondary);
+}
+.vehicle-media-placeholder span {
+  font-size: 20px;
+  font-weight: 700;
+}
+.vehicle-card-content {
+  padding: var(--g-spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-spacing-3);
+  flex: 1;
+}
+.vehicle-card-content h3 {
+  font-size: 20px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.vehicle-card-meta,
+.vehicle-card-seller,
+.vehicle-offer-note {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+}
+.vehicle-card-meta {
+  margin-top: var(--g-spacing-1);
+}
+.vehicle-card-price {
+  font-size: 24px;
+  line-height: 28px;
+  margin-top: auto;
+}
+.vehicle-price-source {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+  line-height: 16px;
+  width: fit-content;
+}
+.vehicle-show-more {
+  margin-top: var(--g-spacing-4);
+}
+.vehicle-selected-note {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--g-spacing-3);
+  margin-top: var(--g-spacing-3);
+  padding: var(--g-spacing-3);
+  border-radius: 12px;
+  background: var(--tint);
+  align-items: center;
+}
+.vehicle-selected-note .vehicle-media {
+  display: contents;
+}
+.vehicle-selected-note .vehicle-media img,
+.vehicle-selected-note .vehicle-media-placeholder {
+  grid-column: 1;
+  grid-row: 1;
+  border-radius: 8px;
+  background: var(--b-color-base-gray-100);
+}
+.vehicle-selected-note > div {
+  grid-column: 2;
+  grid-row: 1;
+}
+.vehicle-selected-note p {
+  font-size: 12px;
+  line-height: 16px;
+}
+.vehicle-selected-note strong {
+  display: block;
+  margin-bottom: var(--g-spacing-1);
+  font-size: 14px;
+  line-height: 20px;
+}
+.vehicle-chat-offers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--g-spacing-2);
+  margin-top: var(--g-spacing-3);
+}
+.vehicle-offer-card > .bcc-card__wrapper {
+  height: 100%;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.vehicle-offer-card .vehicle-card-content {
+  padding: var(--g-spacing-2);
+  gap: var(--g-spacing-2);
+}
+.vehicle-offer-card .vehicle-card-content h3 {
+  font-size: 14px;
+  line-height: 20px;
+  min-height: 40px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.vehicle-media-compact img,
+.vehicle-media-compact .vehicle-media-placeholder {
+  height: 88px;
+  padding: var(--g-spacing-1);
+  aspect-ratio: auto;
+}
+.vehicle-media-compact .vehicle-media-placeholder svg {
+  width: 32px;
+  height: 32px;
+}
+.vehicle-media-compact .vehicle-media-placeholder span {
+  font-size: 12px;
+}
+.vehicle-offer-more summary {
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+}
+.vehicle-offer-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--g-spacing-1);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--accent-dark);
+}
+.vehicle-offer-badge svg {
+  flex-shrink: 0;
+}
+.vehicle-offer-payment {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+.vehicle-offer-payment > span {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--secondary);
+}
+.vehicle-offer-details {
+  display: grid;
+  gap: var(--g-spacing-2);
+  margin: 0;
+  padding-block: var(--g-spacing-2);
+  border-block: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 16px;
+}
+.vehicle-offer-details > div {
+  display: grid;
+  gap: var(--g-spacing-1);
+}
+.vehicle-offer-details dt {
+  color: var(--secondary);
+}
+.vehicle-offer-details dd {
+  margin: 0;
+  font-weight: 600;
+}
+.vehicle-offer-more > div {
+  display: grid;
+  gap: var(--g-spacing-2);
+  padding-top: var(--g-spacing-2);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+}
+.vehicle-estimate-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+}
+.vehicle-card-price-note {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary);
+}
+.vehicle-offer-card .bcc-button {
+  margin-top: auto;
+}
+.vehicle-offer-card .bcc-button_stretchText {
+  white-space: normal;
+}
+@media (max-width: 600px) {
+  .vehicle-chat-offers {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 168px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: var(--g-spacing-1);
+    padding: var(--g-spacing-1) var(--g-spacing-1) var(--g-spacing-2);
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  .vehicle-offer-card {
+    scroll-snap-align: start;
+  }
+}
+@media (max-width: 560px) {
+  .vehicle-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vehicle-selected-note {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+}
+
+/* Reserve enough room for three readable offers beside the calculator. */
+@media (min-width: 900px) {
+  .calculator-grid:has(.assistant-catalog) {
+    grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr);
+  }
+}
+.assistant-catalog .conversation:has(.vehicle-chat-offers) {
+  height: clamp(440px, 65dvh, 640px);
+}
+
+.vehicle-offer-card {
+  container-type: inline-size;
+}
+@container (min-width: 168px) {
+  .vehicle-offer-details > div {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--g-spacing-1);
+  }
+  .vehicle-offer-details dd {
+    text-align: right;
+  }
+}
+
+.page-footer a,
+.photo-credits-page a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.photo-credits-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--g-spacing-6) var(--g-spacing-4);
+  display: grid;
+  gap: var(--g-spacing-6);
+}
+.photo-credits-page > p {
+  color: var(--secondary);
+  line-height: 24px;
+}
+.photo-credits-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--g-spacing-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.photo-credits-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--g-spacing-2);
+  padding: var(--g-spacing-4);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.photo-credits-list h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+.photo-credits-list a {
+  color: var(--secondary);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.vehicle-more-button {
+  margin-top: var(--g-spacing-3);
+}
+
+.vehicle-eligibility-notice {
+  display: grid;
+  gap: var(--g-spacing-3);
+  margin-top: var(--g-spacing-3);
+  padding: var(--g-spacing-4);
+  border-radius: 12px;
+  background: var(--tint);
+  font-size: 14px;
+  line-height: 20px;
+}
+.vehicle-eligibility-notice p {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--g-spacing-2);
+}
+.vehicle-eligibility-notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.vehicle-eligibility-notice .bcc-button {
+  justify-self: start;
+}
+.vehicle-card-eligibility {
+  padding: var(--g-spacing-2);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 16px;
+}

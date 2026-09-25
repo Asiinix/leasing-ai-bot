@@ -9,4 +9,6 @@ export * from './components/typography';
 export * from './components/form-control';
 export * from './components/select';
 export * from './components/segment-control';
+export * from './components/switch';
+export * from './components/tooltip';
 export * from './theme/providers/ThemeProvider';

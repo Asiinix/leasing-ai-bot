@@ -174,6 +174,20 @@
     "components/segment-control/SegmentControl.tsx": "f0274e38216e847d433034cb82967a0543fdc2e0318dc2aee0ab4fa6a94a03f4",
     "hooks/useOnResize.ts": "4f4e6d6737cd87c51f81a834e48b8f491af2bbcc4484abe9b147720c75f520c2",
     "components/segment-control/SegmentControl.type.ts": "324c4bfa4170ae80646036dfe7500f8f21025c340c136159057c66857c49bed4",
-    "components/segment-control/SegmentControl.scss": "eeb08d5bc149cb94846bac26a7680ceff13f63c96c49e2194a261ab016c6c7d1"
+    "components/segment-control/SegmentControl.scss": "eeb08d5bc149cb94846bac26a7680ceff13f63c96c49e2194a261ab016c6c7d1",
+    "components/switch/Switch.type.ts": "4a044d81fde927582ec5d6f07b89635d3dac17cd5bcde38af01cb93c1093e0a0",
+    "components/switch/Switch.tsx": "1297a4f48168772b2e3e70127b063bc70cecb7106700fc71ece7cd17b91df3f1",
+    "components/switch/index.ts": "37b37ce2646c019dfa5a72d319f2da4aa46b4287077bcf2a90608da84b2c115c",
+    "components/switch/Switch.scss": "17f515e7b969e3c8197699fb3f2ee354d91e22e1d235573e649c602dea830405",
+    "components/toggle-control/ToggleControl.scss": "6f9b0af361dc2d7989b2a51793ee5f55d547c2f950d178ea6ee62a5197715046",
+    "components/toggle-control/ToggleControl.tsx": "c1a83407bdcbf3d747526fcb1ee96b37e761d4ad70b3c03b32b2515fce4588a0",
+    "components/toggle-control/ToggleControl.type.ts": "249c6962fa0e3c2ee52ccbdea7fc04511e9c7d2ddd26d2f9e441d312a09162eb",
+    "components/toggle-control/index.ts": "2fee698adad596fed2c1e5ab0e88a294a7cf6774dc172ecaccf761f7ed638c70",
+    "components/tooltip/Tooltip.tsx": "58ec48888ce6bc6349472a877d95373e6923b3eae3f25f6bbcaf3a030326d53e",
+    "components/tooltip/Tooltip.type.ts": "50b9a66ba12595e05e68421dc53ffcd1940050746ac47d5d8d5e32321b8652be",
+    "components/tooltip/Tooltip.scss": "c576107df5ebf5708d6f278fa72e17e09d1351843cf32aa9595e13e4edbb9b9e",
+    "components/tooltip/useTooltip.ts": "ee38df4fa67eebc4f234249be19dd61deaa2e7b416b0dc72477cdbf8d2de5e23",
+    "components/tooltip/lib.ts": "948164bc277180d745084faf6705b66e30e31241c18573b6f38318bc6cd472b3",
+    "components/tooltip/index.ts": "66aed6182546db4c90aac7e9fe44a2d009ff1c3aa0a78b7fb0b55c6fdcc5c162"
   }
 }
