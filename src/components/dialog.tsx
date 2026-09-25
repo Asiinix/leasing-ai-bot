@@ -1,6 +1,7 @@
 "use client";
 
 import { ModalV2 } from "bcc-design";
+import s from "./dialog.module.scss";
 
 export function Dialog({
   title,
@@ -28,6 +29,7 @@ export function Dialog({
       stickyFooter={Boolean(footer)}
       maxWidth={wide ? 880 : 560}
       width="100%"
+      dialogClassName={wide ? s.wide : s.narrow}
       onClose={onClose}
     >
       {children}

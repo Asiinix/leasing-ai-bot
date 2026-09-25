@@ -79,17 +79,23 @@ export function initialDraft(): DraftState {
   };
 }
 
-/** Accepts +7 / 8 / 7 prefixes and formatting; returns +7XXXXXXXXXX or null. */
+/**
+ * Same rule as the application contact form: digits, spaces, brackets and dashes, 10–15
+ * digits. A Kazakhstan "8 7xx…" number becomes +7…. Returns "+<digits>" or null.
+ */
 export function normalizePhone(input: string): string | null {
-  const digits = input.replace(/\D/g, "");
-  const national =
-    digits.length === 11 && (digits[0] === "7" || digits[0] === "8")
-      ? digits.slice(1)
-      : digits.length === 10
-        ? digits
-        : null;
-  return national && /^7\d{9}$/.test(national) ? `+7${national}` : null;
+  const raw = input.trim();
+  if (!/^\+?[\d\s()-]+$/.test(raw)) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 15) return null;
+  if (digits.length === 11 && digits[0] === "8") digits = `7${digits.slice(1)}`;
+  if (digits.length === 10) digits = `7${digits}`;
+  return `+${digits}`;
 }
+
+export const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && value.trim().length <= 254;
+export const isValidIin = (value: string) => /^\d{12}$/.test(value);
 
 export function formatPhone(phone: string): string {
   const d = phone.replace(/\D/g, "").slice(-10);
@@ -141,13 +147,14 @@ export function validateField<K extends DraftField>(
         : fail("Срок — целое число месяцев от 1 до 120.");
     case "contactName": {
       const name = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
-      return name.length >= 2 && name.length <= 80 && /^[\p{L}\s.'-]+$/u.test(name)
+      // Same rule as the application form: surname and name, patronymic optional.
+      return name.split(" ").length >= 2 && name.length <= 200 && /^[\p{L}\s.'-]+$/u.test(name)
         ? ok(name)
-        : fail("Имя — от 2 до 80 букв.");
+        : fail("Укажите фамилию и имя, отчество — при наличии.");
     }
     case "contactPhone": {
       const phone = typeof value === "string" ? normalizePhone(value) : null;
-      return phone ? ok(phone) : fail("Телефон — казахстанский номер, например +7 701 123 45 67.");
+      return phone ? ok(phone) : fail("Укажите от 10 до 15 цифр, например +7 (700) 123-45-67.");
     }
   }
   return fail("Неизвестное поле.");

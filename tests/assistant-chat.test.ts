@@ -136,7 +136,10 @@ test("server rejects unavailable, foreign-currency and out-of-range values", asy
   assert.ok(result.errors.some((e) => /тенге/.test(e)));
   assert.equal(validateField("price", -1).ok, false);
   assert.equal(validateField("contactPhone", "123").ok, false);
+  assert.equal(validateField("contactPhone", "+7 (12)").ok, false);
   assert.equal(validateField("contactPhone", "8 701 123 45 67").ok, true);
+  assert.equal(validateField("contactName", "Айгуль").ok, false);
+  assert.equal(validateField("contactName", "Айгуль Серикова").ok, true);
 });
 
 test("advance given as an amount converts only to an available percent", async () => {
@@ -249,15 +252,16 @@ test("repeated submission and concurrent double click create one application", a
   const store = new ApplicationStore(path.join(dir, "applications.json"));
   const values = {
     ...initialDraft().values,
-    contactName: "Айгуль",
+    contactName: "Айгуль Серикова",
     contactPhone: "+77011234567",
   };
   const quote = { modelLabel: "Hyundai Tucson" } as never;
+  const contact = { email: "a@example.kz", iin: "012345678901" };
   const sessionA = "11111111-1111-4111-8111-111111111111";
   const key = "22222222-2222-4222-8222-222222222222";
   const [first, second] = await Promise.all([
-    store.submit({ sessionId: sessionA, idempotencyKey: key, values, quote }),
-    store.submit({ sessionId: sessionA, idempotencyKey: key, values, quote }),
+    store.submit({ sessionId: sessionA, idempotencyKey: key, values, contact, quote }),
+    store.submit({ sessionId: sessionA, idempotencyKey: key, values, contact, quote }),
   ]);
   assert.equal(first.application.id, second.application.id);
   assert.equal(second.duplicate, true);
@@ -266,6 +270,7 @@ test("repeated submission and concurrent double click create one application", a
     sessionId: sessionA,
     idempotencyKey: "33333333-3333-4333-8333-333333333333",
     values,
+    contact,
     quote,
   });
   assert.equal(again.application.id, first.application.id);
@@ -274,6 +279,7 @@ test("repeated submission and concurrent double click create one application", a
     sessionId: "44444444-4444-4444-8444-444444444444",
     idempotencyKey: key,
     values,
+    contact,
     quote,
   });
   assert.notEqual(other.application.id, first.application.id);

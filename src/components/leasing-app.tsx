@@ -41,6 +41,7 @@ import { initialDraft, type LeaseDraft } from "@/lib/draft";
 import { useLeaseDraft } from "@/lib/use-lease-draft";
 import { ApplicationDialog } from "./application-dialog";
 import { AssistantPanel } from "./assistant-panel";
+import { type ApplicationContact } from "./application-contact-form";
 import { ModelPicker, modelLabel } from "./model-picker";
 import { MoneyInput } from "./money-input";
 import faqIllustration from "./assets/faq-question.png";
@@ -49,6 +50,14 @@ import s from "./leasing-app.module.scss";
 
 const ScheduleDialog = dynamic(
   () => import("./schedule-dialog").then((module) => module.ScheduleDialog),
+  { ssr: false },
+);
+const ScoringDialog = dynamic(
+  () => import("./scoring-dialog").then((module) => module.ScoringDialog),
+  { ssr: false },
+);
+const ProposalDialog = dynamic(
+  () => import("./proposal-dialog").then((module) => module.ProposalDialog),
   { ssr: false },
 );
 type FormState = Pick<LeaseDraft, "clientType" | "modelId" | "price" | "advancePercent" | "months">;
@@ -127,10 +136,23 @@ export function LeasingApp() {
   const [termsError, setTermsError] = useState("");
   const [retry, setRetry] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [proposalKey, setProposalKey] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scoringOpen, setScoringOpen] = useState(false);
+  // Скоринг проходится один раз на набор условий: повторно по тем же условиям
+  // «Продолжить оформление» сразу открывает заявку.
+  const [scoredKey, setScoredKey] = useState<string | null>(null);
   const [continueOpen, setContinueOpen] = useState(false);
   // Стоимость из примера — не данные клиента.
   const sample = draft.state.sources.price === "default";
+  // Контакты заявки живут только в памяти страницы: в localStorage не пишутся.
+  const [contact, setContact] = useState<ApplicationContact>({
+    fullName: "",
+    email: "",
+    phone: "",
+    iin: "",
+    consent: false,
+  });
   const [applied, setApplied] = useState<Applied | null>(null);
   const assistantAnchor = useRef<HTMLDivElement>(null);
   const colorMode = useColorMode();
@@ -245,6 +267,12 @@ export function LeasingApp() {
         : null,
     [activeRate, form.price, terms],
   );
+  const currentProposalKey =
+    quote && model && !catalogError
+      ? JSON.stringify([formKey(form), quote, model, termsKey])
+      : null;
+  // Invalidate the open preview permanently, including change-and-revert.
+  if (proposalKey !== null && proposalKey !== currentProposalKey) setProposalKey(null);
   // Шаг 1 — пока нет расчета, шаг 2 — расчет есть и можно подбирать условия.
   const currentStep = quote ? 2 : 1;
   const advances = [...new Set(terms?.rates.map((rate) => rate.advancePercent))].sort(
@@ -265,6 +293,11 @@ export function LeasingApp() {
 
   function change(patch: Partial<FormState>) {
     draft.update(patch, "form");
+  }
+  /** Единый вход в заявку из калькулятора и чата: скоринг по текущим условиям, затем заявка. */
+  function openApplication() {
+    if (quote && scoredKey !== formKey(form)) setScoringOpen(true);
+    else setContinueOpen(true);
   }
   /** «Изменить данные»: к полям калькулятора (на мобиле — прокрутка к форме). */
   function editData() {
@@ -325,10 +358,10 @@ export function LeasingApp() {
           пишется из обработчика scroll без перерисовки React). Шапка — часть баннера
           по стилю, поэтому всегда в светлой теме. */}
       <div ref={headerRef} className={`${s.headerSticky} bcc-root_theme_bcc-leasing-light`}>
-        <Container maxWidth={1280} gutters={24}>
+        <Container maxWidth={1280} className={s.container}>
           {/* HeaderDesktop не подошел: он всегда резервирует справа пустой блок
               пользователя и на мобиле обрезает левую часть. */}
-          <Flex as="header" alignItems="center" gap={16} className={s.headerBar}>
+          <Flex as="header" alignItems="center" className={s.headerBar}>
             {/* Логотипа BCC Leasing в DS нет — используем фирменный файл. Шапка всегда
                 светлая, поэтому один вариант логотипа подходит для обеих тем. */}
             <Image src={leasingLogo} alt="BCC Leasing" priority className={s.logo} />
@@ -367,13 +400,15 @@ export function LeasingApp() {
           контента (тот же Container). Картинка светлая, поэтому баннер всегда в светлой
           теме: класс темы DS переопределяет токены только внутри него. */}
       <div ref={heroRef} className={`${s.hero} bcc-root_theme_bcc-leasing-light`}>
-        <Container maxWidth={1280} gutters={24} className={s.heroInner}>
+        <Container maxWidth={1280} className={`${s.container} ${s.heroInner}`}>
           <Flex direction="column" gap={24} className={s.heroContent}>
             <div className={s.breadcrumbs}>
               <Breadcrumbs breadcrumbs={breadcrumbs} size="sm" />
             </div>
             <Flex direction="column" gap={8}>
-              <Typography.Title tag="h1">Калькулятор лизинга</Typography.Title>
+              <Typography.Title tag="h1" id="promo-banner-heading">
+                Продукт только для избранных, но не для вас
+              </Typography.Title>
               <Typography.Paragraph view="large" color="secondary">
                 Рассчитайте платеж и выберите удобные условия
               </Typography.Paragraph>
@@ -393,7 +428,7 @@ export function LeasingApp() {
         </Container>
       </div>
       <main id="calculator" aria-busy={booting}>
-        <Container maxWidth={1280} gutters={24} className={s.page}>
+        <Container maxWidth={1280} className={`${s.container} ${s.page}`}>
           {isApplied && (
             <Alert
               variant="success"
@@ -628,7 +663,7 @@ export function LeasingApp() {
                     setApplied(null);
                   }}
                   onApplyOffer={applyOffer}
-                  onOpenApplication={() => setContinueOpen(true)}
+                  onOpenApplication={openApplication}
                   onEditData={editData}
                   onClose={() => setAssistantOpen(false)}
                 />
@@ -726,11 +761,22 @@ export function LeasingApp() {
                                 </Button>
                               </div>
                               <Button
+                                view="accentSecondary"
+                                size="l"
+                                fullWidth
+                                className={s.multilineButton}
+                                disabled={!currentProposalKey}
+                                onClick={() => setProposalKey(currentProposalKey)}
+                              >
+                                Сформировать коммерческое предложение
+                              </Button>
+                              <Button
                                 view="accentPrimary"
                                 size="l"
                                 fullWidth
+                                className={s.multilineButton}
                                 iconRight={<ArrowDirectionRight />}
-                                onClick={() => setContinueOpen(true)}
+                                onClick={openApplication}
                               >
                                 Продолжить оформление
                               </Button>
@@ -837,8 +883,30 @@ export function LeasingApp() {
         </Container>
       </main>
 
+      {proposalKey && proposalKey === currentProposalKey && quote && (
+        <ProposalDialog
+          key={proposalKey}
+          quote={quote}
+          model={title}
+          clientType={form.clientType}
+          onClose={() => setProposalKey(null)}
+        />
+      )}
       {scheduleOpen && quote && (
         <ScheduleDialog quote={quote} model={title} onClose={() => setScheduleOpen(false)} />
+      )}
+      {scoringOpen && quote && (
+        <ScoringDialog
+          quote={quote}
+          model={title}
+          clientType={form.clientType}
+          onClose={() => setScoringOpen(false)}
+          onProceed={() => {
+            setScoredKey(formKey(form));
+            setScoringOpen(false);
+            setContinueOpen(true);
+          }}
+        />
       )}
       {continueOpen && (
         <ApplicationDialog
@@ -851,6 +919,8 @@ export function LeasingApp() {
             setContinueOpen(false);
             editData();
           }}
+          contact={contact}
+          onContactChange={setContact}
           onClose={() => setContinueOpen(false)}
         />
       )}

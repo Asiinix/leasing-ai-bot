@@ -1,0 +1,43 @@
+// Круг и подпись в одной строке; на узком экране подпись переносится под круг.
+.summary {
+  flex-wrap: wrap;
+}
+
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+// Слот иконки фиксированной ширины, чтобы текст этапов не прыгал при смене состояния.
+.stageIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+
+  .stage[data-state="done"] & {
+    color: var(--b-color-icon-success-strong-500);
+  }
+
+  .stage[data-state="pending"] &::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--b-color-icon-neutral-weak-400);
+    content: "";
+  }
+}

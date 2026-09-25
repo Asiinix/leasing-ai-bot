@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Checkbox, Flex, Input, Typography } from "bcc-design";
+import { Alert, Button, Flex, Typography } from "bcc-design";
 import ArrowDirectionRight from "bcc-design-icons/base/Arrows/ArrowDirectionRight";
 import { appPath } from "@/lib/app-path";
 import {
@@ -16,6 +16,7 @@ import {
 import { money, percent } from "@/lib/format";
 import type { Quote } from "@/lib/types";
 import { sessionId } from "@/lib/use-lease-draft";
+import { ApplicationContactForm, type ApplicationContact } from "./application-contact-form";
 import { Dialog } from "./dialog";
 import s from "./application-dialog.module.scss";
 
@@ -47,6 +48,8 @@ export function ApplicationDialog({
   modelName,
   quote,
   quoteProblem,
+  contact,
+  onContactChange,
   onUpdate,
   onEditParams,
   onClose,
@@ -55,76 +58,64 @@ export function ApplicationDialog({
   modelName: string;
   quote: Quote | null;
   quoteProblem: string;
+  /** Contacts live in page memory only (not in localStorage), as in the contact form. */
+  contact: ApplicationContact;
+  onContactChange: (value: ApplicationContact) => void;
   onUpdate: (patch: DraftPatch) => void;
   onEditParams: () => void;
   onClose: () => void;
 }) {
   const values = draft.values;
-  const [name, setName] = useState(values.contactName);
-  const [phone, setPhone] = useState(values.contactPhone ? formatPhone(values.contactPhone) : "");
-  const [nameError, setNameError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [consent, setConsent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [submission, setSubmission] = useState<Submission | null>(null);
-  const fingerprint = applicationFingerprint(values);
+  const fingerprint = `${applicationFingerprint(values)}|${contact.iin}|${contact.email.toLowerCase()}`;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubmission(readSubmission());
   }, []);
-  // Contacts filled in the chat after the dialog opened.
+  // Name and phone the client gave in the chat prefill empty form fields.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (values.contactName) setName(values.contactName);
-    if (values.contactPhone) setPhone(formatPhone(values.contactPhone));
+    const patch: Partial<ApplicationContact> = {};
+    if (values.contactName && !contact.fullName) patch.fullName = values.contactName;
+    if (values.contactPhone && !contact.phone) patch.phone = formatPhone(values.contactPhone);
+    if (Object.keys(patch).length) onContactChange({ ...contact, ...patch });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.contactName, values.contactPhone]);
 
   const done = submission?.fingerprint === fingerprint ? submission.result : undefined;
   const missing = missingFields(draft).filter((f) => f !== "contactName" && f !== "contactPhone");
   const paramsReady = missing.length === 0 && quote !== null;
 
-  function commitName(value: string) {
-    const checked = validateField("contactName", value);
-    setNameError(checked.ok || !value ? "" : checked.error);
-    if (checked.ok && checked.value !== values.contactName)
-      onUpdate({ contactName: checked.value });
-    return checked.ok;
-  }
-  function commitPhone(value: string) {
-    const checked = validateField("contactPhone", value);
-    setPhoneError(checked.ok || !value ? "" : checked.error);
-    if (checked.ok && checked.value !== values.contactPhone)
-      onUpdate({ contactPhone: checked.value });
-    return checked.ok;
+  /** Form edits also reach the shared draft, so the assistant knows contacts are given. */
+  function changeContact(next: ApplicationContact) {
+    onContactChange(next);
+    const name = validateField("contactName", next.fullName);
+    const phone = validateField("contactPhone", next.phone);
+    const patch: DraftPatch = {};
+    if (name.ok && name.value !== values.contactName) patch.contactName = name.value;
+    if (phone.ok && phone.value !== values.contactPhone) patch.contactPhone = phone.value;
+    if (Object.keys(patch).length) onUpdate(patch);
   }
 
-  async function submit() {
+  async function submit(valid: ApplicationContact) {
     setError("");
-    const nameOk = commitName(name);
-    const phoneOk = commitPhone(phone);
-    if (!nameOk)
-      setNameError(
-        name
-          ? validateField("contactName", name).ok
-            ? ""
-            : "Имя — от 2 до 80 букв."
-          : "Укажите контактное лицо.",
-      );
-    if (!phoneOk)
-      setPhoneError(
-        phone ? "Телефон — казахстанский номер, например +7 701 123 45 67." : "Укажите телефон.",
-      );
-    if (!nameOk || !phoneOk || !paramsReady || !consent) return;
-
-    const contactName = (validateField("contactName", name) as { value: string }).value;
-    const contactPhone = (validateField("contactPhone", phone) as { value: string }).value;
+    if (!paramsReady) {
+      setError("Сначала подтвердите параметры лизинга выше.");
+      return;
+    }
+    const name = validateField("contactName", valid.fullName);
+    const phone = validateField("contactPhone", valid.phone);
+    if (!name.ok || !phone.ok) {
+      setError(!name.ok ? name.error : phone.ok ? "" : phone.error);
+      return;
+    }
     const finalDraft: DraftState = {
       ...draft,
-      values: { ...values, contactName, contactPhone },
+      values: { ...values, contactName: name.value, contactPhone: phone.value },
     };
-    const finalFingerprint = applicationFingerprint(finalDraft.values);
+    const finalFingerprint = `${applicationFingerprint(finalDraft.values)}|${valid.iin}|${valid.email.toLowerCase()}`;
     // The same content keeps the same key: a repeated click or retry cannot create a duplicate.
     const current = readSubmission();
     const idempotencyKey =
@@ -139,7 +130,8 @@ export function ApplicationDialog({
         body: JSON.stringify({
           sessionId: sessionId(),
           idempotencyKey,
-          consent,
+          consent: valid.consent,
+          contact: { email: valid.email, iin: valid.iin },
           draft: finalDraft,
         }),
       });
@@ -166,7 +158,7 @@ export function ApplicationDialog({
     } catch (err) {
       setError(
         err instanceof TypeError
-          ? "Нет соединения. Данные сохранены — повторите отправку, дубликат не создастся."
+          ? "Нет соединения. Данные на месте — повторите отправку, дубликат не создастся."
           : (err as Error).message,
       );
     } finally {
@@ -182,14 +174,13 @@ export function ApplicationDialog({
         onClose={onClose}
         footer={
           <Flex direction="column" gap={8}>
+            {/* Обход дефекта DS: Button с href рендерит <a> без самого href. */}
             <Button
               view="accentPrimary"
               size="l"
               fullWidth
-              href={done.continueUrl}
-              target="_blank"
-              rel="noreferrer"
               iconRight={<ArrowDirectionRight />}
+              onClick={() => window.open(done.continueUrl, "_blank", "noopener,noreferrer")}
             >
               Продолжить в сервисе BCC Leasing
             </Button>
@@ -218,9 +209,10 @@ export function ApplicationDialog({
             view="accentPrimary"
             size="l"
             fullWidth
+            htmlType="submit"
+            form="leasing-contact-form"
             loading={sending}
-            disabled={!paramsReady || !consent || sending}
-            onClick={() => void submit()}
+            disabled={sending}
           >
             Отправить заявку
           </Button>
@@ -289,39 +281,12 @@ export function ApplicationDialog({
           )}
         </Flex>
 
-        <Flex direction="column" gap={12}>
-          <Typography.Paragraph view="medium" weight="semibold">
-            Контакты
-          </Typography.Paragraph>
-          <Input
-            fullWidth
-            size="lg"
-            label="Контактное лицо"
-            autoComplete="name"
-            value={name}
-            error={nameError || undefined}
-            onChange={(_, payload) => setName(payload.value)}
-            onBlur={() => commitName(name)}
-          />
-          <Input
-            fullWidth
-            size="lg"
-            label="Телефон"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            value={phone}
-            error={phoneError || undefined}
-            hint={phoneError ? undefined : "Только для связи по этой заявке"}
-            onChange={(_, payload) => setPhone(payload.value)}
-            onBlur={() => commitPhone(phone)}
-          />
-          <Checkbox
-            checked={consent}
-            label="Согласен на обработку контактных данных для рассмотрения заявки"
-            onChange={(_, payload) => setConsent(payload.checked)}
-          />
-        </Flex>
+        <ApplicationContactForm
+          value={contact}
+          onChange={changeContact}
+          onValid={(valid) => void submit(valid)}
+          note="Контакты отправляются только вместе с заявкой в этот сервис и пока не передаются в BCC. В браузере они не сохраняются."
+        />
         {error && (
           <Alert variant="error" fullWidth disableTruncate autoCloseDelay={null}>
             {error}

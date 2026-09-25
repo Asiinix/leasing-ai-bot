@@ -18,6 +18,7 @@ export interface StoredApplication {
   idempotencyKey: string;
   fingerprint: string;
   values: LeaseDraft;
+  contact: { email: string; iin: string };
   quote: QuoteView;
   status: "saved";
 }
@@ -56,12 +57,13 @@ export class ApplicationStore {
     sessionId: string;
     idempotencyKey: string;
     values: LeaseDraft;
+    contact: { email: string; iin: string };
     quote: QuoteView;
   }): Promise<{ application: StoredApplication; duplicate: boolean }> {
     const run = this.queue.then(async () => {
       const items = await this.load();
       const session = hashSession(input.sessionId);
-      const fingerprint = applicationFingerprint(input.values);
+      const fingerprint = `${applicationFingerprint(input.values)}|${input.contact.iin}|${input.contact.email.toLowerCase()}`;
       const existing = items.find(
         (item) =>
           item.session === session &&
@@ -78,6 +80,7 @@ export class ApplicationStore {
         idempotencyKey: input.idempotencyKey,
         fingerprint,
         values: input.values,
+        contact: input.contact,
         quote: input.quote,
         status: "saved",
       };

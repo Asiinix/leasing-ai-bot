@@ -2,6 +2,16 @@
 // двухколоночная сетка с «липкой» правой колонкой и CSS-брейкпоинтом без JS
 // (адаптивные пропы Flex/Grid вычисляются в JS и на SSR дают прыжок раскладки).
 
+// Боковые поля страницы: 24px, на телефоне 16px. Не через gutters Container:
+// он пишет отступ inline-стилем и брейкпоинтов не принимает.
+.container {
+  padding-inline: var(--g-spacing-6);
+
+  @media (max-width: 575px) {
+    padding-inline: var(--g-spacing-4);
+  }
+}
+
 // Container DS по умолчанию height: 100% — страница растет по контенту.
 .page {
   display: flex;
@@ -26,7 +36,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--g-spacing-4);
-  scroll-margin-top: var(--g-spacing-6);
+  // На узком экране openAssistant прокручивает к колонке: верх панели не должен
+  // уходить под липкую шапку (отступ шапки 24 + сжатая плашка 64 + зазор 16).
+  scroll-margin-top: calc(var(--g-spacing-6) + var(--g-spacing-4) * 5);
 
   @media (min-width: 992px) {
     position: sticky;
@@ -171,69 +183,35 @@
   }
 }
 
-// Баннер во всю ширину окна. Картинка 1440×667 (фургон справа, слева пусто под
-// текст) вписана по высоте баннера целиком, без обрезки, и прижата вправо;
-// нижние углы баннера скруглены, как на сайте.
+// Общий верхний баннер: слоган слева, изображение справа.
 .hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  // Фон — цвет, запеченный в саму картинку (#f5f4f7): токена DS с таким значением нет,
-  // а с ближайшим (gray-50, #f4f5fa) по краю картинки видна полоса.
-  background-color: #f5f4f7;
+  background-color: #dbe4e8;
   color: var(--b-color-text-neutral-strong-900);
   border-radius: 0 0 var(--b-border-radius-cof-16) var(--b-border-radius-cof-16);
 
-  // Картинка — отдельным слоем точно своего размера: левый край плавно растворяется
-  // в фоне маской (не видно стыка и скругленных углов картинки), при загрузке
-  // картинка плавно проявляется.
   &::before {
     content: "";
     position: absolute;
     z-index: -1;
-    top: 0;
-    right: 0;
-    height: 100%;
-    aspect-ratio: 1440 / 667;
-    background: url("./assets/gazel-banner.webp") center / 100% 100% no-repeat;
-    // Края картинки плавно растворяются в фоне (в маске важна только прозрачность):
-    // слева — стык с пустой частью баннера, по остальным сторонам — места, где
-    // синий контур упирается в обрез баннера.
-    mask-image:
-      linear-gradient(to right, transparent, black 30%),
-      linear-gradient(to top, transparent, black 18%),
-      linear-gradient(to left, transparent, black 10%),
-      linear-gradient(to bottom, transparent, black 12%);
-    mask-composite: intersect;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgb(235 242 246 / 85%), transparent 65%),
+      url("./assets/leasing-promo-banner.webp") center / cover no-repeat;
     animation: hero-image-in 0.8s ease-out both;
   }
 
-  // На средних экранах картинка по высоте баннера заехала бы под текст:
-  // уменьшаем ее и прижимаем к правому нижнему углу.
-  @media (min-width: 768px) and (max-width: 1199px) {
-    &::before {
-      top: auto;
-      bottom: 0;
-      height: 75%;
-    }
-  }
-
-  // На узком экране фургон под текстом: слой картинки прижат вниз, под него
-  // оставлено место паддингом.
   @media (max-width: 767px) {
-    padding-bottom: 80%;
+    padding-bottom: 230px;
 
     &::before {
       top: auto;
-      right: 0;
-      bottom: 0;
-      width: 170%;
-      height: auto;
-      // Левая часть картинки здесь за краем экрана, растворяем только обрезы.
-      mask-image:
-        linear-gradient(to top, transparent, black 15%),
-        linear-gradient(to left, transparent, black 12%),
-        linear-gradient(to bottom, transparent, black 12%);
+      height: 230px;
+      background:
+        linear-gradient(#dbe4e8, transparent 35%),
+        url("./assets/leasing-promo-banner.webp") right bottom / auto 100% no-repeat;
     }
   }
 }
@@ -286,6 +264,7 @@
   // При прокрутке плашка сжимается: 80px → 64px по высоте, чуть уже по бокам.
   min-height: calc(var(--g-spacing-4) * 5 - var(--g-spacing-4) * var(--header-progress, 0));
   margin-inline: calc(var(--g-spacing-8) * var(--header-progress, 0));
+  gap: var(--g-spacing-4);
   padding: var(--g-spacing-3) var(--g-spacing-6);
   animation: header-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   border-radius: var(--b-border-radius-cof-10);
@@ -308,6 +287,25 @@
   @media (max-width: 767px) {
     margin-inline: calc(var(--g-spacing-2) * var(--header-progress, 0));
     padding-inline: var(--g-spacing-4);
+  }
+
+  // На 320px логотип, «Демо» и две кнопки с зазорами по 16px не помещаются в строку.
+  @media (max-width: 575px) {
+    gap: var(--g-spacing-2);
+    padding-inline: var(--g-spacing-3);
+  }
+}
+
+// Длинные подписи кнопок на узком экране переносятся на вторую строку: Button DS
+// держит текст в одну строку и обрезает его с обеих сторон по центру.
+.multilineButton {
+  height: auto;
+  padding-block: var(--g-spacing-3);
+
+  :global(.bcc-button__childrenWrapper) {
+    overflow: visible;
+    white-space: normal;
+    text-align: center;
   }
 }
 

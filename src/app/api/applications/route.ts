@@ -2,7 +2,13 @@ import { UUID } from "../../../lib/assistant-contract";
 import { ToolSession } from "../../../lib/assistant-tools";
 import { applicationStore } from "../../../lib/applications";
 import { getCatalog, getTerms } from "../../../lib/colvir";
-import { missingFields, parseDraftState, FIELD_LABELS } from "../../../lib/draft";
+import {
+  FIELD_LABELS,
+  isValidEmail,
+  isValidIin,
+  missingFields,
+  parseDraftState,
+} from "../../../lib/draft";
 import { BCC_APPLICATION_URL } from "../../../lib/knowledge";
 import { allow } from "../../../lib/rate-limit";
 
@@ -26,6 +32,11 @@ export async function POST(request: Request): Promise<Response> {
   if (typeof idempotencyKey !== "string" || !UUID.test(idempotencyKey))
     return bad("Нет ключа отправки");
   if (consent !== true) return bad("Нужно согласие на обработку контактных данных.");
+  const contact = body.contact as { email?: unknown; iin?: unknown } | undefined;
+  const email = typeof contact?.email === "string" ? contact.email.trim() : "";
+  const iin = typeof contact?.iin === "string" ? contact.iin : "";
+  if (!isValidEmail(email)) return bad("Проверьте адрес почты, например name@example.kz.");
+  if (!isValidIin(iin)) return bad("ИИН должен содержать 12 цифр.");
   const draft = parseDraftState(body.draft);
   if (!draft) return bad("Некорректные данные заявки");
   if (!allow(`applications:${sessionId}`, 5, 60_000))
@@ -47,6 +58,7 @@ export async function POST(request: Request): Promise<Response> {
       sessionId,
       idempotencyKey,
       values: draft.values,
+      contact: { email, iin },
       quote: quoteCard.quote,
     });
     return Response.json(

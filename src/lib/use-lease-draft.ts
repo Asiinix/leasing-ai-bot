@@ -66,7 +66,12 @@ export function useLeaseDraft() {
   }, []);
 
   useEffect(() => {
-    if (restored) write(DRAFT_KEY, state);
+    // Contacts stay in page memory only, like the application contact form.
+    if (restored)
+      write(DRAFT_KEY, {
+        ...state,
+        values: { ...state.values, contactName: "", contactPhone: "" },
+      });
   }, [state, restored]);
 
   const update = useCallback((patch: DraftPatch, source: FieldSource = "form") => {
