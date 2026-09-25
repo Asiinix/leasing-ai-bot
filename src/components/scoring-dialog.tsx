@@ -40,17 +40,17 @@ const decisionText: Record<Decision, { title: string; detail: string }> = {
   approved: {
     title: "Предварительно одобрено",
     detail:
-      "Можно переходить к заявке. Окончательное решение банк примет после проверки документов.",
+      "Продолжите оформление в сервисе BCC Leasing. Окончательное решение банк примет после проверки документов.",
   },
   review: {
     title: "Нужна дополнительная проверка",
     detail:
-      "Заявку можно подать, менеджер уточнит данные. Увеличьте аванс или срок, чтобы повысить шансы.",
+      "Продолжите оформление, менеджер уточнит данные. Увеличьте аванс или срок, чтобы повысить шансы.",
   },
   declined: {
     title: "Сейчас одобрение маловероятно",
     detail:
-      "Попробуйте снизить платеж: увеличьте аванс или срок лизинга, либо выберите модель дешевле.",
+      "Заявка сохранена, но попробуйте снизить платеж: увеличьте аванс или срок лизинга, либо выберите модель дешевле.",
   },
 };
 
@@ -60,16 +60,20 @@ export function ScoringDialog({
   quote,
   model,
   clientType,
+  applicationId,
+  continueUrl,
+  initialTaxId = "",
   onClose,
-  onProceed,
 }: {
   quote: Quote;
   model: string;
   clientType: ClientType;
+  applicationId: string;
+  continueUrl: string;
+  initialTaxId?: string;
   onClose: () => void;
-  onProceed: () => void;
 }) {
-  const [form, setForm] = useState<ScoringForm>(emptyScoringForm);
+  const [form, setForm] = useState<ScoringForm>({ ...emptyScoringForm, taxId: initialTaxId });
   const [phase, setPhase] = useState<Phase>("form");
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ScoringResult | null>(null);
@@ -116,29 +120,30 @@ export function ScoringDialog({
           Запустить скоринг
         </Button>
         <Button view="neutral" size="l" fullWidth onClick={onClose}>
-          Вернуться к расчету
+          Пропустить
         </Button>
       </Flex>
     ) : phase === "result" && result ? (
       <Flex direction="column" gap={8}>
         {result.decision !== "declined" && (
+          // Обход дефекта DS: Button с href рендерит <a> без самого href.
           <Button
             view="accentPrimary"
             size="l"
             fullWidth
             iconRight={<ArrowDirectionRight />}
-            onClick={onProceed}
+            onClick={() => window.open(continueUrl, "_blank", "noopener,noreferrer")}
           >
-            Перейти к заявке
+            Продолжить в сервисе BCC Leasing
           </Button>
         )}
         <Button
           view={result.decision === "declined" ? "accentPrimary" : "neutral"}
           size="l"
           fullWidth
-          onClick={result.decision === "declined" ? onClose : () => setPhase("form")}
+          onClick={onClose}
         >
-          {result.decision === "declined" ? "Изменить условия расчета" : "Изменить анкету"}
+          {result.decision === "declined" ? "Изменить условия расчета" : "Готово"}
         </Button>
       </Flex>
     ) : undefined;
@@ -146,7 +151,7 @@ export function ScoringDialog({
   return (
     <Dialog
       title="Предварительный скоринг"
-      description={`${model}, ${money(quote.monthlyPayment)} в месяц на ${quote.rate.months} мес.`}
+      description={`Заявка ${applicationId} сохранена · ${model}, ${money(quote.monthlyPayment)} в месяц на ${quote.rate.months} мес.`}
       onClose={onClose}
       footer={footer}
     >

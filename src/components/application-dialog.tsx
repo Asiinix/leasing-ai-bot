@@ -52,6 +52,7 @@ export function ApplicationDialog({
   onContactChange,
   onUpdate,
   onEditParams,
+  onSubmitted,
   onClose,
 }: {
   draft: DraftState;
@@ -63,6 +64,8 @@ export function ApplicationDialog({
   onContactChange: (value: ApplicationContact) => void;
   onUpdate: (patch: DraftPatch) => void;
   onEditParams: () => void;
+  /** Called once the application is saved; the page then opens the scoring modal. */
+  onSubmitted?: (result: NonNullable<Submission["result"]>, contact: ApplicationContact) => void;
   onClose: () => void;
 }) {
   const values = draft.values;
@@ -155,6 +158,7 @@ export function ApplicationDialog({
       };
       writeSubmission(next);
       setSubmission(next);
+      onSubmitted?.(next.result!, valid);
     } catch (err) {
       setError(
         err instanceof TypeError
