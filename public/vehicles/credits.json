@@ -1,0 +1,66 @@
+[
+  {
+    "key": "Toyota_Camry",
+    "file": "/vehicles/toyota-camry.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2018_Toyota_Camry_(ASV70R)_Ascent_sedan_(2018-08-27)_01.jpg",
+    "author": "EurovisionNim",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "key": "Hyundai_Tucson",
+    "file": "/vehicles/hyundai-tucson.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2022_Hyundai_Tucson_Preferred,_Front_Right,_05-24-2021.jpg",
+    "author": "SsmIntrigue",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "key": "Kia_Sportage",
+    "file": "/vehicles/kia-sportage.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2025_Kia_Sportage_S_front_only.jpg",
+    "author": "LuvsMG481",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "key": "Chevrolet_Cobalt",
+    "file": "/vehicles/chevrolet-cobalt.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Chevrolet_Cobalt_2013_in_Russia.JPG",
+    "author": "Milhouse35",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "key": "Hyundai_Elantra",
+    "file": "/vehicles/hyundai-elantra.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2023_Hyundai_Elantra_Limited_in_Silver,_front_left,_04-04-2026.jpg",
+    "author": "Cutlass",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  {
+    "key": "Lada_Granta",
+    "file": "/vehicles/lada-granta.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:Lada_Granta_(2018_facelift)_in_Tomsk_01_(cropped).jpg",
+    "author": "Ilya Plekhanov",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "key": "Changan_CS35",
+    "file": "/vehicles/changan-cs35.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2014_Chang%27an_CS35,_front_8.4.18.jpg",
+    "author": "Kevauto",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "key": "Geely_Binyue",
+    "file": "/vehicles/geely-coolray.webp",
+    "source": "https://commons.wikimedia.org/wiki/File:2022_Geely_Coolray_1.5T_Comfort.jpg",
+    "author": "RL GNZLZ",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  }
+]
